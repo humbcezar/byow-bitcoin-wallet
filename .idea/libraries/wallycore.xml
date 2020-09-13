@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="wallycore">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../libwally-core/src/swig_java/wallycore.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
