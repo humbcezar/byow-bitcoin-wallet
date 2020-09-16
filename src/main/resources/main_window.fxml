@@ -4,14 +4,15 @@
 <?import javafx.scene.layout.*?>
 
 <BorderPane maxHeight="-Infinity"
-        maxWidth="-Infinity"
-        minHeight="-Infinity"
-        minWidth="-Infinity"
-        prefHeight="400.0"
-        prefWidth="600.0"
-        xmlns="http://javafx.com/javafx/11.0.2"
-        xmlns:fx="http://javafx.com/fxml/1"
-        fx:controller="byow.bitcoinwallet.MainController">
+            maxWidth="-Infinity"
+            minHeight="-Infinity"
+            minWidth="-Infinity"
+            prefHeight="400.0"
+            prefWidth="600.0"
+            xmlns="http://javafx.com/javafx/11.0.2"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="byow.bitcoinwallet.MainController"
+            fx:id="borderPane">
    <top>
       <MenuBar BorderPane.alignment="CENTER">
         <menus>
@@ -20,6 +21,11 @@
               <MenuItem fx:id="file" mnemonicParsing="false" onAction="#exit" text="Exit" />
             </items>
           </Menu>
+            <Menu fx:id="wallet" mnemonicParsing="false" text="Wallet">
+              <items>
+                <MenuItem fx:id="new" mnemonicParsing="false" onAction="#openCreateWalletDialog" text="New" />
+              </items>
+            </Menu>
         </menus>
       </MenuBar>
    </top>
