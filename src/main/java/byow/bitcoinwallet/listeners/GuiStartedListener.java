@@ -17,7 +17,7 @@ import java.io.IOException;
 
 @Component
 public class GuiStartedListener implements ApplicationListener<GuiStartedEvent> {
-    @Value("classpath:/main_window.fxml")
+    @Value("classpath:/fxml/main_window.fxml")
     private Resource fxml;
     @Autowired
     ApplicationContext context;

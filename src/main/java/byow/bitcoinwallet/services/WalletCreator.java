@@ -1,5 +1,7 @@
-package byow.bitcoinwallet;
+package byow.bitcoinwallet.services;
 
+import byow.bitcoinwallet.entities.Wallet;
+import byow.bitcoinwallet.repositories.WalletRepository;
 import com.blockstream.libwally.Wally;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

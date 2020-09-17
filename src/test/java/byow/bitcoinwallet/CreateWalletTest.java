@@ -1,5 +1,7 @@
 package byow.bitcoinwallet;
 
+import byow.bitcoinwallet.entities.Wallet;
+import byow.bitcoinwallet.repositories.WalletRepository;
 import com.blockstream.libwally.Wally;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -15,7 +17,7 @@ import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
 
 public class CreateWalletTest extends TestBase {
-    @Value("classpath:/main_window.fxml")
+    @Value("classpath:/fxml/main_window.fxml")
     private Resource fxml;
 
     @Autowired
@@ -45,7 +47,6 @@ public class CreateWalletTest extends TestBase {
         String langEn = Wally.bip39_get_languages().split(" ")[0];
         Object wordList = Wally.bip39_get_wordlist(langEn);
         Wallet wallet = walletRepository.findByName("Test wallet");
-        // TODO: setar variaveis de banco diferentes e create destroy ddlauto
         // TODO: criar teste de repositorio
         try {
             Wally.bip39_mnemonic_validate(wordList, wallet.getMnemonicSeed());

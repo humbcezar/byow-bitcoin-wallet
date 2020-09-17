@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<DialogPane headerText="Give your wallet a name and click create. Then, annotate the generated mnemonic seed in a safe place, and click OK." minHeight="-Infinity" minWidth="-Infinity" prefHeight="250.0" prefWidth="300.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="byow.bitcoinwallet.CreateWalletDialogController">
+<DialogPane headerText="Give your wallet a name and click create. Then, annotate the generated mnemonic seed in a safe place, and click OK." minHeight="-Infinity" minWidth="-Infinity" prefHeight="300.0" prefWidth="450.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="byow.bitcoinwallet.controllers.CreateWalletDialogController">
    <content>
       <GridPane>
         <columnConstraints>
@@ -25,7 +25,7 @@
                   <Insets top="10.0" />
                </GridPane.margin>
             </Button>
-            <TextArea fx:id="mnemonicSeed" editable="false" prefHeight="200.0" prefWidth="200.0" GridPane.columnSpan="2" GridPane.rowIndex="3" />
+            <TextArea fx:id="mnemonicSeed" editable="false" prefHeight="200.0" prefWidth="200.0" wrapText="true" GridPane.columnSpan="2" GridPane.rowIndex="3" />
             <Label text="Mnemonic Seed:" GridPane.rowIndex="2" />
          </children>
       </GridPane>

@@ -1,4 +1,4 @@
-package byow.bitcoinwallet;
+package byow.bitcoinwallet.entities;
 
 import javax.persistence.*;
 

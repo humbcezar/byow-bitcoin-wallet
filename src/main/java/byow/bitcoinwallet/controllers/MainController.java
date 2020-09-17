@@ -1,5 +1,6 @@
-package byow.bitcoinwallet;
+package byow.bitcoinwallet.controllers;
 
+import byow.bitcoinwallet.controllers.CreateWalletDialogController;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -20,7 +21,7 @@ import java.util.Optional;
 public class MainController {
     @FXML
     private BorderPane borderPane;
-    @Value("create_wallet_dialog.fxml")
+    @Value("fxml/create_wallet_dialog.fxml")
     private Resource createWalletDialog;
     @Autowired
     ApplicationContext context;

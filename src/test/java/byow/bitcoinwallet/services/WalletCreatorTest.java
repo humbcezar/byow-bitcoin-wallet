@@ -1,5 +1,9 @@
-package byow.bitcoinwallet;
+package byow.bitcoinwallet.services;
 
+import byow.bitcoinwallet.TestBase;
+import byow.bitcoinwallet.entities.Wallet;
+import byow.bitcoinwallet.repositories.WalletRepository;
+import byow.bitcoinwallet.services.WalletCreator;
 import com.blockstream.libwally.Wally;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
