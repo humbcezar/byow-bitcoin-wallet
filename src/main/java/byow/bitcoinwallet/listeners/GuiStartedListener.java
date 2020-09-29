@@ -17,26 +17,36 @@ import java.io.IOException;
 
 @Component
 public class GuiStartedListener implements ApplicationListener<GuiStartedEvent> {
-    @Value("classpath:/fxml/main_window.fxml")
     private Resource fxml;
-    @Autowired
-    ApplicationContext context;
+    private ApplicationContext context;
+
+    public GuiStartedListener(
+            @Value("classpath:/fxml/main_window.fxml") Resource fxml,
+            @Autowired ApplicationContext context
+    ) {
+        this.fxml = fxml;
+        this.context = context;
+    }
 
     @Override
     @EventListener
     public void onApplicationEvent(GuiStartedEvent guiStartedEvent) {
-        FXMLLoader fxmlLoader = null;
-        Parent root = null;
+        FXMLLoader fxmlLoader = new FXMLLoader();
+        Stage stage = guiStartedEvent.getStage();
+        stage.setTitle("BYOW Wallet");
+        stage.setScene(new Scene(initializeFxml(fxmlLoader)));
+        stage.show();
+    }
+
+    private Parent initializeFxml(FXMLLoader fxmlLoader) {
+        Parent root;
         try {
-            fxmlLoader = new FXMLLoader(this.fxml.getURL());
+            fxmlLoader.setLocation(this.fxml.getURL());
             fxmlLoader.setControllerFactory(context::getBean);
             root = fxmlLoader.load();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        Stage stage = guiStartedEvent.getStage();
-        stage.setTitle("BYOW Wallet");
-        stage.setScene(new Scene(root));
-        stage.show();
+        return root;
     }
 }

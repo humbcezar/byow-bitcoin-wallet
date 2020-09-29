@@ -10,10 +10,18 @@ public class Wallet {
     @Column(name = "id")
     private long id;
 
-    @Column(name = "name")
+    public Wallet(String name, String mnemonicSeed) {
+        this.name = name;
+        this.mnemonicSeed = mnemonicSeed;
+    }
+
+    public Wallet() {
+    }
+
+    @Column(name = "name", unique = true, nullable = false)
     private String name;
 
-    @Column(name = "mnemonic_seed")
+    @Column(name = "mnemonic_seed", unique = true, nullable = false)
     private String mnemonicSeed;
 
     public String getMnemonicSeed() {

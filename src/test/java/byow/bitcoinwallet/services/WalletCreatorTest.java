@@ -3,7 +3,6 @@ package byow.bitcoinwallet.services;
 import byow.bitcoinwallet.TestBase;
 import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.repositories.WalletRepository;
-import byow.bitcoinwallet.services.WalletCreator;
 import com.blockstream.libwally.Wally;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -32,7 +31,7 @@ public class WalletCreatorTest extends TestBase {
 
     @Test
     public void create() {
-        Wallet wallet = walletCreator.create("Test name", "mnemonic seed");
+        Wallet wallet = walletCreator.create(new Wallet("Test name", "mnemonic seed"));
         Assertions.assertEquals("Test name", wallet.getName());
         Assertions.assertEquals("mnemonic seed", wallet.getMnemonicSeed());
         Mockito.verify(walletRepository, Mockito.times(1)).save(wallet);

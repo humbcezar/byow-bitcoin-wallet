@@ -4,30 +4,33 @@ import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.repositories.WalletRepository;
 import com.blockstream.libwally.Wally;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
 
-import java.security.SecureRandom;
-
-@Component
+@Service
 public class WalletCreator {
-    @Autowired
-    WalletRepository walletRepository;
+    private WalletRepository walletRepository;
+    private Object wordList;
+    private EntropyCreator entropyCreator;
 
-    public Wallet create(String name, String mnemonicSeed) {
-        Wallet wallet = new Wallet();
-        wallet.setMnemonicSeed(mnemonicSeed);
-        wallet.setName(name);
+    @Autowired
+    public WalletCreator(
+            WalletRepository walletRepository,
+            @Qualifier("wordList") Object wordList,
+            EntropyCreator entropyCreator
+    ) {
+        this.walletRepository = walletRepository;
+        this.wordList = wordList;
+        this.entropyCreator = entropyCreator;
+    }
+
+    public Wallet create(Wallet wallet) {
         walletRepository.save(wallet);
         return wallet;
     }
 
     public String generateMnemonicSeed() {
-        String langEn = Wally.bip39_get_languages().split(" ")[0];
-        Object wordList = Wally.bip39_get_wordlist(langEn);
-        byte[] entropy = new byte[Wally.BIP32_ENTROPY_LEN_128];
-        SecureRandom secureRandom = new SecureRandom();
-        secureRandom.nextBytes(entropy);
-        String mnemonicSeed = Wally.bip39_mnemonic_from_bytes(wordList, entropy);
+        String mnemonicSeed = Wally.bip39_mnemonic_from_bytes(wordList, entropyCreator.createEntropy());
         try {
             Wally.bip39_mnemonic_validate(wordList, mnemonicSeed);
         } catch (Exception e) {

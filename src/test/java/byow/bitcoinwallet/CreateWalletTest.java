@@ -15,6 +15,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
+import org.testfx.service.query.NodeQuery;
+
+import java.util.stream.IntStream;
 
 public class CreateWalletTest extends TestBase {
     @Value("classpath:/fxml/main_window.fxml")
@@ -47,12 +50,36 @@ public class CreateWalletTest extends TestBase {
         String langEn = Wally.bip39_get_languages().split(" ")[0];
         Object wordList = Wally.bip39_get_wordlist(langEn);
         Wallet wallet = walletRepository.findByName("Test wallet");
-        // TODO: criar teste de repositorio
         try {
             Wally.bip39_mnemonic_validate(wordList, wallet.getMnemonicSeed());
         } catch (final Exception e) {
             Assertions.fail(e);
         }
         Assertions.assertEquals(mnemonicSeed, wallet.getMnemonicSeed());
+    }
+
+    @Test
+    public void createWalletWithoutNameFails(FxRobot robot) {
+        robot.clickOn("#wallet");
+        robot.clickOn("#new");
+        robot.clickOn("#create");
+        robot.clickOn("OK");
+        robot.clickOn("Cancel");
+    }
+
+    @Test
+    public void createWalletWithRepeatedNameFails(FxRobot robot) {
+        IntStream.range(0, 2).forEach(i -> {
+            robot.clickOn("#wallet");
+            robot.clickOn("#new");
+            robot.clickOn("#walletName");
+            robot.write("Test wallet2");
+            robot.clickOn("#create");
+            robot.clickOn("OK");
+        });
+        NodeQuery text = robot.lookup(
+            "Could not create wallet: A wallet with the same name already exists."
+        );
+        Assertions.assertNotNull(text.queryLabeled().getText());
     }
 }
