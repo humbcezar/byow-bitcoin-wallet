@@ -24,9 +24,16 @@ public class WalletCreator {
         this.entropyCreator = entropyCreator;
     }
 
-    public Wallet create(Wallet wallet) {
+    public Wallet create(String walletName, String mnemonicSeed, String password) {
+        Wallet wallet = new Wallet(walletName, createSeed(mnemonicSeed, password));
         walletRepository.save(wallet);
         return wallet;
+    }
+
+    private String createSeed(String mnemonicSeed, String password) {
+        final byte[] seed = new byte[Wally.BIP39_SEED_LEN_512];
+        Wally.bip39_mnemonic_to_seed(mnemonicSeed, password, seed);
+        return Wally.hex_from_bytes(seed);
     }
 
     public String generateMnemonicSeed() {

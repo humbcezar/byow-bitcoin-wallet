@@ -5,31 +5,31 @@ import javax.persistence.*;
 @Entity
 @Table(name = "wallet")
 public class Wallet {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private long id;
 
-    public Wallet(String name, String mnemonicSeed) {
-        this.name = name;
-        this.mnemonicSeed = mnemonicSeed;
-    }
-
-    public Wallet() {
-    }
-
     @Column(name = "name", unique = true, nullable = false)
     private String name;
 
-    @Column(name = "mnemonic_seed", unique = true, nullable = false)
-    private String mnemonicSeed;
+    @Column(name = "seed", unique = true, nullable = false)
+    private String seed;
 
-    public String getMnemonicSeed() {
-        return mnemonicSeed;
+    public Wallet(String name, String seed) {
+        this.name = name;
+        this.seed = seed;
     }
 
-    public void setMnemonicSeed(String mnemonicSeed) {
-        this.mnemonicSeed = mnemonicSeed;
+    public Wallet() {}
+
+    public String getSeed() {
+        return seed;
+    }
+
+    public void setSeed(String seed) {
+        this.seed = seed;
     }
 
     public Long getId() {

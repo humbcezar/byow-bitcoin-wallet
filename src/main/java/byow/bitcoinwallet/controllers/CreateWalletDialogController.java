@@ -17,6 +17,9 @@ public class CreateWalletDialogController {
     @FXML
     public TextArea mnemonicSeed;
 
+    @FXML
+    public TextField walletPassword;
+
     @Autowired
     private WalletCreator walletCreator;
 
@@ -44,6 +47,6 @@ public class CreateWalletDialogController {
     }
 
     public void createWallet() {
-        walletCreator.create(new Wallet(walletName.getText(), mnemonicSeed.getText()));
+        walletCreator.create(walletName.getText(), mnemonicSeed.getText(), walletPassword.getText());
     }
 }

@@ -19,7 +19,7 @@ public class WalletRepositoryTest {
         Wallet wallet = new Wallet("name", "seed");
         walletRepository.save(wallet);
         Wallet wallet2 = walletRepository.findByName("name");
-        Assertions.assertEquals(wallet.getMnemonicSeed(), wallet2.getMnemonicSeed());
+        Assertions.assertEquals(wallet.getSeed(), wallet2.getSeed());
         Assertions.assertEquals(wallet.getName(), wallet2.getName());
     }
 
