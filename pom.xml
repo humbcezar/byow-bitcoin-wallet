@@ -15,7 +15,7 @@
     <name>bitcoin-wallet</name>
     <description>Bitcoin wallet project</description>
     <properties>
-        <java.version>11</java.version>
+        <java.version>14</java.version>
     </properties>
 
     <build>

@@ -1,25 +1,39 @@
 package byow.bitcoinwallet.services;
 
-import byow.bitcoinwallet.TestBase;
 import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.repositories.WalletRepository;
 import com.blockstream.libwally.Wally;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 
-public class WalletCreatorTest extends TestBase {
+@ActiveProfiles("test")
+@SpringBootTest
+public class WalletCreatorTest {
     @Autowired
     WalletCreator walletCreator;
     @MockBean
     WalletRepository walletRepository;
+    @MockBean
+    ApplicationEventPublisher applicationEventPublisher;
+
+    @BeforeEach
+    void setUp() {
+        initMocks(this);
+        walletCreator.setApplicationEventPublisher(this.applicationEventPublisher);
+    }
 
     @Test
     public void generateMnemonicSeed() {
@@ -41,6 +55,7 @@ public class WalletCreatorTest extends TestBase {
         assertEquals("Test name", wallet.getName());
         assertEquals(expectedSeed, wallet.getSeed());
         verify(walletRepository, times(1)).save(wallet);
+        verify(applicationEventPublisher, times(1)).publishEvent(any());
     }
 
     @Test
@@ -55,5 +70,6 @@ public class WalletCreatorTest extends TestBase {
         assertEquals("Test name", wallet.getName());
         assertEquals(expectedSeed, wallet.getSeed());
         verify(walletRepository, times(1)).save(wallet);
+        verify(applicationEventPublisher, times(1)).publishEvent(any());
     }
 }
