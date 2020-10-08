@@ -1,5 +1,6 @@
 package byow.bitcoinwallet.guitests;
 
+import byow.bitcoinwallet.factories.SpringComponentBuilderFactory;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -12,7 +13,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.test.context.ActiveProfiles;
 import org.testfx.framework.junit5.ApplicationExtension;
-import org.testfx.framework.junit5.Start;
 
 @SpringBootTest
 @ExtendWith(ApplicationExtension.class)
@@ -24,12 +24,16 @@ abstract public class TestBase {
     @Autowired
     protected ApplicationContext context;
 
+    @Autowired
+    private SpringComponentBuilderFactory springComponentBuilderFactory;
+
     protected Stage stage;
 
     public void start (Stage stage) throws Exception {
         this.stage = stage;
         FXMLLoader fxmlLoader = new FXMLLoader(fxml.getURL());
         fxmlLoader.setControllerFactory(context::getBean);
+        fxmlLoader.setBuilderFactory(springComponentBuilderFactory);
         Parent root = fxmlLoader.load();
         stage.setTitle("BYOW Wallet");
         stage.setScene(new Scene(root));

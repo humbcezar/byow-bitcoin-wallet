@@ -2,6 +2,7 @@ package byow.bitcoinwallet.guitests;
 
 import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.repositories.WalletRepository;
+import byow.bitcoinwallet.services.WalletCreator;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,12 +15,18 @@ public class LoadWalletTest extends TestBase {
     @Autowired
     WalletRepository walletRepository;
 
+    @Autowired
+    private WalletCreator walletCreator;
+
     @Override
     @Start
     public void start(Stage stage) throws Exception {
-        Wallet wallet = new Wallet("testwallet", "abc");
-        walletRepository.save(wallet);
         super.start(stage);
+        walletCreator.create(
+                "testwallet",
+                "gap print mobile track security horn polar female inhale liberty general benefit",
+                ""
+        );
     }
 
     @Test

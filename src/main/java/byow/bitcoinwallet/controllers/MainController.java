@@ -1,16 +1,14 @@
 package byow.bitcoinwallet.controllers;
 
-import byow.bitcoinwallet.entities.Wallet;
-import byow.bitcoinwallet.repositories.WalletRepository;
+import byow.bitcoinwallet.services.CurrentWalletManager;
 import byow.bitcoinwallet.services.WalletsMenuManager;
 import javafx.application.Platform;
+import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Menu;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
+import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -38,10 +36,21 @@ public class MainController {
     @Autowired
     private WalletsMenuManager walletsMenuManager;
 
-    private Wallet currentWallet;
+    @Autowired
+    private CurrentWalletManager currentWalletManager;
 
     @FXML
     public void initialize() {
+        walletsMenuManager.getMenuItems().addListener(
+                (ListChangeListener<MenuItem>) change -> Platform.runLater(
+                        () -> load.getItems().setAll(change.getList())
+                )
+        );
+        currentWalletManager.walletNameProperty().addListener((observable, oldValue, newValue) -> Platform.runLater(() -> {
+                Stage stage = (Stage) borderPane.getScene().getWindow();
+                stage.setTitle("BYOW Wallet - ".concat(newValue));
+            })
+        );
         walletsMenuManager.load();
     }
 
@@ -98,15 +107,7 @@ public class MainController {
         }
     }
 
-    public BorderPane getBorderPane() {
-        return borderPane;
-    }
-
     public Menu getLoad() {
         return load;
-    }
-
-    public void setCurrentWallet(Wallet wallet) {
-        this.currentWallet = wallet;
     }
 }

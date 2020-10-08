@@ -1,6 +1,7 @@
 package byow.bitcoinwallet.listeners;
 
 import byow.bitcoinwallet.events.GuiStartedEvent;
+import byow.bitcoinwallet.factories.SpringComponentBuilderFactory;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -19,13 +20,17 @@ import java.io.IOException;
 public class GuiStartedListener implements ApplicationListener<GuiStartedEvent> {
     private Resource fxml;
     private ApplicationContext context;
+    private SpringComponentBuilderFactory springComponentBuilderFactory;
 
+    @Autowired
     public GuiStartedListener(
             @Value("classpath:/fxml/main_window.fxml") Resource fxml,
-            @Autowired ApplicationContext context
+            ApplicationContext context,
+            SpringComponentBuilderFactory springComponentBuilderFactory
     ) {
         this.fxml = fxml;
         this.context = context;
+        this.springComponentBuilderFactory = springComponentBuilderFactory;
     }
 
     @Override
@@ -43,6 +48,7 @@ public class GuiStartedListener implements ApplicationListener<GuiStartedEvent> 
         try {
             fxmlLoader.setLocation(this.fxml.getURL());
             fxmlLoader.setControllerFactory(context::getBean);
+            fxmlLoader.setBuilderFactory(springComponentBuilderFactory);
             root = fxmlLoader.load();
         } catch (IOException e) {
             throw new RuntimeException(e);

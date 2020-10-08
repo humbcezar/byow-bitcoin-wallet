@@ -1,0 +1,23 @@
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tab?>
+<fx:root type="javafx.scene.control.Tab" xmlns:fx="http://javafx.com/fxml">
+    <content>
+        <GridPane>
+            <children>
+                <Label text="Receiving address" GridPane.columnIndex="0" GridPane.rowIndex="0" >
+                    <GridPane.margin>
+                        <Insets top="10.0" left="10.0" right="10.0"/>
+                    </GridPane.margin>
+                </Label>
+                <TextField fx:id="receivingAddress" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="350">
+                    <GridPane.margin>
+                        <Insets top="10.0" left="10.0" right="10.0"/>
+                    </GridPane.margin>
+                </TextField>
+            </children>
+        </GridPane>
+    </content>
+</fx:root>

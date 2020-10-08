@@ -1,12 +1,18 @@
 package byow.bitcoinwallet.services;
 
-import byow.bitcoinwallet.controllers.MainController;
 import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.repositories.WalletRepository;
+import com.sun.javafx.collections.ImmutableObservableList;
+import com.sun.javafx.collections.ObservableListWrapper;
+import javafx.application.Platform;
+import javafx.beans.property.SimpleListProperty;
+import javafx.collections.ObservableList;
 import javafx.scene.control.MenuItem;
-import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.LinkedList;
+
 
 @Component
 public class WalletsMenuManager {
@@ -14,7 +20,9 @@ public class WalletsMenuManager {
     private WalletRepository walletRepository;
 
     @Autowired
-    private MainController mainController;
+    private CurrentWalletManager currentWalletManager;
+
+    private final ObservableList<MenuItem> menuItems = new ObservableListWrapper<>(new LinkedList<>());
 
     public void load() {
         walletRepository.findAll().forEach(this::addWallet);
@@ -22,13 +30,11 @@ public class WalletsMenuManager {
 
     public void addWallet(Wallet wallet) {
         MenuItem menuItem = new MenuItem(wallet.getName());
-        menuItem.setOnAction(click -> setCurrentWallet(wallet));
-        mainController.getLoad().getItems().add(menuItem);
+        menuItem.setOnAction(click -> currentWalletManager.updateCurrentWallet(wallet));
+        menuItems.add(menuItem);
     }
 
-    public void setCurrentWallet(Wallet wallet) {
-        Stage stage = (Stage) mainController.getBorderPane().getScene().getWindow();
-        stage.setTitle("BYOW Wallet - ".concat(wallet.getName()));
-        mainController.setCurrentWallet(wallet);
+    public ObservableList<MenuItem> getMenuItems() {
+        return menuItems;
     }
 }
