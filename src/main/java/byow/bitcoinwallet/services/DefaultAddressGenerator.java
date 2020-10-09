@@ -7,25 +7,19 @@ import org.springframework.stereotype.Component;
 import static com.blockstream.libwally.Wally.*;
 
 @Component
-public class SegwitAddressGenerator implements AddressGenerator {
+public class DefaultAddressGenerator implements AddressGenerator {
 
-    public String generate(Wallet wallet) {
+    public String generate(Wallet wallet, DerivationPath derivationPath) {
         Object BIP32RootKey = buildBIP32RootKey(wallet.getSeed());
-        Object privateKey = getFirstBIP84AddressPrivateKey(BIP32RootKey);
+        Object privateKey = getPrivateKey(BIP32RootKey, derivationPath);
 
         return bip32_key_to_addr_segwit(privateKey, "bc", 0);
     }
 
-    private Object getFirstBIP84AddressPrivateKey(Object BIP32RootKey) {
+    private Object getPrivateKey(Object BIP32RootKey, DerivationPath derivationPath) {
         return bip32_key_from_parent_path(
                 BIP32RootKey,
-                new int[]{
-                        BIP32_INITIAL_HARDENED_CHILD + 84,
-                        BIP32_INITIAL_HARDENED_CHILD,
-                        BIP32_INITIAL_HARDENED_CHILD,
-                        0,
-                        0
-                },
+                derivationPath.getParsedPath(),
                 BIP32_FLAG_KEY_PRIVATE
         );
     }

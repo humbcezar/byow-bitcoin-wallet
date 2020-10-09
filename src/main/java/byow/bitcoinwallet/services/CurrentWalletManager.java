@@ -5,6 +5,8 @@ import javafx.beans.property.SimpleStringProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
+
 @Component
 public class CurrentWalletManager {
 
@@ -20,7 +22,7 @@ public class CurrentWalletManager {
     public void updateCurrentWallet(Wallet currentWallet) {
         this.currentWallet = currentWallet;
         walletName.setValue(currentWallet.getName());
-        currentReceivingAddress.setValue(addressGenerator.generate(currentWallet));
+        currentReceivingAddress.setValue(addressGenerator.generate(currentWallet, FIRST_BIP84_ADDRESS_PATH));
     }
 
     public String getWalletName() {
