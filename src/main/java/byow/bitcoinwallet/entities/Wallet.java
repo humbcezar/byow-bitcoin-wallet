@@ -14,7 +14,7 @@ public class Wallet {
     @Column(name = "name", unique = true, nullable = false)
     private String name;
 
-    @Column(name = "seed", unique = true, nullable = false)
+    @Column(name = "seed", nullable = false)
     private String seed;
 
     public Wallet(String name, String seed) {

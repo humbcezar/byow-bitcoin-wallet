@@ -61,6 +61,27 @@ public class DefaultAddressGeneratorTest {
                         "",
                         "bc1qzvfaa0r54fnlfsdv745h2npe7uuwph0892323l",
                         FIRST_BIP84_ADDRESS_PATH
+                ),
+                Arguments.of(
+                        "bip84-test-vector-1",
+                        "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+                        "",
+                        "bc1qcr8te4kr609gcawutmrza0j4xv80jy8z306fyu",
+                        new DerivationPath("84'/0'/0'/0/0")
+                ),
+                Arguments.of(
+                        "bip84-test-vector-2",
+                        "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+                        "",
+                        "bc1qnjg0jd8228aq7egyzacy8cys3knf9xvrerkf9g",
+                        new DerivationPath("84'/0'/0'/0/1")
+                ),
+                Arguments.of(
+                        "bip84-test-vector-3",
+                        "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+                        "",
+                        "bc1q8c6fshw2dlwun7ekn9qwf37cu2rn755upcp6el",
+                        new DerivationPath("84'/0'/0'/1/0")
                 )
         );
     }
