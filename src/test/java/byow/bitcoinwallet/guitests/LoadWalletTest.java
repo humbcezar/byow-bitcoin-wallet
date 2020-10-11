@@ -1,7 +1,5 @@
 package byow.bitcoinwallet.guitests;
 
-import byow.bitcoinwallet.entities.Wallet;
-import byow.bitcoinwallet.repositories.WalletRepository;
 import byow.bitcoinwallet.services.WalletCreator;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
@@ -12,8 +10,6 @@ import org.testfx.framework.junit5.Start;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class LoadWalletTest extends TestBase {
-    @Autowired
-    WalletRepository walletRepository;
 
     @Autowired
     private WalletCreator walletCreator;

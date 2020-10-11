@@ -4,6 +4,7 @@
 <?import javafx.scene.layout.*?>
 
 <?import byow.bitcoinwallet.controllers.ReceiveTabController?>
+<?import javafx.geometry.Insets?>
 <BorderPane fx:id="borderPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="byow.bitcoinwallet.controllers.MainController">
    <top>
       <MenuBar BorderPane.alignment="CENTER">
@@ -22,12 +23,23 @@
         </menus>
       </MenuBar>
    </top>
-   <center>
-      <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
-        <tabs>
-          <Tab text="Send" />
-          <ReceiveTabController />
-        </tabs>
-      </TabPane>
-   </center>
+    <center>
+        <VBox prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
+            <children>
+                <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+                    <tabs>
+                        <Tab text="Send" />
+                    </tabs>
+                    <ReceiveTabController />
+                </TabPane>
+                <TableView fx:id="balanceTable" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="columnAddress" editable="false" resizable="false" sortable="false" text="Address" prefWidth="${balanceTable.width*0.60}" />
+                        <TableColumn fx:id="columnBalance" editable="false" resizable="false" sortable="false" text="Balance" prefWidth="${balanceTable.width*0.20}"/>
+                        <TableColumn fx:id="columnConfirmations" editable="false" resizable="false" sortable="false" text="Confirmations" prefWidth="${balanceTable.width*0.20}"/>
+                    </columns>
+                </TableView>
+            </children>
+        </VBox>
+    </center>
 </BorderPane>

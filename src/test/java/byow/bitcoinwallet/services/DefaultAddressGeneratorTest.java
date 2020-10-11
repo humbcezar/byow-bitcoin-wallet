@@ -1,6 +1,7 @@
 package byow.bitcoinwallet.services;
 
 import byow.bitcoinwallet.entities.Wallet;
+import byow.bitcoinwallet.repositories.WalletRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -26,13 +27,18 @@ public class DefaultAddressGeneratorTest {
     @Autowired
     private WalletCreator walletCreator;
 
+    @Autowired
+    private WalletRepository walletRepository;
+
     @MockBean
     ApplicationEventPublisher applicationEventPublisher;
 
     @BeforeEach
     void setUp() {
         initMocks(this);
+        walletRepository.deleteAll();
         walletCreator.setApplicationEventPublisher(this.applicationEventPublisher);
+        addressGenerator.setBitcoinEnvironment("mainnet");
     }
 
     @ParameterizedTest
