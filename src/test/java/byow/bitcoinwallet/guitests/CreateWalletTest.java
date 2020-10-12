@@ -4,17 +4,24 @@ import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.enums.Languages;
 import byow.bitcoinwallet.repositories.WalletRepository;
 import com.blockstream.libwally.Wally;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
+import org.testfx.matcher.control.TableViewMatchers;
 import org.testfx.service.query.NodeQuery;
 
 import java.util.stream.IntStream;
 
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.testfx.matcher.control.TableViewMatchers.containsRowAtIndex;
 
 public class CreateWalletTest extends TestBase {
     @Override
@@ -45,6 +52,11 @@ public class CreateWalletTest extends TestBase {
         assertEquals("Test wallet", wallet.getName());
         assertTrue(wallet.getSeed() != null && !wallet.getSeed().isEmpty());
         assertEquals("BYOW Wallet - Test wallet", stage.getTitle());
+        robot.clickOn("Receive");
+        String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+        assertNotNull(address);
+        final TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+        MatcherAssert.assertThat(tableView, is(not(containsRowAtIndex(0))));
     }
 
     @Test
@@ -68,6 +80,10 @@ public class CreateWalletTest extends TestBase {
         assertEquals("Test wallet3", wallet.getName());
         assertTrue(wallet.getSeed() != null && !wallet.getSeed().isEmpty());
         assertEquals("BYOW Wallet - Test wallet3", stage.getTitle());
+        String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+        assertNotNull(address);
+        final TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+        MatcherAssert.assertThat(tableView, is(not(containsRowAtIndex(0))));
     }
 
     @Test

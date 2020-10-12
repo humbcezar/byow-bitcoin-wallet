@@ -1,6 +1,7 @@
 package byow.bitcoinwallet.controllers;
 
 import byow.bitcoinwallet.entities.Wallet;
+import byow.bitcoinwallet.services.SeedGenerator;
 import byow.bitcoinwallet.services.WalletCreator;
 import javafx.beans.binding.BooleanBinding;
 import javafx.fxml.FXML;
@@ -23,6 +24,9 @@ public class CreateWalletDialogController {
     @Autowired
     private WalletCreator walletCreator;
 
+    @Autowired
+    private SeedGenerator seedGenerator;
+
     private BooleanBinding allInputsAreFull;
 
     public BooleanBinding getAllInputsAreFull() {
@@ -43,7 +47,7 @@ public class CreateWalletDialogController {
     }
 
     public void generateMnemonicSeed() {
-        mnemonicSeed.setText(walletCreator.generateMnemonicSeed());
+        mnemonicSeed.setText(seedGenerator.generateMnemonicSeed());
     }
 
     public void createWallet() {

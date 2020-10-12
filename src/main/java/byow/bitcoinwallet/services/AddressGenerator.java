@@ -4,6 +4,6 @@ import byow.bitcoinwallet.entities.Wallet;
 
 public interface AddressGenerator {
 
-    public String generate(Wallet wallet, DerivationPath derivationPath);
+    public String generate(String seed, DerivationPath derivationPath);
 
 }

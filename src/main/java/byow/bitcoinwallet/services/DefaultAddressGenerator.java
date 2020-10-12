@@ -11,8 +11,8 @@ import static com.blockstream.libwally.Wally.*;
 public class DefaultAddressGenerator implements AddressGenerator {
     private String bitcoinEnvironment;
 
-    public String generate(Wallet wallet, DerivationPath derivationPath) {
-        Object BIP32RootKey = buildBIP32RootKey(wallet.getSeed());
+    public String generate(String seed, DerivationPath derivationPath) {
+        Object BIP32RootKey = buildBIP32RootKey(seed);
         Object privateKey = getPrivateKey(BIP32RootKey, derivationPath);
         String addressPrefix = defineAddressPrefix();
 

@@ -15,31 +15,28 @@ public class WalletCreator {
     private Object wordList;
     private EntropyCreator entropyCreator;
     private ApplicationEventPublisher applicationEventPublisher;
+    private SeedGenerator seedGenerator;
 
     @Autowired
     public WalletCreator(
             WalletRepository walletRepository,
             @Qualifier("wordList") Object wordList,
             EntropyCreator entropyCreator,
-            ApplicationEventPublisher applicationEventPublisher
+            ApplicationEventPublisher applicationEventPublisher,
+            SeedGenerator seedGenerator
     ) {
         this.walletRepository = walletRepository;
         this.wordList = wordList;
         this.entropyCreator = entropyCreator;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.seedGenerator = seedGenerator;
     }
 
     public Wallet create(String walletName, String mnemonicSeed, String password) {
-        Wallet wallet = new Wallet(walletName, createSeed(mnemonicSeed, password));
+        Wallet wallet = new Wallet(walletName, seedGenerator.generateSeed(mnemonicSeed, password));
         walletRepository.save(wallet);
         this.applicationEventPublisher.publishEvent(new WalletCreatedEvent(this, wallet));
         return wallet;
-    }
-
-    private String createSeed(String mnemonicSeed, String password) {
-        final byte[] seed = new byte[Wally.BIP39_SEED_LEN_512];
-        Wally.bip39_mnemonic_to_seed(mnemonicSeed, password, seed);
-        return Wally.hex_from_bytes(seed);
     }
 
     public String generateMnemonicSeed() {

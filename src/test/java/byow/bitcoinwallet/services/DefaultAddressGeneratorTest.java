@@ -55,7 +55,7 @@ public class DefaultAddressGeneratorTest {
                 mnemonicSeed,
                 password
         );
-        String address = addressGenerator.generate(wallet, derivationPath);
+        String address = addressGenerator.generate(wallet.getSeed(), derivationPath);
         assertEquals(expectedAddress, address);
     }
 

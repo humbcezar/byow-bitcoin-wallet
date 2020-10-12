@@ -1,33 +1,28 @@
 package byow.bitcoinwallet.guitests;
 
-import byow.bitcoinwallet.entities.ReceivingAddress;
+import byow.bitcoinwallet.entities.Wallet;
+import byow.bitcoinwallet.repositories.WalletRepository;
 import byow.bitcoinwallet.services.AddressGenerator;
-import byow.bitcoinwallet.services.WalletCreator;
-import javafx.scene.control.TableCell;
+import byow.bitcoinwallet.services.DerivationPath;
+import byow.bitcoinwallet.services.SeedGenerator;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.hamcrest.MatcherAssert;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.ApplicationEventPublisher;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
-import org.testfx.matcher.control.TableViewMatchers;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
-
 import java.math.BigDecimal;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.testfx.matcher.control.TableViewMatchers.containsRowAtIndex;
 
 
 public class BalanceTableTest extends TestBase {
-
-    @Autowired
-    private WalletCreator walletCreator;
 
     @Autowired
     private BitcoindRpcClient bitcoindRpcClient;
@@ -35,38 +30,46 @@ public class BalanceTableTest extends TestBase {
     @Autowired
     private AddressGenerator addressGenerator;
 
-    @MockBean
-    ApplicationEventPublisher applicationEventPublisher;
+    @Autowired
+    private SeedGenerator seedGenerator;
+
+    @Autowired
+    private WalletRepository walletRepository;
+
+    private String seed;
 
     @Override
     @Start
     public void start(Stage stage) throws Exception {
-        initMocks(this);
-        walletCreator.setApplicationEventPublisher(this.applicationEventPublisher);
-        walletCreator.create(
-                "testwallet2",
-                "gap print mobile track security horn polar female inhale liberty general benefit",
-                ""
-        );
-        String address = bitcoindRpcClient.getNewAddress();
-        bitcoindRpcClient.generateToAddress(101, address);
-        bitcoindRpcClient.sendToAddress("bcrt1qzvfaa0r54fnlfsdv745h2npe7uuwph08d9n5a9", BigDecimal.ONE);
-        bitcoindRpcClient.generateToAddress(1, address);
+        seed = seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), "");
+        Wallet wallet = new Wallet("testwallet2", seed);
+        walletRepository.save(wallet);
         super.start(stage);
     }
 
     @Test
     public void showAddressWithPositiveBalance(FxRobot robot) {
+        String toAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
+        String fromAddress = bitcoindRpcClient.getNewAddress();
+        bitcoindRpcClient.generateToAddress(101, fromAddress);
+        bitcoindRpcClient.sendToAddress(toAddress, BigDecimal.ONE);
+
         robot.clickOn("#wallet");
         robot.moveTo("#load");
         robot.clickOn("testwallet2");
+        //TODO: substitute sleep for something safer
+        robot.sleep(5, TimeUnit.SECONDS);
         final TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
-        MatcherAssert.assertThat(tableView, TableViewMatchers.containsRowAtIndex(
+        MatcherAssert.assertThat(tableView, containsRowAtIndex(
                 0,
-                "bcrt1qzvfaa0r54fnlfsdv745h2npe7uuwph08d9n5a9",
+                toAddress,
                 "1.00000000",
-                1
+                0
             )
         );
+        robot.clickOn("Receive");
+        String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+        String expectedReceinvingAddress = addressGenerator.generate(seed, new DerivationPath("84'/0'/0'/0/1"));
+        assertEquals(expectedReceinvingAddress, address);
     }
 }

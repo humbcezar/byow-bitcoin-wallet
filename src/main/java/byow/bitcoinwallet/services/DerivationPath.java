@@ -27,4 +27,12 @@ public class DerivationPath {
                 })
                 .toArray();
     }
+
+    public DerivationPath next() {
+        String[] splitPath = path.split("/");
+        int nextLast = Integer.parseInt(splitPath[splitPath.length - 1]) + 1;
+        splitPath[splitPath.length - 1] = Integer.toString(nextLast);
+
+        return new DerivationPath(String.join("/", splitPath));
+    }
 }

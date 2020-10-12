@@ -1,6 +1,9 @@
 package byow.bitcoinwallet.controllers;
 
+import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.services.CurrentWalletManager;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TextField;
@@ -45,7 +48,7 @@ public class ReceiveTabController extends Tab {
 
     public void initialize() {
         currentWalletManager.currentReceivingAddressProperty().addListener(
-                (observable, oldValue, newValue) -> receivingAddress.setText(newValue)
+                (observable, oldValue, newValue) -> receivingAddress.setText(newValue.getAddress())
         );
     }
 }

@@ -2,8 +2,6 @@ package byow.bitcoinwallet.services;
 
 import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.repositories.WalletRepository;
-import com.blockstream.libwally.Wally;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,18 +31,6 @@ public class WalletCreatorTest {
     void setUp() {
         initMocks(this);
         walletCreator.setApplicationEventPublisher(this.applicationEventPublisher);
-    }
-
-    @Test
-    public void generateMnemonicSeed() {
-        String langEn = Wally.bip39_get_languages().split(" ")[0];
-        Object wordList = Wally.bip39_get_wordlist(langEn);
-        String mnemonicSeed = walletCreator.generateMnemonicSeed();
-        try {
-            Wally.bip39_mnemonic_validate(wordList, mnemonicSeed);
-        } catch (final Exception e) {
-            Assertions.fail(e);
-        }
     }
 
     @Test
