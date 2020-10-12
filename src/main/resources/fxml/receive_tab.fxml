@@ -3,7 +3,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.Tab?>
-<fx:root type="javafx.scene.control.Tab" xmlns:fx="http://javafx.com/fxml">
+<fx:root type="javafx.scene.control.Tab" xmlns:fx="http://javafx.com/fxml" >
     <content>
         <GridPane>
             <children>

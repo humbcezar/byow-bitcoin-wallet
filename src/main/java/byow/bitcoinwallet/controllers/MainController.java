@@ -1,6 +1,5 @@
 package byow.bitcoinwallet.controllers;
 
-import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.services.CurrentWalletManager;
 import byow.bitcoinwallet.services.WalletsMenuManager;
 import javafx.application.Platform;
@@ -8,7 +7,6 @@ import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,23 +17,10 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.Optional;
 
 @Component
 public class MainController {
-
-    @FXML
-    public TableView<ReceivingAddress> balanceTable;
-
-    @FXML
-    public TableColumn<ReceivingAddress, String> columnAddress;
-
-    @FXML
-    public TableColumn<ReceivingAddress, BigDecimal> columnBalance;
-
-    @FXML
-    public TableColumn<ReceivingAddress, Integer> columnConfirmations;
 
     @FXML
     private BorderPane borderPane;
@@ -67,10 +52,6 @@ public class MainController {
                 stage.setTitle("BYOW Wallet - ".concat(newValue));
             })
         );
-        balanceTable.setItems(currentWalletManager.getReceivingAddresses());
-        columnAddress.setCellValueFactory(new PropertyValueFactory<>("address"));
-        columnBalance.setCellValueFactory(new PropertyValueFactory<>("balance"));
-        columnConfirmations.setCellValueFactory(new PropertyValueFactory<>("confirmations"));
         walletsMenuManager.load();
     }
 

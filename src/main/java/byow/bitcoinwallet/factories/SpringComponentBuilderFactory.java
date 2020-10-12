@@ -1,5 +1,6 @@
 package byow.bitcoinwallet.factories;
 
+import byow.bitcoinwallet.controllers.BalanceTableController;
 import byow.bitcoinwallet.controllers.ReceiveTabController;
 import javafx.fxml.JavaFXBuilderFactory;
 import javafx.util.Builder;
@@ -15,7 +16,7 @@ public class SpringComponentBuilderFactory implements BuilderFactory {
 
     @Override
     public Builder<?> getBuilder(Class<?> type) {
-        if (type == ReceiveTabController.class) {
+        if (type == ReceiveTabController.class || type == BalanceTableController.class) {
             return (Builder<Object>) () -> context.getBean(type);
         }
         JavaFXBuilderFactory defaultFactory = new JavaFXBuilderFactory();
