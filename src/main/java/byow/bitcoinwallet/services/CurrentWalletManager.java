@@ -41,7 +41,7 @@ public class CurrentWalletManager {
         //TODO: por task em pojo (nao componente)
         //TODO: refatorar updatecurrentwallettask para servico
         //TODO: OU criar metodo ou inner class no updatecurrentwallettask pra retornar task
-        //TODO: antes de rodar task, cancelar task anterior (interrupt, colocando field task nesta classe e mudando referencia a cada execucao
+        //TODO: antes de rodar task, cancelar task anterior (interrupt ou cancel, e setoncance;, colocando field task nesta classe e mudando referencia a cada execucao
         Task<Void> task = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
