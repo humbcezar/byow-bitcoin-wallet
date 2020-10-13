@@ -2,6 +2,7 @@ package byow.bitcoinwallet.controllers;
 
 import byow.bitcoinwallet.services.CurrentWalletManager;
 import byow.bitcoinwallet.services.WalletsMenuManager;
+import byow.bitcoinwallet.tasks.UpdateCurrentWalletTask;
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
@@ -23,6 +24,9 @@ import java.util.Optional;
 public class MainController {
 
     @FXML
+    public ProgressBar progressBar;
+
+    @FXML
     private BorderPane borderPane;
 
     @FXML
@@ -30,6 +34,9 @@ public class MainController {
 
     @Value("fxml/create_wallet_dialog.fxml")
     private Resource createWalletDialog;
+
+    @Autowired
+    private UpdateCurrentWalletTask updateCurrentWalletTask;
 
     @Autowired
     private ApplicationContext context;
@@ -111,4 +118,9 @@ public class MainController {
     public Menu getLoad() {
         return load;
     }
+
+    public ProgressBar getProgressBar() {
+        return progressBar;
+    }
+
 }

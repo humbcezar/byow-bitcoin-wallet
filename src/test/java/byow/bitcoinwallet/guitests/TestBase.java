@@ -1,6 +1,7 @@
 package byow.bitcoinwallet.guitests;
 
 import byow.bitcoinwallet.factories.SpringComponentBuilderFactory;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -13,6 +14,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.test.context.ActiveProfiles;
 import org.testfx.framework.junit5.ApplicationExtension;
+import org.testfx.framework.junit5.Stop;
 
 @SpringBootTest
 @ExtendWith(ApplicationExtension.class)
@@ -39,4 +41,5 @@ abstract public class TestBase {
         stage.setScene(new Scene(root));
         stage.show();
     }
+
 }

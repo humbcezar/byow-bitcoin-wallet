@@ -1,39 +1,28 @@
 package byow.bitcoinwallet.services;
 
+import byow.bitcoinwallet.controllers.MainController;
 import byow.bitcoinwallet.entities.CurrentReceivingAddress;
 import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.entities.Wallet;
+import byow.bitcoinwallet.tasks.UpdateCurrentWalletTask;
 import com.sun.javafx.collections.ObservableListWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
-import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.TxOutput;
-import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Unspent;
 
-import java.math.BigDecimal;
 import java.util.*;
-
-import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
 
 @Component
 public class CurrentWalletManager {
 
-    @Value("${bitcoin.initial_addresses_to_monitor}")
-    private int initialAddressToMonitor;
+    @Autowired
+    private UpdateCurrentWalletTask updateCurrentWalletTask;
 
     @Autowired
-    private AddressGenerator addressGenerator;
-
-    @Autowired
-    private BitcoindRpcClient bitcoindRpcClient;
-
-    @Autowired
-    private MultiAddressesImporter multiAddressesImporter;
+    private MainController mainController;
 
     private Wallet currentWallet;
 
@@ -48,43 +37,34 @@ public class CurrentWalletManager {
         walletName.setValue(currentWallet.getName());
         receivingAddresses.clear();
 
-        Task<Void> task = new Task<>() {
+        //TODO: progressbar in a new component
+        //TODO: por task em pojo (nao componente)
+        //TODO: refatorar updatecurrentwallettask para servico
+        //TODO: OU criar metodo ou inner class no updatecurrentwallettask pra retornar task
+        //TODO: antes de rodar task, cancelar task anterior (interrupt, colocando field task nesta classe e mudando referencia a cada execucao
+        Task<Void> task = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
-                List<String> addressList = new LinkedList<>();
-                DerivationPath addressPath = FIRST_BIP84_ADDRESS_PATH;
-                for (int i = 0; i < initialAddressToMonitor; i++) {
-                    addressList.add(addressGenerator.generate(currentWallet.getSeed(), addressPath));
-                    addressPath = addressPath.next();
-                }
-                multiAddressesImporter.importMultiAddresses(addressList.toArray(new String[0]));
-                List<Unspent> utxos = bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, addressList.toArray(new String[0]));
-                LinkedHashMap<String, ReceivingAddress> usedReceivingAddressMap = new LinkedHashMap<>();
-                utxos.forEach(
-                        utxo -> usedReceivingAddressMap.putIfAbsent(utxo.address(), buildReceivingAddress(usedReceivingAddressMap, utxo))
-                );
-                receivingAddresses.setAll(usedReceivingAddressMap.values());
-                String lastUsedAddress = utxos.get(utxos.size() - 1).address();
-                currentReceivingAddress.setReceivingAddress(
-                        new ReceivingAddress(BigDecimal.ZERO, 0, addressList.get(addressList.indexOf(lastUsedAddress) + 1))
-                );
-
+                updateProgress(-1, 1);
+                updateCurrentWalletTask.setSeed(currentWallet.getSeed())
+                        .setCurrentReceivingAddress(currentReceivingAddress)
+                        .setReceivingAddresses(receivingAddresses)
+                        .run();
+                updateProgress(1, 1);
                 return null;
             }
         };
-        new Thread(task).start();
-    }
 
-    private ReceivingAddress buildReceivingAddress(LinkedHashMap<String, ReceivingAddress> receivingAddresses, Unspent utxo) {
-        ReceivingAddress address = receivingAddresses.getOrDefault(utxo.address(), null);
-        if (address == null) {
-            return new ReceivingAddress(utxo.amount(), utxo.confirmations(), utxo.address());
-        }
-        if (utxo.confirmations() < address.getConfirmations()) {
-            address.setConfirmations(utxo.confirmations());
-        }
-        address.setBalance(utxo.amount() + address.getBalance());
-        return address;
+        task.setOnScheduled(
+            event ->
+                mainController.getProgressBar().progressProperty().bind(task.progressProperty())
+        );
+        task.setOnSucceeded(event -> {
+            mainController.getProgressBar().progressProperty().unbind();
+            mainController.getProgressBar().progressProperty().setValue(0);
+        });
+
+        new Thread(task).start();
     }
 
     public String getWalletName() {

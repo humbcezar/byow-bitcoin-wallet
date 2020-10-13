@@ -37,4 +37,11 @@
             </children>
         </VBox>
     </center>
+    <bottom>
+        <HBox prefHeight="19.0" prefWidth="600.0" BorderPane.alignment="CENTER">
+            <children>
+                <ProgressBar fx:id="progressBar" prefHeight="33.0" prefWidth="200.0" progress="0.0" />
+            </children>
+        </HBox>
+    </bottom>
 </BorderPane>
