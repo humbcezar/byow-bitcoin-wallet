@@ -1,10 +1,6 @@
 package byow.bitcoinwallet.controllers;
 
-import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.services.CurrentWalletManager;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TextField;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +14,7 @@ import java.io.IOException;
 
 @Lazy
 @Component
-public class ReceiveTabController extends Tab {
+public class ReceiveTabController extends Tab implements BaseController {
 
     private Resource fxml;
 
@@ -38,12 +34,7 @@ public class ReceiveTabController extends Tab {
         this.context = context;
         this.currentWalletManager = currentWalletManager;
         setText("Receive");
-        FXMLLoader fxmlLoader = new FXMLLoader();
-        fxmlLoader.setLocation(this.fxml.getURL());
-        fxmlLoader.setController(this);
-        fxmlLoader.setRoot(this);
-        fxmlLoader.setControllerFactory(context::getBean);
-        fxmlLoader.load();
+        construct(this.fxml, this.context);
     }
 
     public void initialize() {

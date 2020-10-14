@@ -5,8 +5,10 @@ import byow.bitcoinwallet.services.CurrentWalletManager;
 import byow.bitcoinwallet.services.WalletsMenuManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
+@Lazy
 @Component
 public class WalletCreatedListener implements ApplicationListener<WalletCreatedEvent> {
 

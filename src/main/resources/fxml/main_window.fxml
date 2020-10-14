@@ -4,8 +4,8 @@
 <?import javafx.scene.layout.*?>
 
 <?import byow.bitcoinwallet.controllers.ReceiveTabController?>
-<?import javafx.geometry.Insets?>
 <?import byow.bitcoinwallet.controllers.BalanceTableController?>
+<?import byow.bitcoinwallet.controllers.ProgressBarController?>
 <BorderPane fx:id="borderPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="byow.bitcoinwallet.controllers.MainController">
    <top>
       <MenuBar BorderPane.alignment="CENTER">
@@ -40,7 +40,7 @@
     <bottom>
         <HBox prefHeight="19.0" prefWidth="600.0" BorderPane.alignment="CENTER">
             <children>
-                <ProgressBar fx:id="progressBar" prefHeight="33.0" prefWidth="200.0" progress="0.0" />
+                <ProgressBarController/>
             </children>
         </HBox>
     </bottom>

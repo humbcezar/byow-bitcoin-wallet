@@ -19,7 +19,7 @@ import java.math.BigDecimal;
 
 @Component
 @Lazy
-public class BalanceTableController extends TableView<ReceivingAddress> {
+public class BalanceTableController extends TableView<ReceivingAddress> implements BaseController {
     @FXML
     public TableView<ReceivingAddress> balanceTable;
 
@@ -47,12 +47,7 @@ public class BalanceTableController extends TableView<ReceivingAddress> {
         this.fxml = fxml;
         this.context = context;
         this.currentWalletManager = currentWalletManager;
-        FXMLLoader fxmlLoader = new FXMLLoader();
-        fxmlLoader.setLocation(this.fxml.getURL());
-        fxmlLoader.setController(this);
-        fxmlLoader.setRoot(this);
-        fxmlLoader.setControllerFactory(context::getBean);
-        fxmlLoader.load();
+        construct(this.fxml, this.context);
     }
 
     public void initialize() {

@@ -2,18 +2,16 @@ package byow.bitcoinwallet.services;
 
 import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.repositories.WalletRepository;
-import com.sun.javafx.collections.ImmutableObservableList;
 import com.sun.javafx.collections.ObservableListWrapper;
-import javafx.application.Platform;
-import javafx.beans.property.SimpleListProperty;
 import javafx.collections.ObservableList;
 import javafx.scene.control.MenuItem;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.LinkedList;
 
-
+@Lazy
 @Component
 public class WalletsMenuManager {
     @Autowired
