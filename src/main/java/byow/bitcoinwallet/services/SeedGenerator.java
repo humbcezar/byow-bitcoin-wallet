@@ -12,6 +12,9 @@ public class SeedGenerator {
 
     private EntropyCreator entropyCreator;
 
+    public SeedGenerator() {
+    }
+
     @Autowired
     public SeedGenerator(@Qualifier("wordList") Object wordList, EntropyCreator entropyCreator) {
         this.wordList = wordList;

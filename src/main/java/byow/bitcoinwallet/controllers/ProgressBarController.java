@@ -17,9 +17,12 @@ public class ProgressBarController extends ProgressBar implements BaseController
     @FXML
     public ProgressBar progressBar;
 
-    private final Resource fxml;
+    private Resource fxml;
 
-    private final ApplicationContext context;
+    private ApplicationContext context;
+
+    public ProgressBarController() {
+    }
 
     @Autowired
     public ProgressBarController(

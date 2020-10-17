@@ -1,6 +1,5 @@
 package byow.bitcoinwallet.services;
 
-import byow.bitcoinwallet.entities.Wallet;
 import com.blockstream.libwally.Wally;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

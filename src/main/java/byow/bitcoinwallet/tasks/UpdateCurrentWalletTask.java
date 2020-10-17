@@ -1,9 +1,8 @@
 package byow.bitcoinwallet.tasks;
 
-import byow.bitcoinwallet.controllers.ProgressBarController;
 import byow.bitcoinwallet.entities.CurrentReceivingAddress;
 import byow.bitcoinwallet.entities.ReceivingAddress;
-import byow.bitcoinwallet.services.AddressGenerator;
+import byow.bitcoinwallet.services.AddressSequentialGenerator;
 import byow.bitcoinwallet.services.DerivationPath;
 import byow.bitcoinwallet.services.MultiAddressesImporter;
 import javafx.collections.ObservableList;
@@ -16,8 +15,8 @@ import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Unspent;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 
 import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
@@ -25,20 +24,15 @@ import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PAT
 @Lazy
 @Component
 public class UpdateCurrentWalletTask {
-    @Value("${bitcoin.initial_addresses_to_monitor}")
     private int initialAddressToMonitor;
 
-    @Autowired
     private MultiAddressesImporter multiAddressesImporter;
 
-    @Autowired
-    private AddressGenerator addressGenerator;
+    private AddressSequentialGenerator addressSequentialGenerator;
 
-    @Autowired
     private BitcoindRpcClient bitcoindRpcClient;
 
-    @Autowired
-    private ProgressBarController progressBarController;
+    private UpdateCurrentWalletTaskBuilder taskBuilder;
 
     private String seed;
 
@@ -46,26 +40,59 @@ public class UpdateCurrentWalletTask {
 
     private CurrentReceivingAddress currentReceivingAddress;
 
-    public void update() {
-        List<String> addressList = deriveAddresses();
-        List<Unspent> utxos = getUtxos(addressList);
-        setUsedAddresses(utxos);
-        setNextAddress(addressList, utxos);
+    private DerivationPath currentDerivationPath = FIRST_BIP84_ADDRESS_PATH;
+
+    @Autowired
+    public UpdateCurrentWalletTask(
+            MultiAddressesImporter multiAddressesImporter,
+            AddressSequentialGenerator addressSequentialGenerator,
+            BitcoindRpcClient bitcoindRpcClient,
+            UpdateCurrentWalletTaskBuilder taskBuilder
+    ) {
+        this.multiAddressesImporter = multiAddressesImporter;
+        this.addressSequentialGenerator = addressSequentialGenerator;
+        this.bitcoindRpcClient = bitcoindRpcClient;
+        this.taskBuilder = taskBuilder;
     }
 
-    private void setNextAddress(List<String> addressList, List<Unspent> utxos) {
-        String lastUsedAddress = utxos.get(utxos.size() - 1).address();
+    public void update() {
+        List<String> addressList = addressSequentialGenerator.deriveAddresses(
+                initialAddressToMonitor,
+                seed,
+                currentDerivationPath
+        );
+        List<Unspent> utxos = getUtxos(addressList);
+        Collection<ReceivingAddress> receivingAddressCollection = updateUsedAddresses(utxos);
+        if (receivingAddressCollection.size() >= initialAddressToMonitor) {
+            currentDerivationPath = currentDerivationPath.next(initialAddressToMonitor);
+            update();
+            return;
+        }
+        updateNextAddress(addressList, receivingAddressCollection);
+    }
+
+    private void updateNextAddress(List<String> addressList, Collection<ReceivingAddress> receivingAddressCollection) {
+        String nextAddress = addressList.get(0);
+        if (receivingAddressCollection.size() > 0) {
+            String lastUsedAddress = receivingAddressCollection.stream()
+                    .skip(receivingAddressCollection.size() - 1)
+                    .findFirst()
+                    .get()
+                    .getAddress();
+            nextAddress = addressList.get(addressList.indexOf(lastUsedAddress) + 1);
+        }
         currentReceivingAddress.setReceivingAddress(
-                new ReceivingAddress(BigDecimal.ZERO, 0, addressList.get(addressList.indexOf(lastUsedAddress) + 1))
+                new ReceivingAddress(BigDecimal.ZERO, 0, nextAddress)
         );
     }
 
-    private void setUsedAddresses(List<Unspent> utxos) {
+    private Collection<ReceivingAddress> updateUsedAddresses(List<Unspent> utxos) {
         LinkedHashMap<String, ReceivingAddress> usedReceivingAddressMap = new LinkedHashMap<>();
         utxos.forEach(
                 utxo -> usedReceivingAddressMap.putIfAbsent(utxo.address(), buildReceivingAddress(usedReceivingAddressMap, utxo))
         );
-        receivingAddresses.setAll(usedReceivingAddressMap.values());
+        receivingAddresses.addAll(usedReceivingAddressMap.values());
+        return usedReceivingAddressMap.values();
     }
 
     private List<Unspent> getUtxos(List<String> addressList) {
@@ -74,33 +101,11 @@ public class UpdateCurrentWalletTask {
         return utxos;
     }
 
-    private List<String> deriveAddresses() {
-        List<String> addressList = new LinkedList<>();
-        DerivationPath addressPath = FIRST_BIP84_ADDRESS_PATH;
-        for (int i = 0; i < initialAddressToMonitor; i++) {
-            addressList.add(addressGenerator.generate(seed, addressPath));
-            addressPath = addressPath.next();
-        }
-        return addressList;
-    }
-
     public UpdateTask getTask() {
-        UpdateTask task = new UpdateTask();
-        task.setOnScheduled(
-                event -> progressBarController.progressBar.progressProperty().bind(task.progressProperty())
-        );
-        task.setOnSucceeded(event -> {
-            progressBarController.progressBar.progressProperty().unbind();
-            progressBarController.progressBar.progressProperty().setValue(0);
-        });
-        task.setOnCancelled(event -> {
-            progressBarController.progressBar.progressProperty().unbind();
-            progressBarController.progressBar.progressProperty().setValue(0);
-        });
-        return task;
+        return taskBuilder.build(new UpdateTask());
     }
 
-    private class UpdateTask extends Task<Void> {
+    class UpdateTask extends Task<Void> {
         @Override
         protected Void call() throws Exception {
             updateProgress(-1, 1);
@@ -118,7 +123,7 @@ public class UpdateCurrentWalletTask {
         if (utxo.confirmations() < address.getConfirmations()) {
             address.setConfirmations(utxo.confirmations());
         }
-        address.setBalance(utxo.amount() + address.getBalance());
+        address.setBalance(utxo.amount().add(new BigDecimal(address.getBalance())).toString());
         return address;
     }
 
@@ -136,4 +141,10 @@ public class UpdateCurrentWalletTask {
         this.currentReceivingAddress = currentReceivingAddress;
         return this;
     }
+
+    @Autowired
+    public void setInitialAddressToMonitor(@Value("${bitcoin.initial_addresses_to_monitor}") int initialAddressToMonitor) {
+        this.initialAddressToMonitor = initialAddressToMonitor;
+    }
+
 }

@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient;
-import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -31,8 +30,8 @@ public class MultiAddressesImporterTest {
         MultiAddressesImporter multiAddressesImporter = new MultiAddressesImporter(bitcoindRpcClient);
         String seed = seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), "");
         String address1 = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
-        String address2 = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next());
-        String address3 = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next().next());
+        String address2 = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1));
+        String address3 = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1).next(1));
         multiAddressesImporter.importMultiAddresses(address1, address2, address3);
         Mockito.verify(bitcoindRpcClient).query("importmulti", expectedRequest(address1, address2, address3));
     }

@@ -28,9 +28,9 @@ public class DerivationPath {
                 .toArray();
     }
 
-    public DerivationPath next() {
+    public DerivationPath next(int n) {
         String[] splitPath = path.split("/");
-        int nextLast = Integer.parseInt(splitPath[splitPath.length - 1]) + 1;
+        int nextLast = Integer.parseInt(splitPath[splitPath.length - 1]) + n;
         splitPath[splitPath.length - 1] = Integer.toString(nextLast);
 
         return new DerivationPath(String.join("/", splitPath));

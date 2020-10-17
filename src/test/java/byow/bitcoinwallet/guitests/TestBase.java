@@ -21,13 +21,13 @@ import org.testfx.framework.junit5.Stop;
 @ActiveProfiles("test")
 abstract public class TestBase {
     @Value("classpath:/fxml/main_window.fxml")
-    private Resource fxml;
+    protected Resource fxml;
 
     @Autowired
     protected ApplicationContext context;
 
     @Autowired
-    private SpringComponentBuilderFactory springComponentBuilderFactory;
+    protected SpringComponentBuilderFactory springComponentBuilderFactory;
 
     protected Stage stage;
 

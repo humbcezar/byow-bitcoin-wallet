@@ -9,6 +9,7 @@ import javafx.application.Platform;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -43,11 +44,14 @@ public class BalanceTableTest extends TestBase {
 
     private String seed;
 
+    private String walletName;
+
     @Override
     @Start
     public void start(Stage stage) throws Exception {
+        walletName = RandomString.make();
         seed = seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), "");
-        Wallet wallet = new Wallet("testwallet2", seed);
+        Wallet wallet = new Wallet(walletName, seed);
         walletRepository.save(wallet);
         super.start(stage);
     }
@@ -61,7 +65,7 @@ public class BalanceTableTest extends TestBase {
 
         robot.clickOn("#wallet");
         robot.moveTo("#load");
-        robot.clickOn("testwallet2");
+        robot.clickOn(walletName);
         robot.clickOn("Receive");
         WaitForAsyncUtils.waitFor(20, TimeUnit.SECONDS, () -> {
             TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
