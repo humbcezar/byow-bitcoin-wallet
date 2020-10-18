@@ -74,12 +74,11 @@ public class UpdateCurrentWalletTask {
     private void updateNextAddress(List<String> addressList, Collection<ReceivingAddress> receivingAddressCollection) {
         String nextAddress = addressList.get(0);
         if (receivingAddressCollection.size() > 0) {
-            String lastUsedAddress = receivingAddressCollection.stream()
-                    .skip(receivingAddressCollection.size() - 1)
-                    .findFirst()
-                    .get()
-                    .getAddress();
-            nextAddress = addressList.get(addressList.indexOf(lastUsedAddress) + 1);
+            nextAddress = addressSequentialGenerator.deriveAddresses(
+                    1,
+                    seed,
+                    currentDerivationPath.next(receivingAddressCollection.size())
+            ).get(0);
         }
         currentReceivingAddress.setReceivingAddress(
                 new ReceivingAddress(BigDecimal.ZERO, 0, nextAddress)
