@@ -19,8 +19,6 @@ import org.testfx.util.WaitForAsyncUtils;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
 
 import java.math.BigDecimal;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -28,8 +26,7 @@ import java.util.stream.IntStream;
 
 import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.testfx.matcher.control.TableViewMatchers.containsRow;
-import static org.testfx.matcher.control.TableViewMatchers.containsRowAtIndex;
+import static org.testfx.matcher.control.TableViewMatchers.*;
 
 public class BalanceTableTest extends TestBase {
 
@@ -64,38 +61,84 @@ public class BalanceTableTest extends TestBase {
 
     @Test
     public void showAddressWithPositiveBalance(FxRobot robot) throws TimeoutException {
-        String toAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
+        showNAddressesWithPositiveBalance(robot, 1);
+    }
+
+    @Test
+    public void showTenAddressWithPositiveBalance(FxRobot robot) throws TimeoutException {
+        showNAddressesWithPositiveBalance(robot, 10);
+    }
+
+    @Test
+    public void showTwentyFiveAddressWithPositiveBalance(FxRobot robot) throws TimeoutException {
+        showNAddressesWithPositiveBalance(robot, 25);
+    }
+
+    @Test
+    public void showThreeAddressesWithPositiveValueWithVaryingTransactions(FxRobot robot) throws TimeoutException {
+        int numberOfReceivingAddresses = 3;
+
+        List<String> addresses = addressSequentialGenerator.deriveAddresses(numberOfReceivingAddresses, seed, FIRST_BIP84_ADDRESS_PATH);
         String fromAddress = bitcoindRpcClient.getNewAddress();
         bitcoindRpcClient.generateToAddress(101, fromAddress);
-        bitcoindRpcClient.sendToAddress(toAddress, BigDecimal.ONE);
+
+        //balance:4, confirmations:11,
+        bitcoindRpcClient.sendToAddress(addresses.get(0), BigDecimal.ONE);
+        bitcoindRpcClient.sendToAddress(addresses.get(0), new BigDecimal(3));
+        bitcoindRpcClient.generateToAddress(1, fromAddress);
+        //balance:10, confirmations:9,
+        bitcoindRpcClient.sendToAddress(addresses.get(1), BigDecimal.ONE);
+        bitcoindRpcClient.generateToAddress(1, fromAddress);
+        bitcoindRpcClient.sendToAddress(addresses.get(1), new BigDecimal(2));
+        bitcoindRpcClient.sendToAddress(addresses.get(1), new BigDecimal(7));
+        //balance:5, confirmations:5,
+        bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE);
+        bitcoindRpcClient.generateToAddress(1, fromAddress);
+        bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE);
+        bitcoindRpcClient.generateToAddress(1, fromAddress);
+        bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE);
+        bitcoindRpcClient.generateToAddress(1, fromAddress);
+        bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE);
+        bitcoindRpcClient.generateToAddress(1, fromAddress);
+        bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE);
+        bitcoindRpcClient.generateToAddress(5, fromAddress);
 
         robot.clickOn("#wallet");
         robot.moveTo("#load");
         robot.clickOn(walletName);
         robot.clickOn("Receive");
-        WaitForAsyncUtils.waitFor(20, TimeUnit.SECONDS, () -> {
+        WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
             TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
-            return !tableView.getItems().isEmpty();
+            return tableView.getItems().size() == numberOfReceivingAddresses;
         });
 
         TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
-        MatcherAssert.assertThat(tableView, containsRowAtIndex(
-                0,
-                toAddress,
-                "1.00000000",
-                0
+
+        MatcherAssert.assertThat(tableView, containsRow(
+                addresses.get(0),
+                "4.00000000",
+                11
             )
         );
+        MatcherAssert.assertThat(tableView, containsRow(
+                addresses.get(1),
+                "10.00000000",
+                9
+            )
+        );
+        MatcherAssert.assertThat(tableView, containsRow(
+                addresses.get(2),
+                "5.00000000",
+                5
+            )
+        );
+        MatcherAssert.assertThat(tableView, hasNumRows(numberOfReceivingAddresses));
         String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
-        String expectedReceinvingAddress = addressGenerator.generate(seed, new DerivationPath("84'/0'/0'/0/1"));
-        assertEquals(expectedReceinvingAddress, address);
+        String expectedReceivingAddress = addressGenerator.generate(seed, new DerivationPath("84'/0'/0'/0/" + numberOfReceivingAddresses));
+        assertEquals(expectedReceivingAddress, address);
     }
 
-    @Test
-    public void showTenAddressWithPositiveBalance(FxRobot robot) throws TimeoutException {
-        //TODO: testar com mais de 20
-        //TODO: testar com multiplas transacoes para mesmos enderecos
-        int numberOfReceivingAddresses = 10;
+    private void showNAddressesWithPositiveBalance(FxRobot robot, int numberOfReceivingAddresses) throws TimeoutException {
         List<String> addresses = addressSequentialGenerator.deriveAddresses(numberOfReceivingAddresses, seed, FIRST_BIP84_ADDRESS_PATH);
         String fromAddress = bitcoindRpcClient.getNewAddress();
         bitcoindRpcClient.generateToAddress(101, fromAddress);
@@ -121,8 +164,11 @@ public class BalanceTableTest extends TestBase {
                 )
             );
         });
+        MatcherAssert.assertThat(tableView, hasNumRows(numberOfReceivingAddresses));
         String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
         String expectedReceivingAddress = addressGenerator.generate(seed, new DerivationPath("84'/0'/0'/0/" + numberOfReceivingAddresses));
         assertEquals(expectedReceivingAddress, address);
     }
+
+    //TODO: testar com floating btc recebidos
 }

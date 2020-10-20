@@ -1,5 +1,6 @@
 package byow.bitcoinwallet.services;
 
+import byow.bitcoinwallet.entities.Wallet;
 import com.blockstream.libwally.Wally;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -27,7 +28,7 @@ public class DefaultAddressGenerator implements AddressGenerator {
     }
 
     private Object buildBIP32RootKey(String seed) {
-        return bip32_key_from_seed(Wally.hex_to_bytes(seed), Wally.BIP32_VER_MAIN_PRIVATE, 0);
+        return bip32_key_from_seed(Wally.hex_to_bytes(seed), BIP32_VER_MAIN_PRIVATE, 0);
     }
 
     @Value("${bitcoin.network.environment}")
