@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<DialogPane headerText="Give your wallet a name and enter valid Mnemonic Seed. Then, annotate the mnemonic seed in a safe place, and click OK." minHeight="-Infinity" minWidth="-Infinity" prefHeight="300.0" prefWidth="450.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="byow.bitcoinwallet.controllers.ImportDialogController">
+    <content>
+        <GridPane>
+            <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            </rowConstraints>
+            <children>
+                <Label text="Wallet Name" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                <TextField fx:id="walletName" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                <Label text="Wallet Password (optional)" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                <TextField fx:id="walletPassword" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                <TextArea fx:id="mnemonicSeed" prefHeight="200.0" prefWidth="200.0" wrapText="true" GridPane.columnSpan="2" GridPane.rowIndex="4" />
+                <Label text="Mnemonic Seed:" GridPane.rowIndex="3" />
+            </children>
+        </GridPane>
+    </content>
+    <padding>
+        <Insets left="10.0" right="10.0" top="10.0" />
+    </padding>
+</DialogPane>

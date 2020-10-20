@@ -19,6 +19,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.Optional;
 
 @Lazy
@@ -33,6 +34,9 @@ public class MainController {
 
     @Value("fxml/create_wallet_dialog.fxml")
     private Resource createWalletDialog;
+
+    @Value("fxml/import_wallet_dialog.fxml")
+    private Resource importWalletDialog;
 
     @Autowired
     private UpdateCurrentWalletTask updateCurrentWalletTask;
@@ -65,18 +69,25 @@ public class MainController {
         Platform.exit();
     }
 
-    public void openCreateWalletDialog() {
+    public void openCreateWalletDialog() throws IOException {
         Dialog<ButtonType> dialog = new Dialog<>();
         FXMLLoader fxmlLoader = new FXMLLoader();
-        initializeFxml(dialog, fxmlLoader);
-        configureDialog(dialog, fxmlLoader);
+        initializeFxml(dialog, fxmlLoader, createWalletDialog.getURL());
+        configureDialog(dialog, fxmlLoader, "Create New Wallet");
     }
 
-    private void configureDialog(Dialog<ButtonType> dialog, FXMLLoader fxmlLoader) {
-        dialog.setTitle("Create New Wallet");
+    public void openImportWalletDialog() throws IOException {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        FXMLLoader fxmlLoader = new FXMLLoader();
+        initializeFxml(dialog, fxmlLoader, importWalletDialog.getURL());
+        configureDialog(dialog, fxmlLoader, "Import Wallet");
+    }
+
+    private void configureDialog(Dialog<ButtonType> dialog, FXMLLoader fxmlLoader, String dialogTitle) {
+        dialog.setTitle(dialogTitle);
         dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
-        CreateWalletDialogController controller = fxmlLoader.getController();
+        GenerateWalletDialogController controller = fxmlLoader.getController();
         dialog.getDialogPane()
             .lookupButton(ButtonType.OK)
             .disableProperty()
@@ -85,12 +96,12 @@ public class MainController {
         showDialog(dialog, controller);
     }
 
-    private void showDialog(Dialog<ButtonType> dialog, CreateWalletDialogController controller) {
+    private void showDialog(Dialog<ButtonType> dialog, GenerateWalletDialogController controller) {
         Optional<ButtonType> result = dialog.showAndWait();
         createWallet(controller, result);
     }
 
-    private void createWallet(CreateWalletDialogController controller, Optional<ButtonType> result) {
+    private void createWallet(GenerateWalletDialogController controller, Optional<ButtonType> result) {
         if (result.isPresent() && result.get() == ButtonType.OK) {
             try {
                 controller.createWallet();
@@ -103,11 +114,11 @@ public class MainController {
         }
     }
 
-    private void initializeFxml(Dialog<ButtonType> dialog, FXMLLoader fxmlLoader) {
+    private void initializeFxml(Dialog<ButtonType> dialog, FXMLLoader fxmlLoader, URL resourceUrl) {
         dialog.initOwner(borderPane.getScene().getWindow());
         fxmlLoader.setControllerFactory(context::getBean);
         try {
-            fxmlLoader.setLocation(createWalletDialog.getURL());
+            fxmlLoader.setLocation(resourceUrl);
             dialog.getDialogPane().setContent(fxmlLoader.load());
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -117,5 +128,4 @@ public class MainController {
     public Menu getLoad() {
         return load;
     }
-
 }

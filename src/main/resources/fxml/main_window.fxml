@@ -18,7 +18,8 @@
             <Menu fx:id="wallet" mnemonicParsing="false" text="Wallet">
               <items>
                 <MenuItem fx:id="new" mnemonicParsing="false" onAction="#openCreateWalletDialog" text="New" />
-                  <Menu fx:id="load" mnemonicParsing="false" text="Load" />
+                <MenuItem fx:id="import" mnemonicParsing="false" onAction="#openImportWalletDialog" text="Import" />
+                <Menu fx:id="load" mnemonicParsing="false" text="Load" />
               </items>
             </Menu>
         </menus>
