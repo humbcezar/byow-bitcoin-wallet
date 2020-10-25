@@ -73,6 +73,8 @@ public class MainController {
     }
 
     public void exit() {
+        transactionTask.close();
+        updateCurrentWalletTask.cancel();
         Platform.exit();
     }
 

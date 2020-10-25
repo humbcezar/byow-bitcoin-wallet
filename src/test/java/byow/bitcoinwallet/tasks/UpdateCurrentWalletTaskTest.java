@@ -78,8 +78,7 @@ public class UpdateCurrentWalletTaskTest {
                 addressSequentialGenerator,
                 bitcoindRpcClient,
                 taskBuilder,
-                currentReceivingAddressesManager,
-                nextReceivingAddress
+                currentReceivingAddressesManager
         );
     }
 

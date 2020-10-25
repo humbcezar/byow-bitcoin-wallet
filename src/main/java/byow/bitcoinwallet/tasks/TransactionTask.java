@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.zeromq.SocketType;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
+import org.zeromq.ZMQ.Socket;
 import wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.RawTransaction;
 import wf.bitcoin.krotjson.HexCoder;
@@ -27,19 +28,19 @@ public class TransactionTask {
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
 
+    private Socket subscriber;
+
     private TxTask currentTask;
 
     public TxTask getTask() {
-        currentTask = new TxTask();
-        return currentTask;
+        return new TxTask();
     }
 
     class TxTask extends Task<Void> {
         @Override
         protected Void call() throws Exception {
-            ZMQ.Socket subscriber = zContext.createSocket(SocketType.SUB);
+            subscriber = zContext.createSocket(SocketType.SUB);
             subscriber.connect("tcp://127.0.0.1:29000");
-            subscriber.subscribe("rawtx");
 
             while (!Thread.currentThread().isInterrupted()) {
                 String topic = subscriber.recvStr();
@@ -56,8 +57,21 @@ public class TransactionTask {
         }
     }
 
-    public TxTask getCurrentTask() {
-        return currentTask;
+    public void unsubscribe() {
+        subscriber.unsubscribe("rawtx");
     }
 
+    public void subscribe() {
+        subscriber.subscribe("rawtx");
+    }
+
+    public void close() {
+        if (subscriber != null) {
+            subscriber.unsubscribe("rawtx");
+            subscriber.close();
+        }
+        if (currentTask != null) {
+            currentTask.cancel();
+        }
+    }
 }

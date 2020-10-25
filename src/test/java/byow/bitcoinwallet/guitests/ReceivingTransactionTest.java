@@ -1,7 +1,9 @@
 package byow.bitcoinwallet.guitests;
 
-import byow.bitcoinwallet.entities.ReceivingAddress;
+import byow.bitcoinwallet.services.AddressSequentialGenerator;
+import byow.bitcoinwallet.services.SeedGenerator;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.hamcrest.MatcherAssert;
@@ -16,12 +18,20 @@ import java.math.BigDecimal;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.testfx.matcher.control.TableViewMatchers.containsRow;
 import static org.testfx.matcher.control.TableViewMatchers.hasNumRows;
 
 public class ReceivingTransactionTest extends TestBase {
     @Autowired
     private BitcoindRpcClient bitcoindRpcClient;
+
+    @Autowired
+    private SeedGenerator seedGenerator;
+
+    @Autowired
+    private AddressSequentialGenerator addressSequentialGenerator;
 
     @Override
     @Start
@@ -36,6 +46,7 @@ public class ReceivingTransactionTest extends TestBase {
         robot.clickOn("#walletName");
         robot.write("Receive tx wallet");
         robot.clickOn("#create");
+        String mnemonicSeed = robot.lookup("#mnemonicSeed").queryAs(TextArea.class).getText();
         robot.clickOn("OK");
         robot.clickOn("Receive");
         WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
@@ -57,5 +68,12 @@ public class ReceivingTransactionTest extends TestBase {
             )
         );
         MatcherAssert.assertThat(tableView, hasNumRows(1));
+
+        String seed = seedGenerator.generateSeed(mnemonicSeed,"");
+        String expectedNextAddress = addressSequentialGenerator
+                .deriveAddresses(1, seed, FIRST_BIP84_ADDRESS_PATH.next(1))
+                .get(0);
+        String nextAddress = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+        assertEquals(expectedNextAddress, nextAddress);
     }
 }

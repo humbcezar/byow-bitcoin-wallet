@@ -1,10 +1,7 @@
 package byow.bitcoinwallet.tasks;
 
-import byow.bitcoinwallet.entities.NextReceivingAddress;
-import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.services.AddressSequentialGenerator;
 import byow.bitcoinwallet.services.CurrentReceivingAddressesManager;
-import byow.bitcoinwallet.services.DerivationPath;
 import byow.bitcoinwallet.services.MultiAddressesImporter;
 import javafx.concurrent.Task;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,10 +11,7 @@ import org.springframework.stereotype.Component;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Unspent;
 
-import java.math.BigDecimal;
 import java.util.List;
-
-import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
 
 @Lazy
 @Component
@@ -36,9 +30,7 @@ public class UpdateCurrentWalletTask {
 
     private String seed;
 
-    private NextReceivingAddress nextReceivingAddress;
-
-    private DerivationPath currentDerivationPath = FIRST_BIP84_ADDRESS_PATH;
+    private UpdateTask currentTask;
 
     @Autowired
     public UpdateCurrentWalletTask(
@@ -46,54 +38,35 @@ public class UpdateCurrentWalletTask {
             AddressSequentialGenerator addressSequentialGenerator,
             BitcoindRpcClient bitcoindRpcClient,
             UpdateCurrentWalletTaskBuilder taskBuilder,
-            CurrentReceivingAddressesManager currentReceivingAddressesManager,
-            NextReceivingAddress nextReceivingAddress
+            CurrentReceivingAddressesManager currentReceivingAddressesManager
     ) {
         this.multiAddressesImporter = multiAddressesImporter;
         this.addressSequentialGenerator = addressSequentialGenerator;
         this.bitcoindRpcClient = bitcoindRpcClient;
         this.taskBuilder = taskBuilder;
         this.currentReceivingAddressesManager = currentReceivingAddressesManager;
-        this.nextReceivingAddress = nextReceivingAddress;
     }
 
     public void update() {
-        nextReceivingAddress.setReceivingAddress(
-            new ReceivingAddress(BigDecimal.ZERO, 0, "")
-        );
         List<String> addressList = initializeAddresses();
         List<Unspent> utxos = getUtxos(addressList);
         int updatedAddressesCount = currentReceivingAddressesManager.updateReceivingAddresses(utxos);
         if (updatedAddressesCount >= initialAddressToMonitor) {
-            currentDerivationPath = currentDerivationPath.next(initialAddressToMonitor);
+            currentReceivingAddressesManager.setNextCurrentDerivationPath(initialAddressToMonitor);
             update();
             return;
         }
-        updateNextAddress(addressList, updatedAddressesCount);
+        currentReceivingAddressesManager.updateNextAddress(addressList.get(0), updatedAddressesCount, seed);
     }
 
     private List<String> initializeAddresses() {
         List<String> addressList = addressSequentialGenerator.deriveAddresses(
             initialAddressToMonitor,
             seed,
-            currentDerivationPath
+            currentReceivingAddressesManager.getCurrentDerivationPath()
         );
         currentReceivingAddressesManager.initializeReceivingAddresses(addressList);
         return addressList;
-    }
-
-    private void updateNextAddress(List<String> addressList, int updatedAddressesCount) {
-        String nextAddress = addressList.get(0);
-        if (updatedAddressesCount > 0) {
-            nextAddress = addressSequentialGenerator.deriveAddresses(
-                    1,
-                    seed,
-                    currentDerivationPath.next(updatedAddressesCount)
-            ).get(0);
-        }
-        nextReceivingAddress.setReceivingAddress(
-            new ReceivingAddress(BigDecimal.ZERO, 0, nextAddress)
-        );
     }
 
     private List<Unspent> getUtxos(List<String> addressList) {
@@ -102,7 +75,14 @@ public class UpdateCurrentWalletTask {
     }
 
     public UpdateTask getTask() {
-        return taskBuilder.build(new UpdateTask());
+        currentTask = taskBuilder.build(new UpdateTask());
+        return currentTask;
+    }
+
+    public void cancel() {
+        if (currentTask != null) {
+            currentTask.cancel();
+        }
     }
 
     class UpdateTask extends Task<Void> {

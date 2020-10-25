@@ -12,6 +12,9 @@ public class UpdateCurrentWalletTaskBuilder {
     @Autowired
     private ProgressBarController progressBarController;
 
+    @Autowired
+    private TransactionTask transactionTask;
+
     public UpdateTask build(UpdateTask task) {
         task.setOnScheduled(
                 event -> progressBarController.progressBar.progressProperty().bind(task.progressProperty())
@@ -19,10 +22,12 @@ public class UpdateCurrentWalletTaskBuilder {
         task.setOnSucceeded(event -> {
             progressBarController.progressBar.progressProperty().unbind();
             progressBarController.progressBar.progressProperty().setValue(0);
+            transactionTask.subscribe();
         });
         task.setOnCancelled(event -> {
             progressBarController.progressBar.progressProperty().unbind();
             progressBarController.progressBar.progressProperty().setValue(0);
+            transactionTask.unsubscribe();
         });
         return task;
     }

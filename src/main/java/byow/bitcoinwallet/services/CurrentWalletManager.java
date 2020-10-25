@@ -3,7 +3,6 @@ package byow.bitcoinwallet.services;
 import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.tasks.UpdateCurrentWalletTask;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.concurrent.Task;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -22,18 +21,13 @@ public class CurrentWalletManager {
 
     private final SimpleStringProperty walletName = new SimpleStringProperty();
 
-    private Task<Void> task;
-
     public void updateCurrentWallet(Wallet currentWallet) {
         this.currentWallet = currentWallet;
         walletName.setValue(currentWallet.getName());
         currentReceivingAddressesManager.clear();
 
-        if (task != null) {
-            task.cancel();
-        }
-        task = updateCurrentWalletTask.setSeed(currentWallet.getSeed()).getTask();
-        new Thread(task).start();
+        updateCurrentWalletTask.cancel();
+        new Thread(updateCurrentWalletTask.setSeed(currentWallet.getSeed()).getTask()).start();
     }
 
     public String getWalletName() {
@@ -42,6 +36,10 @@ public class CurrentWalletManager {
 
     public SimpleStringProperty walletNameProperty() {
         return walletName;
+    }
+
+    public Wallet getCurrentWallet() {
+        return currentWallet;
     }
 
 }
