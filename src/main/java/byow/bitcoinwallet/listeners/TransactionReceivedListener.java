@@ -32,7 +32,7 @@ public class TransactionReceivedListener implements ApplicationListener<Transact
                         .filter(address -> currentReceivingAddressesManager.contains(address))
                         .map(address -> currentReceivingAddressesManager.get(address))
                         .forEach(receivingAddress -> {
-                            bitcoindRpcClient.listUnspent(0, 6, receivingAddress.getAddress())
+                            bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, receivingAddress.getAddress())
                                 .stream()
                                 .map(BitcoindRpcClient.TxOutput::amount)
                                 .reduce(BigDecimal::add)
