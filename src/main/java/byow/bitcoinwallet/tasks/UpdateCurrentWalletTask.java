@@ -1,11 +1,11 @@
 package byow.bitcoinwallet.tasks;
 
-import byow.bitcoinwallet.entities.CurrentReceivingAddress;
+import byow.bitcoinwallet.entities.NextReceivingAddress;
 import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.services.AddressSequentialGenerator;
+import byow.bitcoinwallet.services.CurrentReceivingAddressesManager;
 import byow.bitcoinwallet.services.DerivationPath;
 import byow.bitcoinwallet.services.MultiAddressesImporter;
-import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,8 +15,6 @@ import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Unspent;
 
 import java.math.BigDecimal;
-import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
@@ -34,11 +32,11 @@ public class UpdateCurrentWalletTask {
 
     private UpdateCurrentWalletTaskBuilder taskBuilder;
 
+    private CurrentReceivingAddressesManager currentReceivingAddressesManager;
+
     private String seed;
 
-    private ObservableList<ReceivingAddress> receivingAddresses;
-
-    private CurrentReceivingAddress currentReceivingAddress;
+    private NextReceivingAddress nextReceivingAddress;
 
     private DerivationPath currentDerivationPath = FIRST_BIP84_ADDRESS_PATH;
 
@@ -47,57 +45,60 @@ public class UpdateCurrentWalletTask {
             MultiAddressesImporter multiAddressesImporter,
             AddressSequentialGenerator addressSequentialGenerator,
             BitcoindRpcClient bitcoindRpcClient,
-            UpdateCurrentWalletTaskBuilder taskBuilder
+            UpdateCurrentWalletTaskBuilder taskBuilder,
+            CurrentReceivingAddressesManager currentReceivingAddressesManager,
+            NextReceivingAddress nextReceivingAddress
     ) {
         this.multiAddressesImporter = multiAddressesImporter;
         this.addressSequentialGenerator = addressSequentialGenerator;
         this.bitcoindRpcClient = bitcoindRpcClient;
         this.taskBuilder = taskBuilder;
+        this.currentReceivingAddressesManager = currentReceivingAddressesManager;
+        this.nextReceivingAddress = nextReceivingAddress;
     }
 
     public void update() {
-        List<String> addressList = addressSequentialGenerator.deriveAddresses(
-                initialAddressToMonitor,
-                seed,
-                currentDerivationPath
+        nextReceivingAddress.setReceivingAddress(
+            new ReceivingAddress(BigDecimal.ZERO, 0, "")
         );
+        List<String> addressList = initializeAddresses();
         List<Unspent> utxos = getUtxos(addressList);
-        Collection<ReceivingAddress> receivingAddressCollection = updateUsedAddresses(utxos);
-        if (receivingAddressCollection.size() >= initialAddressToMonitor) {
+        int updatedAddressesCount = currentReceivingAddressesManager.updateReceivingAddresses(utxos);
+        if (updatedAddressesCount >= initialAddressToMonitor) {
             currentDerivationPath = currentDerivationPath.next(initialAddressToMonitor);
             update();
             return;
         }
-        updateNextAddress(addressList, receivingAddressCollection);
+        updateNextAddress(addressList, updatedAddressesCount);
     }
 
-    private void updateNextAddress(List<String> addressList, Collection<ReceivingAddress> receivingAddressCollection) {
+    private List<String> initializeAddresses() {
+        List<String> addressList = addressSequentialGenerator.deriveAddresses(
+            initialAddressToMonitor,
+            seed,
+            currentDerivationPath
+        );
+        currentReceivingAddressesManager.initializeReceivingAddresses(addressList);
+        return addressList;
+    }
+
+    private void updateNextAddress(List<String> addressList, int updatedAddressesCount) {
         String nextAddress = addressList.get(0);
-        if (receivingAddressCollection.size() > 0) {
+        if (updatedAddressesCount > 0) {
             nextAddress = addressSequentialGenerator.deriveAddresses(
                     1,
                     seed,
-                    currentDerivationPath.next(receivingAddressCollection.size())
+                    currentDerivationPath.next(updatedAddressesCount)
             ).get(0);
         }
-        currentReceivingAddress.setReceivingAddress(
-                new ReceivingAddress(BigDecimal.ZERO, 0, nextAddress)
+        nextReceivingAddress.setReceivingAddress(
+            new ReceivingAddress(BigDecimal.ZERO, 0, nextAddress)
         );
-    }
-
-    private Collection<ReceivingAddress> updateUsedAddresses(List<Unspent> utxos) {
-        LinkedHashMap<String, ReceivingAddress> usedReceivingAddressMap = new LinkedHashMap<>();
-        utxos.forEach(
-                utxo -> usedReceivingAddressMap.putIfAbsent(utxo.address(), buildReceivingAddress(usedReceivingAddressMap, utxo))
-        );
-        receivingAddresses.addAll(usedReceivingAddressMap.values());
-        return usedReceivingAddressMap.values();
     }
 
     private List<Unspent> getUtxos(List<String> addressList) {
         multiAddressesImporter.importMultiAddresses(addressList.toArray(new String[0]));
-        List<Unspent> utxos = bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, addressList.toArray(new String[0]));
-        return utxos;
+        return bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, addressList.toArray(new String[0]));
     }
 
     public UpdateTask getTask() {
@@ -114,30 +115,8 @@ public class UpdateCurrentWalletTask {
         }
     }
 
-    private ReceivingAddress buildReceivingAddress(LinkedHashMap<String, ReceivingAddress> receivingAddresses, Unspent utxo) {
-        ReceivingAddress address = receivingAddresses.getOrDefault(utxo.address(), null);
-        if (address == null) {
-            return new ReceivingAddress(utxo.amount(), utxo.confirmations(), utxo.address());
-        }
-        if (utxo.confirmations() < address.getConfirmations()) {
-            address.setConfirmations(utxo.confirmations());
-        }
-        address.setBalance(utxo.amount().add(new BigDecimal(address.getBalance())).toString());
-        return address;
-    }
-
     public UpdateCurrentWalletTask setSeed(String seed) {
         this.seed = seed;
-        return this;
-    }
-
-    public UpdateCurrentWalletTask setReceivingAddresses(ObservableList<ReceivingAddress> receivingAddresses) {
-        this.receivingAddresses = receivingAddresses;
-        return this;
-    }
-
-    public UpdateCurrentWalletTask setCurrentReceivingAddress(CurrentReceivingAddress currentReceivingAddress) {
-        this.currentReceivingAddress = currentReceivingAddress;
         return this;
     }
 
@@ -145,5 +124,4 @@ public class UpdateCurrentWalletTask {
     public void setInitialAddressToMonitor(@Value("${bitcoin.initial_addresses_to_monitor}") int initialAddressToMonitor) {
         this.initialAddressToMonitor = initialAddressToMonitor;
     }
-
 }

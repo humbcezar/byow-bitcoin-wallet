@@ -30,6 +30,8 @@ import static org.testfx.matcher.control.TableViewMatchers.*;
 
 public class BalanceTableTest extends TestBase {
 
+    public static final int TIMEOUT = 40;
+
     @Autowired
     private BitcoindRpcClient bitcoindRpcClient;
 
@@ -80,7 +82,6 @@ public class BalanceTableTest extends TestBase {
 
         List<String> addresses = addressSequentialGenerator.deriveAddresses(numberOfReceivingAddresses, seed, FIRST_BIP84_ADDRESS_PATH);
         String fromAddress = bitcoindRpcClient.getNewAddress();
-        bitcoindRpcClient.generateToAddress(101, fromAddress);
 
         //balance:4, confirmations:11,
         bitcoindRpcClient.sendToAddress(addresses.get(0), BigDecimal.ONE);
@@ -107,7 +108,7 @@ public class BalanceTableTest extends TestBase {
         robot.moveTo("#load");
         robot.clickOn(walletName);
         robot.clickOn("Receive");
-        WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
+        WaitForAsyncUtils.waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
             TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
             return tableView.getItems().size() == numberOfReceivingAddresses;
         });
@@ -141,7 +142,6 @@ public class BalanceTableTest extends TestBase {
     private void showNAddressesWithPositiveBalance(FxRobot robot, int numberOfReceivingAddresses) throws TimeoutException {
         List<String> addresses = addressSequentialGenerator.deriveAddresses(numberOfReceivingAddresses, seed, FIRST_BIP84_ADDRESS_PATH);
         String fromAddress = bitcoindRpcClient.getNewAddress();
-        bitcoindRpcClient.generateToAddress(101, fromAddress);
 
         addresses.forEach(address -> bitcoindRpcClient.sendToAddress(address, BigDecimal.ONE));
 
@@ -149,7 +149,7 @@ public class BalanceTableTest extends TestBase {
         robot.moveTo("#load");
         robot.clickOn(walletName);
         robot.clickOn("Receive");
-        WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
+        WaitForAsyncUtils.waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
             TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
             return tableView.getItems().size() == numberOfReceivingAddresses;
         });

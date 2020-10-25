@@ -7,6 +7,7 @@ import javafx.util.converter.BigDecimalStringConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.zeromq.ZContext;
 import wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
 
@@ -36,5 +37,10 @@ public class ByowApplication {
     @Bean
     public BigDecimalStringConverter bigDecimalStringConverter() {
         return new BigDecimalStringConverter();
+    }
+
+    @Bean
+    public ZContext zContext() {
+        return new ZContext();
     }
 }

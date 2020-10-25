@@ -1,8 +1,10 @@
 package byow.bitcoinwallet.entities;
 
 import javafx.beans.value.ObservableValueBase;
+import org.springframework.stereotype.Component;
 
-public class CurrentReceivingAddress extends ObservableValueBase<ReceivingAddress> {
+@Component
+public class NextReceivingAddress extends ObservableValueBase<ReceivingAddress> {
     private ReceivingAddress receivingAddress;
 
     public void setReceivingAddress(ReceivingAddress receivingAddress) {

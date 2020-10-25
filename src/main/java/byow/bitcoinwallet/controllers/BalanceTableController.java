@@ -1,9 +1,10 @@
 package byow.bitcoinwallet.controllers;
 
 import byow.bitcoinwallet.entities.ReceivingAddress;
+import byow.bitcoinwallet.services.CurrentReceivingAddressesManager;
 import byow.bitcoinwallet.services.CurrentWalletManager;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -36,25 +37,29 @@ public class BalanceTableController extends TableView<ReceivingAddress> implemen
 
     private ApplicationContext context;
 
-    private CurrentWalletManager currentWalletManager;
+    private CurrentReceivingAddressesManager currentReceivingAddressesManager;
 
     @Autowired
     public BalanceTableController(
             @Value("classpath:/fxml/balance_table.fxml") Resource fxml,
             @Autowired ApplicationContext context,
-            @Autowired CurrentWalletManager currentWalletManager
+            @Autowired CurrentReceivingAddressesManager currentReceivingAddressesManager
     ) throws IOException {
         this.fxml = fxml;
         this.context = context;
-        this.currentWalletManager = currentWalletManager;
+        this.currentReceivingAddressesManager = currentReceivingAddressesManager;
         construct(this.fxml, this.context);
     }
 
     public void initialize() {
-        balanceTable.setItems(currentWalletManager.getReceivingAddresses());
+        balanceTable.setItems(
+            new FilteredList<>(
+                currentReceivingAddressesManager.getReceivingAddresses(),
+                receivingAddress -> new BigDecimal(receivingAddress.getBalance()).compareTo(BigDecimal.ZERO) > 0
+            )
+        );
         columnAddress.setCellValueFactory(new PropertyValueFactory<>("address"));
         columnBalance.setCellValueFactory(new PropertyValueFactory<>("balance"));
         columnConfirmations.setCellValueFactory(new PropertyValueFactory<>("confirmations"));
     }
-
 }

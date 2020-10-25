@@ -2,6 +2,7 @@ package byow.bitcoinwallet.controllers;
 
 import byow.bitcoinwallet.services.CurrentWalletManager;
 import byow.bitcoinwallet.services.WalletsMenuManager;
+import byow.bitcoinwallet.tasks.TransactionTask;
 import byow.bitcoinwallet.tasks.UpdateCurrentWalletTask;
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
@@ -50,6 +51,9 @@ public class MainController {
     @Autowired
     private CurrentWalletManager currentWalletManager;
 
+    @Autowired
+    private TransactionTask transactionTask;
+
     @FXML
     public void initialize() {
         walletsMenuManager.getMenuItems().addListener(
@@ -63,6 +67,9 @@ public class MainController {
             })
         );
         walletsMenuManager.load();
+        Thread thread = new Thread(transactionTask.getTask());
+        thread.setDaemon(true);
+        thread.start();
     }
 
     public void exit() {

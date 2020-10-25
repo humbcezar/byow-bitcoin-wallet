@@ -4,8 +4,10 @@ import javafx.beans.property.*;
 import javafx.util.converter.BigDecimalStringConverter;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 public class ReceivingAddress {
+
     private BigDecimalStringConverter bigDecimalStringConverter = new BigDecimalStringConverter();
 
     private StringProperty balance = new SimpleStringProperty();
@@ -63,5 +65,18 @@ public class ReceivingAddress {
                 ", confirmations=" + confirmations +
                 ", address='" + address + '\'' +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ReceivingAddress that = (ReceivingAddress) o;
+        return getAddress().equals(that.getAddress());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getAddress());
     }
 }

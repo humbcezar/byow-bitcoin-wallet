@@ -8,6 +8,18 @@
         <version>2.3.3.RELEASE</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
+    <repositories>
+        <repository>
+            <id>default</id>
+            <name>default</name>
+            <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
+        <repository>
+            <id>spring-milestone</id>
+            <name>spring-milestone</name>
+            <url>https://repo.spring.io/milestone</url>
+        </repository>
+    </repositories>
 
     <groupId>byow.bitcoin-wallet</groupId>
     <artifactId>byow-bitcoin-wallet</artifactId>
@@ -104,5 +116,11 @@
             <artifactId>bitcoin-rpc-client</artifactId>
             <version>1.1.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.zeromq</groupId>
+            <artifactId>jeromq</artifactId>
+            <version>0.5.2</version>
+        </dependency>
+
     </dependencies>
 </project>
