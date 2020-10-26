@@ -6,6 +6,8 @@ import wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient;
 
 import java.util.*;
 
+import static java.util.Objects.isNull;
+
 @Component
 public class MultiAddressesImporter {
     private BitcoinJSONRPCClient bitcoindRpcClient;
@@ -30,7 +32,7 @@ public class MultiAddressesImporter {
                                     put("address", address);
                                 }
                             });
-                            put("timestamp", walletCreationDate.toInstant().getEpochSecond());
+                            put("timestamp", isNull(walletCreationDate) ? 0 : walletCreationDate.toInstant().getEpochSecond());
                             put("watchonly", true);
                         }
                     });

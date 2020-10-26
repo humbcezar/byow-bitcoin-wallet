@@ -35,8 +35,12 @@ public class WalletCreator {
     }
 
     public Wallet create(String walletName, String mnemonicSeed, String password) {
+        return create(walletName, mnemonicSeed, password, new Date());
+    }
+
+    public Wallet create(String walletName, String mnemonicSeed, String password, Date walletCreationDate) {
         Wallet wallet = new Wallet(walletName, seedGenerator.generateSeed(mnemonicSeed, password));
-        wallet.setCreatedAt(new Date());
+        wallet.setCreatedAt(walletCreationDate);
         walletRepository.save(wallet);
         this.applicationEventPublisher.publishEvent(new WalletCreatedEvent(this, wallet));
         return wallet;

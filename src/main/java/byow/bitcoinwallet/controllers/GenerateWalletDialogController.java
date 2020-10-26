@@ -18,7 +18,7 @@ public abstract class GenerateWalletDialogController {
     public TextField walletPassword;
 
     @Autowired
-    private WalletCreator walletCreator;
+    protected WalletCreator walletCreator;
 
     protected BooleanBinding allInputsAreFull;
 
