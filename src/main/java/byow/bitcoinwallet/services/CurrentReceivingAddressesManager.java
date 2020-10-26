@@ -7,27 +7,46 @@ import javafx.beans.Observable;
 import javafx.collections.ObservableList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Unspent;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
 
 @Component
 public class CurrentReceivingAddressesManager {
-    @Autowired
+
     private AddressSequentialGenerator addressSequentialGenerator;
-    @Autowired
+
     private NextReceivingAddress nextReceivingAddress;
 
+    private MultiAddressesImporter multiAddressesImporter;
+
+    private BitcoindRpcClient bitcoindRpcClient;
+
     private final ObservableList<ReceivingAddress> receivingAddresses = new ObservableListWrapper<>(new LinkedList<>(),
-        receivingAddress -> new Observable[]{receivingAddress.balanceProperty(), receivingAddress.confirmationsProperty()}
+            receivingAddress -> new Observable[]{receivingAddress.balanceProperty(), receivingAddress.confirmationsProperty()}
     );
 
-    private final LinkedHashMap<String, ReceivingAddress> receivingAddressesMap = new LinkedHashMap<>();
+    private final Map<String, ReceivingAddress> receivingAddressesMap = new ConcurrentHashMap<>();
 
     private DerivationPath currentDerivationPath = FIRST_BIP84_ADDRESS_PATH;
+
+    @Autowired
+    public CurrentReceivingAddressesManager(
+            AddressSequentialGenerator addressSequentialGenerator,
+            NextReceivingAddress nextReceivingAddress,
+            MultiAddressesImporter multiAddressesImporter,
+            BitcoindRpcClient bitcoindRpcClient
+    ) {
+        this.addressSequentialGenerator = addressSequentialGenerator;
+        this.nextReceivingAddress = nextReceivingAddress;
+        this.multiAddressesImporter = multiAddressesImporter;
+        this.bitcoindRpcClient = bitcoindRpcClient;
+    }
 
     public void clear() {
         receivingAddresses.clear();
@@ -46,10 +65,16 @@ public class CurrentReceivingAddressesManager {
         });
     }
 
-    public int updateReceivingAddresses(List<Unspent> utxos) {
+    public int updateReceivingAddresses(List<String> addressList, Date walletCreationDate) {
+        List<Unspent> utxos = getUtxos(addressList, walletCreationDate);
         Set<ReceivingAddress> changeSet = new HashSet<>();
         utxos.forEach(utxo -> updateReceivingAddress(utxo, changeSet));
         return changeSet.size();
+    }
+
+    private List<Unspent> getUtxos(List<String> addressList, Date walletCreationDate) {
+        multiAddressesImporter.importMultiAddresses(walletCreationDate, addressList.toArray(new String[0]));
+        return bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, addressList.toArray(new String[0]));
     }
 
     private void updateReceivingAddress(Unspent utxo, Set<ReceivingAddress> changeSet) {

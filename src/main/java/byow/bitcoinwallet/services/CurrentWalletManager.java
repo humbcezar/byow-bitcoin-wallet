@@ -27,7 +27,11 @@ public class CurrentWalletManager {
         currentReceivingAddressesManager.clear();
 
         updateCurrentWalletTask.cancel();
-        new Thread(updateCurrentWalletTask.setSeed(currentWallet.getSeed()).getTask()).start();
+        new Thread(
+            updateCurrentWalletTask.setSeed(currentWallet.getSeed())
+                    .setDate(currentWallet.getCreatedAt())
+                    .getTask()
+        ).start();
     }
 
     public String getWalletName() {

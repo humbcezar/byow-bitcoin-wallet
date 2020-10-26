@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -45,10 +46,10 @@ import static org.mockito.Mockito.*;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class UpdateCurrentWalletTaskTest {
 
-    @Mock
+    @MockBean
     private MultiAddressesImporter multiAddressesImporter;
 
-    @Mock
+    @MockBean
     private BitcoindRpcClient bitcoindRpcClient;
 
     @Mock
@@ -74,9 +75,7 @@ public class UpdateCurrentWalletTaskTest {
     void setUp() {
         currentReceivingAddressesManager.clear();
         updateCurrentWalletTask = new UpdateCurrentWalletTask(
-                multiAddressesImporter,
                 addressSequentialGenerator,
-                bitcoindRpcClient,
                 taskBuilder,
                 currentReceivingAddressesManager
         );
@@ -90,10 +89,12 @@ public class UpdateCurrentWalletTaskTest {
         when(bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, expectedAddresses))
                 .thenReturn(new ArrayList<>());
 
-        updateCurrentWalletTask.setInitialAddressToMonitor(20);
-        updateCurrentWalletTask.setSeed(seed).update();
+        Date date = new Date();
 
-        verify(multiAddressesImporter).importMultiAddresses(expectedAddresses);
+        updateCurrentWalletTask.setInitialAddressToMonitor(20);
+        updateCurrentWalletTask.setDate(date).setSeed(seed).update();
+
+        verify(multiAddressesImporter).importMultiAddresses(date, expectedAddresses);
         assertTrue(
              nextReceivingAddress.getValue().getAddress().equals(expectedAddresses[0]) &&
             nextReceivingAddress.getValue().getConfirmations() == 0 &&
@@ -111,10 +112,12 @@ public class UpdateCurrentWalletTaskTest {
         when(bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, expectedAddresses))
                 .thenReturn(unspents);
 
-        updateCurrentWalletTask.setInitialAddressToMonitor(20);
-        updateCurrentWalletTask.setSeed(seed).update();
+        Date date = new Date();
 
-        verify(multiAddressesImporter).importMultiAddresses(expectedAddresses);
+        updateCurrentWalletTask.setInitialAddressToMonitor(20);
+        updateCurrentWalletTask.setDate(date).setSeed(seed).update();
+
+        verify(multiAddressesImporter).importMultiAddresses(date, expectedAddresses);
         assertTrue(
             nextReceivingAddress.getValue().getAddress().equals(expectedAddresses[1]) &&
             nextReceivingAddress.getValue().getConfirmations() == 0 &&
@@ -150,10 +153,12 @@ public class UpdateCurrentWalletTaskTest {
         when(bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, expectedAddresses))
                 .thenReturn(unspents);
 
-        updateCurrentWalletTask.setInitialAddressToMonitor(20);
-        updateCurrentWalletTask.setSeed(seed).update();
+        Date date = new Date();
 
-        verify(multiAddressesImporter).importMultiAddresses(expectedAddresses);
+        updateCurrentWalletTask.setInitialAddressToMonitor(20);
+        updateCurrentWalletTask.setDate(date).setSeed(seed).update();
+
+        verify(multiAddressesImporter).importMultiAddresses(date, expectedAddresses);
         assertTrue(
              nextReceivingAddress.getValue().getAddress().equals(expectedAddresses[5]) &&
             nextReceivingAddress.getValue().getConfirmations() == 0 &&
@@ -192,10 +197,12 @@ public class UpdateCurrentWalletTaskTest {
         when(bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, expectedAddresses))
                 .thenReturn(unspents);
 
-        updateCurrentWalletTask.setInitialAddressToMonitor(20);
-        updateCurrentWalletTask.setSeed(seed).update();
+        Date date = new Date();
 
-        verify(multiAddressesImporter).importMultiAddresses(expectedAddresses);
+        updateCurrentWalletTask.setInitialAddressToMonitor(20);
+        updateCurrentWalletTask.setDate(date).setSeed(seed).update();
+
+        verify(multiAddressesImporter).importMultiAddresses(date, expectedAddresses);
         assertTrue(
              nextReceivingAddress.getValue().getAddress().equals(expectedAddresses[5]) &&
             nextReceivingAddress.getValue().getConfirmations() == 0 &&
@@ -233,15 +240,20 @@ public class UpdateCurrentWalletTaskTest {
         when(bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, expectedAddresses)).thenReturn(unspents);
         when(bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, expectedAddresses2)).thenReturn(new ArrayList<>());
 
+        Date date = new Date();
+
         updateCurrentWalletTask.setInitialAddressToMonitor(20);
-        updateCurrentWalletTask.setSeed(seed).update();
+        updateCurrentWalletTask.setDate(date).setSeed(seed).update();
 
         ArgumentCaptor<String[]> expectedAddressesCaptured = ArgumentCaptor.forClass(String[].class);
-        verify(multiAddressesImporter, times(2)).importMultiAddresses(expectedAddressesCaptured.capture());
+        ArgumentCaptor<Date> expectedDateCaptured = ArgumentCaptor.forClass(Date.class);
+        verify(multiAddressesImporter, times(2)).importMultiAddresses(expectedDateCaptured.capture(), expectedAddressesCaptured.capture());
         List<String[]> allExpectedAddresses = expectedAddressesCaptured.getAllValues();
         assertEquals(40, new HashSet<>(allExpectedAddresses).size());
         assertArrayEquals(allExpectedAddresses.subList(0, 20).toArray(), expectedAddresses);
         assertArrayEquals(allExpectedAddresses.subList(20, 40).toArray(), expectedAddresses2);
+        List<Date> allDateValues = expectedDateCaptured.getAllValues();
+        assertEquals(allDateValues.get(0), date);
 
         assertEquals(40, currentReceivingAddressesManager.getReceivingAddresses().size());
         FilteredList<ReceivingAddress> usedReceivingAddresses = currentReceivingAddressesManager

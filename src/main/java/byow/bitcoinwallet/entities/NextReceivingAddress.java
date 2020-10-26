@@ -7,13 +7,13 @@ import org.springframework.stereotype.Component;
 public class NextReceivingAddress extends ObservableValueBase<ReceivingAddress> {
     private ReceivingAddress receivingAddress;
 
-    public void setReceivingAddress(ReceivingAddress receivingAddress) {
+    public synchronized void setReceivingAddress(ReceivingAddress receivingAddress) {
         this.receivingAddress = receivingAddress;
         this.fireValueChangedEvent();
     }
 
     @Override
-    public ReceivingAddress getValue() {
+    public synchronized ReceivingAddress getValue() {
         return receivingAddress;
     }
 }

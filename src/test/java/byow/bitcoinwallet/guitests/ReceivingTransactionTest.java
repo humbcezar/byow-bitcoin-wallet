@@ -76,4 +76,5 @@ public class ReceivingTransactionTest extends TestBase {
         String nextAddress = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
         assertEquals(expectedNextAddress, nextAddress);
     }
+    //TODO: passar a escutar nextAddress se fora do range (testcase)
 }

@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
+
 @Service
 public class WalletCreator {
     private WalletRepository walletRepository;
@@ -34,6 +36,7 @@ public class WalletCreator {
 
     public Wallet create(String walletName, String mnemonicSeed, String password) {
         Wallet wallet = new Wallet(walletName, seedGenerator.generateSeed(mnemonicSeed, password));
+        wallet.setCreatedAt(new Date());
         walletRepository.save(wallet);
         this.applicationEventPublisher.publishEvent(new WalletCreatedEvent(this, wallet));
         return wallet;

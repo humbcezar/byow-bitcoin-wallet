@@ -7,19 +7,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
-import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
-
-import java.math.BigDecimal;
-import java.util.stream.Stream;
+import java.util.List;
 
 @Component
 @Lazy
 public class TransactionReceivedListener implements ApplicationListener<TransactionReceivedEvent> {
     @Autowired
     private CurrentReceivingAddressesManager currentReceivingAddressesManager;
-
-    @Autowired
-    private BitcoindRpcClient bitcoindRpcClient;
 
     @Autowired
     private CurrentWalletManager currentWalletManager;
@@ -35,18 +29,11 @@ public class TransactionReceivedListener implements ApplicationListener<Transact
                         .addresses()
                         .stream()
                         .filter(address -> currentReceivingAddressesManager.contains(address))
-                        .map(address -> currentReceivingAddressesManager.get(address))
-                        .map(receivingAddress -> {
-                            bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, receivingAddress.getAddress())
-                                .stream()
-                                .map(BitcoindRpcClient.TxOutput::amount)
-                                .reduce(BigDecimal::add)
-                                .ifPresent(sum -> receivingAddress.setBalance(sum.toString()));
-                            int confirmations = event.getRawTransaction().confirmations() == null ? 0
-                                    : event.getRawTransaction().confirmations();
-                            receivingAddress.setConfirmations(confirmations);
-                            return 1;
-                        })
+                        .map(address -> currentReceivingAddressesManager.updateReceivingAddresses(
+                                List.of(address),
+                                currentWalletManager.getCurrentWallet().getCreatedAt()
+                            )
+                        )
                         .reduce(Integer::sum)
                         .ifPresent(sum ->
                             currentReceivingAddressesManager.updateNextAddress(

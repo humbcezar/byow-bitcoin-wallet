@@ -2,15 +2,13 @@ package byow.bitcoinwallet.tasks;
 
 import byow.bitcoinwallet.services.AddressSequentialGenerator;
 import byow.bitcoinwallet.services.CurrentReceivingAddressesManager;
-import byow.bitcoinwallet.services.MultiAddressesImporter;
 import javafx.concurrent.Task;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
-import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
-import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Unspent;
 
+import java.util.Date;
 import java.util.List;
 
 @Lazy
@@ -18,11 +16,7 @@ import java.util.List;
 public class UpdateCurrentWalletTask {
     private int initialAddressToMonitor;
 
-    private MultiAddressesImporter multiAddressesImporter;
-
     private AddressSequentialGenerator addressSequentialGenerator;
-
-    private BitcoindRpcClient bitcoindRpcClient;
 
     private UpdateCurrentWalletTaskBuilder taskBuilder;
 
@@ -32,25 +26,22 @@ public class UpdateCurrentWalletTask {
 
     private UpdateTask currentTask;
 
+    private Date walletCreationDate;
+
     @Autowired
     public UpdateCurrentWalletTask(
-            MultiAddressesImporter multiAddressesImporter,
             AddressSequentialGenerator addressSequentialGenerator,
-            BitcoindRpcClient bitcoindRpcClient,
             UpdateCurrentWalletTaskBuilder taskBuilder,
             CurrentReceivingAddressesManager currentReceivingAddressesManager
     ) {
-        this.multiAddressesImporter = multiAddressesImporter;
         this.addressSequentialGenerator = addressSequentialGenerator;
-        this.bitcoindRpcClient = bitcoindRpcClient;
         this.taskBuilder = taskBuilder;
         this.currentReceivingAddressesManager = currentReceivingAddressesManager;
     }
 
     public void update() {
         List<String> addressList = initializeAddresses();
-        List<Unspent> utxos = getUtxos(addressList);
-        int updatedAddressesCount = currentReceivingAddressesManager.updateReceivingAddresses(utxos);
+        int updatedAddressesCount = currentReceivingAddressesManager.updateReceivingAddresses(addressList, walletCreationDate);
         if (updatedAddressesCount >= initialAddressToMonitor) {
             currentReceivingAddressesManager.setNextCurrentDerivationPath(initialAddressToMonitor);
             update();
@@ -67,11 +58,6 @@ public class UpdateCurrentWalletTask {
         );
         currentReceivingAddressesManager.initializeReceivingAddresses(addressList);
         return addressList;
-    }
-
-    private List<Unspent> getUtxos(List<String> addressList) {
-        multiAddressesImporter.importMultiAddresses(addressList.toArray(new String[0]));
-        return bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, addressList.toArray(new String[0]));
     }
 
     public UpdateTask getTask() {
@@ -97,6 +83,11 @@ public class UpdateCurrentWalletTask {
 
     public UpdateCurrentWalletTask setSeed(String seed) {
         this.seed = seed;
+        return this;
+    }
+
+    public UpdateCurrentWalletTask setDate(Date createdAt) {
+        walletCreationDate = createdAt;
         return this;
     }
 

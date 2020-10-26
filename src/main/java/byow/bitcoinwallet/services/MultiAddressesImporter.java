@@ -4,10 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 
 @Component
 public class MultiAddressesImporter {
@@ -18,11 +15,11 @@ public class MultiAddressesImporter {
         this.bitcoindRpcClient = bitcoindRpcClient;
     }
 
-    public void importMultiAddresses(String... addresses) {
-        bitcoindRpcClient.query("importmulti", makeRequest(addresses));
+    public void importMultiAddresses(Date walletCreationDate, String... addresses) {
+        bitcoindRpcClient.query("importmulti", makeRequest(walletCreationDate, addresses));
     }
 
-    private List<Object> makeRequest(String[] addresses) {
+    private List<Object> makeRequest(Date walletCreationDate, String[] addresses) {
         return new ArrayList<>(){
             {
                 Arrays.stream(addresses).forEach(address -> {
@@ -33,7 +30,7 @@ public class MultiAddressesImporter {
                                     put("address", address);
                                 }
                             });
-                            put("timestamp", 0);
+                            put("timestamp", walletCreationDate.toInstant().getEpochSecond());
                             put("watchonly", true);
                         }
                     });

@@ -1,6 +1,9 @@
 package byow.bitcoinwallet.entities;
 
+import org.springframework.data.annotation.CreatedDate;
+
 import javax.persistence.*;
+import java.util.Date;
 
 @Entity
 @Table(name = "wallet")
@@ -16,6 +19,10 @@ public class Wallet {
 
     @Column(name = "seed",  unique = true, nullable = false)
     private String seed;
+
+    @Column(name = "created_at")
+    @CreatedDate
+    private Date createdAt;
 
     public Wallet(String name, String seed) {
         this.name = name;
@@ -46,6 +53,14 @@ public class Wallet {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
     }
 
 }

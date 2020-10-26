@@ -1,10 +1,8 @@
 package byow.bitcoinwallet.guitests;
 
-import byow.bitcoinwallet.services.DefaultAddressGenerator;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;

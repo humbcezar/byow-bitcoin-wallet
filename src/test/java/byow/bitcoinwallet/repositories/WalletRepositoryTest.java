@@ -7,6 +7,8 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.util.Date;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @ActiveProfiles("test")
@@ -18,10 +20,12 @@ public class WalletRepositoryTest {
     @Test
     public void save() {
         Wallet wallet = new Wallet("name", "seed");
+        wallet.setCreatedAt(new Date());
         walletRepository.save(wallet);
         Wallet wallet2 = walletRepository.findByName("name");
         assertEquals(wallet.getSeed(), wallet2.getSeed());
         assertEquals(wallet.getName(), wallet2.getName());
+        assertNotNull(wallet2.getCreatedAt());
     }
 
     @Test

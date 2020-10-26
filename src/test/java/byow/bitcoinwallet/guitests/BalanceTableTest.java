@@ -19,6 +19,7 @@ import org.testfx.util.WaitForAsyncUtils;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -57,6 +58,7 @@ public class BalanceTableTest extends TestBase {
         walletName = RandomString.make();
         seed = seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), "");
         Wallet wallet = new Wallet(walletName, seed);
+        wallet.setCreatedAt(new Date());
         walletRepository.save(wallet);
         super.start(stage);
     }

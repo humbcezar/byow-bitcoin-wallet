@@ -8,6 +8,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -32,11 +33,12 @@ public class MultiAddressesImporterTest {
         String address1 = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         String address2 = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1));
         String address3 = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1).next(1));
-        multiAddressesImporter.importMultiAddresses(address1, address2, address3);
-        Mockito.verify(bitcoindRpcClient).query("importmulti", expectedRequest(address1, address2, address3));
+        Date date = new Date();
+        multiAddressesImporter.importMultiAddresses(date, address1, address2, address3);
+        Mockito.verify(bitcoindRpcClient).query("importmulti", expectedRequest(date, address1, address2, address3));
     }
 
-    private List<Object> expectedRequest(String... addresses) {
+    private List<Object> expectedRequest(Date date, String... addresses) {
         return new ArrayList<>(){
             {
                 add(new LinkedHashMap<>(){
@@ -46,7 +48,7 @@ public class MultiAddressesImporterTest {
                                 put("address", addresses[0]);
                             }
                         });
-                        put("timestamp", 0);
+                        put("timestamp", date.toInstant().getEpochSecond());
                         put("watchonly", true);
                     }
                 });
@@ -57,7 +59,7 @@ public class MultiAddressesImporterTest {
                                 put("address", addresses[1]);
                             }
                         });
-                        put("timestamp", 0);
+                        put("timestamp", date.toInstant().getEpochSecond());
                         put("watchonly", true);
                     }
                 });
@@ -68,7 +70,7 @@ public class MultiAddressesImporterTest {
                                 put("address", addresses[2]);
                             }
                         });
-                        put("timestamp", 0);
+                        put("timestamp", date.toInstant().getEpochSecond());
                         put("watchonly", true);
                     }
                 });
