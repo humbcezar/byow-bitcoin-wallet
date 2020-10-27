@@ -33,7 +33,9 @@ public class TransactionTask {
     private TxTask currentTask;
 
     public TxTask getTask() {
-        return new TxTask();
+        TxTask txTask = new TxTask();
+        txTask.setOnFailed(event -> txTask.getException().printStackTrace());
+        return txTask;
     }
 
     class TxTask extends Task<Void> {
@@ -43,31 +45,31 @@ public class TransactionTask {
             subscriber.connect("tcp://127.0.0.1:29000");
 
             while (!Thread.currentThread().isInterrupted()) {
-                String topic = subscriber.recvStr();
+                String topic = subscriber.recvStr(ZMQ.DONTWAIT);
+                if (topic == null || !topic.equals("rawtx")) {
+                    Thread.sleep(1000);
+                    continue;
+                }
                 byte[] contents = subscriber.recv();
 
-                switch (topic) {
-                    case "rawtx" -> {
-                        RawTransaction rawTransaction = bitcoindRpcClient.decodeRawTransaction(HexCoder.encode(contents));
-                        applicationEventPublisher.publishEvent(new TransactionReceivedEvent(this, rawTransaction));
-                    }
-                }
+                RawTransaction rawTransaction = bitcoindRpcClient.decodeRawTransaction(HexCoder.encode(contents));
+                logger.info(rawTransaction.toString());
+                applicationEventPublisher.publishEvent(new TransactionReceivedEvent(this, rawTransaction));
             }
             return null;
         }
     }
 
     public void unsubscribe() {
-        subscriber.unsubscribe("rawtx");
+        subscriber.unsubscribe("rawtx".getBytes());
     }
 
     public void subscribe() {
-        subscriber.subscribe("rawtx");
+        subscriber.subscribe("rawtx".getBytes());
     }
 
     public void close() {
         if (subscriber != null) {
-            subscriber.unsubscribe("rawtx");
             subscriber.close();
         }
         if (currentTask != null) {

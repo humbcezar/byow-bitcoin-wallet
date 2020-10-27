@@ -6,6 +6,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,9 +18,11 @@ import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
 import java.math.BigDecimal;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.IntStream;
 
 import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.util.StringUtils.isEmpty;
 import static org.testfx.matcher.control.TableViewMatchers.containsRow;
 import static org.testfx.matcher.control.TableViewMatchers.hasNumRows;
 
@@ -40,41 +43,72 @@ public class ReceivingTransactionTest extends TestBase {
     }
 
     @Test
-    public void receiveTransaction(FxRobot robot) throws TimeoutException {
+    public void receiveOneTransaction(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = createWallet(robot);
+        receiveNTransactions(robot, mnemonicSeed, 1);
+    }
+
+    @Test
+    public void receiveFiveTransactions(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = createWallet(robot);
+        receiveNTransactions(robot, mnemonicSeed, 5);
+    }
+
+    @Test
+    public void receiveFifteenTransactions(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = createWallet(robot);
+        receiveNTransactions(robot, mnemonicSeed, 15);
+    }
+
+    private void receiveNTransactions(FxRobot robot, String mnemonicSeed, int numberOfTransactions) throws TimeoutException {
+        try {
+            WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
+                TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+                String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+                return !address.isBlank();
+            });
+        } catch (TimeoutException e) {
+            throw new RuntimeException(e);
+        }
+        IntStream.range(0, numberOfTransactions).forEach(i -> {
+            String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+            bitcoindRpcClient.sendToAddress(address, BigDecimal.ONE);
+            try {
+                WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
+                    TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+                    return tableView.getItems().size() == i + 1;
+                });
+            } catch (TimeoutException e) {
+                throw new RuntimeException(e);
+            }
+            TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+            MatcherAssert.assertThat(tableView, containsRow(
+                    address,
+                    "1.00000000",
+                    0
+                )
+            );
+            MatcherAssert.assertThat(tableView, hasNumRows(i + 1));
+
+            String seed = seedGenerator.generateSeed(mnemonicSeed,"");
+            String expectedNextAddress = addressSequentialGenerator
+                    .deriveAddresses(1, seed, FIRST_BIP84_ADDRESS_PATH.next(i + 1))
+                    .get(0);
+            String nextAddress = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+            assertEquals(expectedNextAddress, nextAddress);
+        });
+    }
+
+    private String createWallet(FxRobot robot) {
         robot.clickOn("#wallet");
         robot.clickOn("#new");
         robot.clickOn("#walletName");
-        robot.write("Receive tx wallet");
+        robot.write(RandomString.make());
         robot.clickOn("#create");
         String mnemonicSeed = robot.lookup("#mnemonicSeed").queryAs(TextArea.class).getText();
         robot.clickOn("OK");
         robot.clickOn("Receive");
-        WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
-            TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
-            String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
-            return !address.isBlank();
-        });
-        String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
-        bitcoindRpcClient.sendToAddress(address, BigDecimal.ONE);
-        WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
-            TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
-            return tableView.getItems().size() == 1;
-        });
-        TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
-        MatcherAssert.assertThat(tableView, containsRow(
-                address,
-                "1.00000000",
-                0
-            )
-        );
-        MatcherAssert.assertThat(tableView, hasNumRows(1));
-
-        String seed = seedGenerator.generateSeed(mnemonicSeed,"");
-        String expectedNextAddress = addressSequentialGenerator
-                .deriveAddresses(1, seed, FIRST_BIP84_ADDRESS_PATH.next(1))
-                .get(0);
-        String nextAddress = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
-        assertEquals(expectedNextAddress, nextAddress);
+        return mnemonicSeed;
     }
     //TODO: passar a escutar nextAddress se fora do range (testcase)
 }
