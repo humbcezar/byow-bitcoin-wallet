@@ -5,7 +5,7 @@ import byow.bitcoinwallet.services.WalletsMenuManager;
 import byow.bitcoinwallet.tasks.TransactionTask;
 import byow.bitcoinwallet.tasks.UpdateCurrentWalletTask;
 import javafx.application.Platform;
-import javafx.collections.ListChangeListener;
+import javafx.collections.SetChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
@@ -21,7 +21,12 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Lazy
 @Component
@@ -57,9 +62,14 @@ public class MainController {
     @FXML
     public void initialize() {
         walletsMenuManager.getMenuItems().addListener(
-                (ListChangeListener<MenuItem>) change -> Platform.runLater(
-                        () -> load.getItems().setAll(change.getList())
-                )
+            (SetChangeListener<MenuItem>) change -> Platform.runLater(
+                () -> {
+                    Set<String> menuTexts = load.getItems().stream().map(MenuItem::getText).collect(Collectors.toSet());
+                    if (!menuTexts.contains(change.getElementAdded().getText())) {
+                        load.getItems().addAll(change.getElementAdded());
+                    }
+                }
+            )
         );
         currentWalletManager.walletNameProperty().addListener((observable, oldValue, newValue) -> Platform.runLater(() -> {
                 Stage stage = (Stage) borderPane.getScene().getWindow();
