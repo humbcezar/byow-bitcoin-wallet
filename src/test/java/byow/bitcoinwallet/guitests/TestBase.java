@@ -13,6 +13,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.test.context.ActiveProfiles;
 import org.testfx.framework.junit5.ApplicationExtension;
+import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
+
+import java.math.BigDecimal;
 
 @SpringBootTest
 @ExtendWith(ApplicationExtension.class)
@@ -27,9 +30,13 @@ abstract public class TestBase {
     @Autowired
     protected SpringComponentBuilderFactory springComponentBuilderFactory;
 
+    @Autowired
+    private BitcoindRpcClient bitcoindRpcClient;
+
     protected Stage stage;
 
     public void start (Stage stage) throws Exception {
+        createBalanceIfNecessary();
         this.stage = stage;
         FXMLLoader fxmlLoader = new FXMLLoader(fxml.getURL());
         fxmlLoader.setControllerFactory(context::getBean);
@@ -40,4 +47,11 @@ abstract public class TestBase {
         stage.show();
     }
 
+    private void createBalanceIfNecessary() {
+        BigDecimal balance = bitcoindRpcClient.getBalance();
+        if (balance.compareTo(new BigDecimal(100)) <= 0) {
+            String address = bitcoindRpcClient.getNewAddress();
+            bitcoindRpcClient.generateToAddress(1000, address);
+        }
+    }
 }
