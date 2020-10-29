@@ -6,16 +6,17 @@ import org.springframework.stereotype.Component;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.RawTransaction;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 @Lazy
-public class TransactionHandler {
+public class TransactionUpdater {
     private CurrentReceivingAddressesManager currentReceivingAddressesManager;
 
     private CurrentWalletManager currentWalletManager;
 
     @Autowired
-    public TransactionHandler(
+    public TransactionUpdater(
             CurrentReceivingAddressesManager currentReceivingAddressesManager,
             CurrentWalletManager currentWalletManager
     ) {
@@ -23,7 +24,7 @@ public class TransactionHandler {
         this.currentWalletManager = currentWalletManager;
     }
 
-    public void handle(RawTransaction transaction) {
+    public void update(RawTransaction transaction) {
         transaction.vOut()
             .stream()
             .filter(vout -> vout.scriptPubKey().addresses() != null)
@@ -31,6 +32,12 @@ public class TransactionHandler {
                 vout.scriptPubKey()
                     .addresses()
                     .stream()
+                    .peek(address ->
+                        currentReceivingAddressesManager.initializeReceivingAddresses(
+                            1,
+                            currentWalletManager.getCurrentWallet().getSeed()
+                        )
+                    )
                     .filter(address -> currentReceivingAddressesManager.contains(address))
                     .map(address -> currentReceivingAddressesManager.updateReceivingAddresses(
                             List.of(address),

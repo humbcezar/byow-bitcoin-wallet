@@ -1,6 +1,5 @@
 package byow.bitcoinwallet.tasks;
 
-import byow.bitcoinwallet.services.AddressSequentialGenerator;
 import byow.bitcoinwallet.services.CurrentReceivingAddressesManager;
 import javafx.concurrent.Task;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +15,6 @@ import java.util.List;
 public class UpdateCurrentWalletTask {
     private int initialAddressToMonitor;
 
-    private AddressSequentialGenerator addressSequentialGenerator;
-
     private UpdateCurrentWalletTaskBuilder taskBuilder;
 
     private CurrentReceivingAddressesManager currentReceivingAddressesManager;
@@ -30,17 +27,15 @@ public class UpdateCurrentWalletTask {
 
     @Autowired
     public UpdateCurrentWalletTask(
-            AddressSequentialGenerator addressSequentialGenerator,
             UpdateCurrentWalletTaskBuilder taskBuilder,
             CurrentReceivingAddressesManager currentReceivingAddressesManager
     ) {
-        this.addressSequentialGenerator = addressSequentialGenerator;
         this.taskBuilder = taskBuilder;
         this.currentReceivingAddressesManager = currentReceivingAddressesManager;
     }
 
     public void update() {
-        List<String> addressList = initializeAddresses();
+        List<String> addressList = currentReceivingAddressesManager.initializeReceivingAddresses(initialAddressToMonitor, seed);
         int updatedAddressesCount = currentReceivingAddressesManager.updateReceivingAddresses(addressList, walletCreationDate);
         if (updatedAddressesCount >= initialAddressToMonitor) {
             currentReceivingAddressesManager.setNextCurrentDerivationPath(initialAddressToMonitor);
@@ -48,16 +43,6 @@ public class UpdateCurrentWalletTask {
             return;
         }
         currentReceivingAddressesManager.updateNextAddress(addressList.get(0), updatedAddressesCount, seed);
-    }
-
-    private List<String> initializeAddresses() {
-        List<String> addressList = addressSequentialGenerator.deriveAddresses(
-            initialAddressToMonitor,
-            seed,
-            currentReceivingAddressesManager.getCurrentDerivationPath()
-        );
-        currentReceivingAddressesManager.initializeReceivingAddresses(addressList);
-        return addressList;
     }
 
     public UpdateTask getTask() {

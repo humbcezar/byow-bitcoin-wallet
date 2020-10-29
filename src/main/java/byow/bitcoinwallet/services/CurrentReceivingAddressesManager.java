@@ -13,6 +13,7 @@ import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Unspent;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
 
@@ -57,12 +58,16 @@ public class CurrentReceivingAddressesManager {
         );
     }
 
-    public void initializeReceivingAddresses(List<String> addresses) {
-        addresses.forEach(address -> {
-            ReceivingAddress receivingAddress = new ReceivingAddress(BigDecimal.ZERO, -1, address);
-            receivingAddressesMap.put(address, receivingAddress);
-            receivingAddresses.add(receivingAddress);
-        });
+    public List<String> initializeReceivingAddresses(int numberOfAddresses, String seed) {
+        return addressSequentialGenerator.deriveAddresses(numberOfAddresses, seed, currentDerivationPath)
+            .stream()
+            .filter(address -> !receivingAddressesMap.containsKey(address))
+            .peek(address -> {
+                ReceivingAddress receivingAddress = new ReceivingAddress(BigDecimal.ZERO, -1, address);
+                receivingAddressesMap.put(address, receivingAddress);
+                receivingAddresses.add(receivingAddress);
+            })
+            .collect(Collectors.toList());
     }
 
     public int updateReceivingAddresses(List<String> addressList, Date walletCreationDate) {

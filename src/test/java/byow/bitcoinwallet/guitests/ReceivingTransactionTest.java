@@ -22,7 +22,6 @@ import java.util.stream.IntStream;
 
 import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.util.StringUtils.isEmpty;
 import static org.testfx.matcher.control.TableViewMatchers.containsRow;
 import static org.testfx.matcher.control.TableViewMatchers.hasNumRows;
 
@@ -59,6 +58,22 @@ public class ReceivingTransactionTest extends TestBase {
         String mnemonicSeed = createWallet(robot);
         receiveNTransactions(robot, mnemonicSeed, 15);
     }
+
+    @Test
+    public void receiveTwentyTransactions(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = createWallet(robot);
+        receiveNTransactions(robot, mnemonicSeed, 20);
+    }
+
+    @Test
+    public void receiveTwentyFiveTransactions(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = createWallet(robot);
+        receiveNTransactions(robot, mnemonicSeed, 25);
+    }
+
+    //TODO: fazer testes com transacoes em sequencia
+    //TODO: fazer testes com transacoes para um mesmo endereco
+    //TODO: fazer testes com transacoes para um endereco cujos proximos estejam usados
 
     private void receiveNTransactions(FxRobot robot, String mnemonicSeed, int numberOfTransactions) throws TimeoutException {
         try {
@@ -110,5 +125,4 @@ public class ReceivingTransactionTest extends TestBase {
         robot.clickOn("Receive");
         return mnemonicSeed;
     }
-    //TODO: passar a escutar nextAddress se fora do range (testcase)
 }

@@ -59,9 +59,6 @@ public class UpdateCurrentWalletTaskTest {
     private DefaultAddressGenerator addressGenerator;
 
     @Autowired
-    private AddressSequentialGenerator addressSequentialGenerator;
-
-    @Autowired
     private CurrentReceivingAddressesManager currentReceivingAddressesManager;
 
     @Autowired
@@ -75,7 +72,6 @@ public class UpdateCurrentWalletTaskTest {
     void setUp() {
         currentReceivingAddressesManager.clear();
         updateCurrentWalletTask = new UpdateCurrentWalletTask(
-                addressSequentialGenerator,
                 taskBuilder,
                 currentReceivingAddressesManager
         );
