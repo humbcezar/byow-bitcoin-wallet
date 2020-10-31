@@ -67,7 +67,7 @@ public class TransactionUpdaterTest {
         when(currentWalletManager.getCurrentWallet()).thenReturn(wallet);
         when(nextReceivingAddress.equalAddress(any())).thenReturn(true);
         addresses.forEach(address ->
-            when(currentReceivingAddressesManager.updateReceivingAddresses(List.of(address), wallet.getCreatedAt())).thenReturn(1)
+            when(currentReceivingAddressesManager.updateReceivingAddresses(List.of(address))).thenReturn(1)
         );
 
         transactionUpdater.update(rawTransaction);

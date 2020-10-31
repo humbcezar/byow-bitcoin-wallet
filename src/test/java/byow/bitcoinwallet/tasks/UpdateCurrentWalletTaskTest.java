@@ -52,6 +52,9 @@ public class UpdateCurrentWalletTaskTest {
     @MockBean
     private BitcoindRpcClient bitcoindRpcClient;
 
+    @MockBean
+    private RescanAborter rescanAborter;
+
     @Mock
     private UpdateCurrentWalletTaskBuilder taskBuilder;
 
@@ -64,16 +67,19 @@ public class UpdateCurrentWalletTaskTest {
     @Autowired
     private NextReceivingAddress nextReceivingAddress;
 
+
     private SeedGenerator seedGenerator = new SeedGenerator(Wally.bip39_get_wordlist(Languages.EN), new EntropyCreator());
 
     private UpdateCurrentWalletTask updateCurrentWalletTask;
+
 
     @BeforeEach
     void setUp() {
         currentReceivingAddressesManager.clear();
         updateCurrentWalletTask = new UpdateCurrentWalletTask(
                 taskBuilder,
-                currentReceivingAddressesManager
+                currentReceivingAddressesManager,
+                rescanAborter
         );
     }
 

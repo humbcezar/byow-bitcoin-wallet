@@ -59,8 +59,8 @@ public class CurrentReceivingAddressesManager {
         );
     }
 
-    public List<String> initializeReceivingAddresses(int numberOfAddresses, String seed) {
-        return addressSequentialGenerator.deriveAddresses(numberOfAddresses, seed, currentDerivationPath)
+    public List<String> initializeReceivingAddresses(int numberOfAddresses, String seed, Date walletCreationDate) {
+        List<String> addresses = addressSequentialGenerator.deriveAddresses(numberOfAddresses, seed, currentDerivationPath)
             .stream()
             .filter(address -> !receivingAddressesMap.containsKey(address))
             .peek(address -> {
@@ -69,10 +69,14 @@ public class CurrentReceivingAddressesManager {
                 receivingAddresses.add(receivingAddress);
             })
             .collect(Collectors.toList());
+        if (!addresses.isEmpty()) {
+            multiAddressesImporter.importMultiAddresses(walletCreationDate, addresses.toArray(new String[0]));
+        }
+        return addresses;
     }
 
-    public int updateReceivingAddresses(List<String> addressList, Date walletCreationDate) {
-        Map<String, List<ReceivingAddress>> collectedAddressMap = getUtxos(addressList, walletCreationDate)
+    public int updateReceivingAddresses(List<String> addressList) {
+        Map<String, List<ReceivingAddress>> collectedAddressMap = getUtxos(addressList)
                 .stream()
                 .map(utxo -> new ReceivingAddress(utxo.amount(), utxo.confirmations(), utxo.address()))
                 .collect(Collectors.groupingBy(ReceivingAddress::getAddress));
@@ -96,8 +100,7 @@ public class CurrentReceivingAddressesManager {
         return collectedAddressMap.size();
     }
 
-    private List<Unspent> getUtxos(List<String> addressList, Date walletCreationDate) {
-        multiAddressesImporter.importMultiAddresses(walletCreationDate, addressList.toArray(new String[0]));
+    private List<Unspent> getUtxos(List<String> addressList) {
         return bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, addressList.toArray(new String[0]));
     }
 

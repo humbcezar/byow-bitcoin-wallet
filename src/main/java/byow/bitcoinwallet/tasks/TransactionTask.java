@@ -1,6 +1,7 @@
 package byow.bitcoinwallet.tasks;
 
 import byow.bitcoinwallet.events.TransactionReceivedEvent;
+import byow.bitcoinwallet.services.RescanAborter;
 import javafx.concurrent.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,9 @@ public class TransactionTask {
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
 
+    @Autowired
+    private RescanAborter rescanAborter;
+
     private Socket subscriber;
 
     private TxTask currentTask;
@@ -45,12 +49,15 @@ public class TransactionTask {
             subscriber.connect("tcp://127.0.0.1:29000");
 
             while (!Thread.currentThread().isInterrupted()) {
-                String topic = subscriber.recvStr(ZMQ.DONTWAIT);
-                if (topic == null || !topic.equals("rawtx")) {
-                    Thread.sleep(1000);
-                    continue;
+                byte[] contents = null;
+                synchronized (subscriber) {
+                    String topic = subscriber.recvStr(ZMQ.DONTWAIT);
+                    if (topic == null || !topic.equals("rawtx")) {
+//                    Thread.sleep(1000);
+                        continue;
+                    }
+                    contents = subscriber.recv();
                 }
-                byte[] contents = subscriber.recv();
 
                 RawTransaction rawTransaction = bitcoindRpcClient.decodeRawTransaction(HexCoder.encode(contents));
                 logger.info(rawTransaction.toString());
@@ -61,11 +68,15 @@ public class TransactionTask {
     }
 
     public void unsubscribe() {
-        subscriber.unsubscribe("rawtx".getBytes());
+        synchronized (subscriber) {
+            subscriber.unsubscribe("rawtx".getBytes());
+        }
     }
 
     public void subscribe() {
-        subscriber.subscribe("rawtx".getBytes());
+        synchronized (subscriber) {
+            subscriber.subscribe("rawtx".getBytes());
+        }
     }
 
     public void close() {

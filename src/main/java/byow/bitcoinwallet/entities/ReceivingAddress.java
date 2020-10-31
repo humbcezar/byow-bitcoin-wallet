@@ -8,6 +8,8 @@ import java.util.Objects;
 
 public class ReceivingAddress {
 
+    private BigDecimal bigDecimalBalance;
+
     private BigDecimalStringConverter bigDecimalStringConverter = new BigDecimalStringConverter();
 
     private StringProperty balance = new SimpleStringProperty();
@@ -17,6 +19,7 @@ public class ReceivingAddress {
     private StringProperty address = new SimpleStringProperty();
 
     public ReceivingAddress(BigDecimal balance, int confirmations, String address) {
+        this.bigDecimalBalance = balance;
         this.balance.setValue(bigDecimalStringConverter.toString(balance));
         this.confirmations.set(confirmations);
         this.address.setValue(address);
@@ -78,5 +81,9 @@ public class ReceivingAddress {
     @Override
     public int hashCode() {
         return Objects.hash(getAddress());
+    }
+
+    public BigDecimal getBigDecimalBalance() {
+        return bigDecimalBalance;
     }
 }

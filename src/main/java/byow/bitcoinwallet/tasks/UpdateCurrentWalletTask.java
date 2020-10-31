@@ -1,6 +1,7 @@
 package byow.bitcoinwallet.tasks;
 
 import byow.bitcoinwallet.services.CurrentReceivingAddressesManager;
+import byow.bitcoinwallet.services.RescanAborter;
 import javafx.concurrent.Task;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +20,8 @@ public class UpdateCurrentWalletTask {
 
     private CurrentReceivingAddressesManager currentReceivingAddressesManager;
 
+    private RescanAborter rescanAborter;
+
     private String seed;
 
     private UpdateTask currentTask;
@@ -28,15 +31,17 @@ public class UpdateCurrentWalletTask {
     @Autowired
     public UpdateCurrentWalletTask(
             UpdateCurrentWalletTaskBuilder taskBuilder,
-            CurrentReceivingAddressesManager currentReceivingAddressesManager
+            CurrentReceivingAddressesManager currentReceivingAddressesManager,
+            RescanAborter rescanAborter
     ) {
         this.taskBuilder = taskBuilder;
         this.currentReceivingAddressesManager = currentReceivingAddressesManager;
+        this.rescanAborter = rescanAborter;
     }
 
     public void update() {
-        List<String> addressList = currentReceivingAddressesManager.initializeReceivingAddresses(initialAddressToMonitor, seed);
-        int updatedAddressesCount = currentReceivingAddressesManager.updateReceivingAddresses(addressList, walletCreationDate);
+        List<String> addressList = currentReceivingAddressesManager.initializeReceivingAddresses(initialAddressToMonitor, seed, walletCreationDate);
+        int updatedAddressesCount = currentReceivingAddressesManager.updateReceivingAddresses(addressList);
         if (updatedAddressesCount >= initialAddressToMonitor) {
             currentReceivingAddressesManager.setNextCurrentDerivationPath(initialAddressToMonitor);
             update();
@@ -53,6 +58,7 @@ public class UpdateCurrentWalletTask {
     public void cancel() {
         if (currentTask != null) {
             currentTask.cancel();
+            rescanAborter.abortRescan();
         }
     }
 

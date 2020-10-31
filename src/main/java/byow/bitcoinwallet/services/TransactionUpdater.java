@@ -39,15 +39,12 @@ public class TransactionUpdater {
                     .peek(address ->
                         currentReceivingAddressesManager.initializeReceivingAddresses(
                             1,
-                            currentWalletManager.getCurrentWallet().getSeed()
-                        )
-                    )
-                    .filter(address -> currentReceivingAddressesManager.contains(address))
-                    .peek(address -> currentReceivingAddressesManager.updateReceivingAddresses(
-                            List.of(address),
+                            currentWalletManager.getCurrentWallet().getSeed(),
                             currentWalletManager.getCurrentWallet().getCreatedAt()
                         )
                     )
+                    .filter(address -> currentReceivingAddressesManager.contains(address))
+                    .peek(address -> currentReceivingAddressesManager.updateReceivingAddresses(List.of(address)))
                     .filter(address -> nextReceivingAddress.equalAddress(address))
                     .forEach(address ->
                         currentReceivingAddressesManager.updateNextAddress(
