@@ -1,5 +1,7 @@
 package byow.bitcoinwallet.services;
 
+import byow.bitcoinwallet.entities.NextReceivingAddress;
+import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.entities.Wallet;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,11 +11,11 @@ import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.RawTransaction;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.RawTransaction.Out;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.RawTransaction.Out.ScriptPubKey;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class TransactionUpdaterTest {
@@ -26,6 +28,9 @@ public class TransactionUpdaterTest {
 
     @Mock
     private RawTransaction rawTransaction;
+
+    @Mock
+    private NextReceivingAddress nextReceivingAddress;
 
     @Mock
     private Out out;
@@ -46,7 +51,11 @@ public class TransactionUpdaterTest {
     }
 
     private void updateNTransactions(List<String> addresses) {
-        TransactionUpdater transactionUpdater = new TransactionUpdater(currentReceivingAddressesManager, currentWalletManager);
+        TransactionUpdater transactionUpdater = new TransactionUpdater(
+                currentReceivingAddressesManager,
+                currentWalletManager,
+                nextReceivingAddress
+        );
 
         when(scriptPubKey.addresses()).thenReturn(addresses);
         when(out.scriptPubKey()).thenReturn(scriptPubKey);
@@ -56,12 +65,13 @@ public class TransactionUpdaterTest {
         Wallet wallet = new Wallet("testname", seed);
         wallet.setCreatedAt(new Date());
         when(currentWalletManager.getCurrentWallet()).thenReturn(wallet);
+        when(nextReceivingAddress.equalAddress(any())).thenReturn(true);
         addresses.forEach(address ->
             when(currentReceivingAddressesManager.updateReceivingAddresses(List.of(address), wallet.getCreatedAt())).thenReturn(1)
         );
 
         transactionUpdater.update(rawTransaction);
 
-        verify(currentReceivingAddressesManager).updateNextAddress("", addresses.size(), seed);
+        verify(currentReceivingAddressesManager, times(addresses.size())).updateNextAddress("", 1, seed);
     }
 }

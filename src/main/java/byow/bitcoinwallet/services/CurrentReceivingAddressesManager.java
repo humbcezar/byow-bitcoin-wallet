@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
+import static java.lang.Integer.min;
 
 @Component
 public class CurrentReceivingAddressesManager {
@@ -71,24 +72,33 @@ public class CurrentReceivingAddressesManager {
     }
 
     public int updateReceivingAddresses(List<String> addressList, Date walletCreationDate) {
-        List<Unspent> utxos = getUtxos(addressList, walletCreationDate);
-        Set<ReceivingAddress> changeSet = new HashSet<>();
-        utxos.forEach(utxo -> updateReceivingAddress(utxo, changeSet));
-        return changeSet.size();
+        Map<String, List<ReceivingAddress>> collectedAddressMap = getUtxos(addressList, walletCreationDate)
+                .stream()
+                .map(utxo -> new ReceivingAddress(utxo.amount(), utxo.confirmations(), utxo.address()))
+                .collect(Collectors.groupingBy(ReceivingAddress::getAddress));
+
+        collectedAddressMap.forEach(
+            (address, receivingAddresses) ->
+                receivingAddresses.stream()
+                    .reduce(
+                        (address1, address2) -> new ReceivingAddress(
+                            new BigDecimal(address1.getBalance()).add(new BigDecimal(address2.getBalance())),
+                            min(address1.getConfirmations(), address2.getConfirmations()),
+                            address1.getAddress()
+                        )
+                    ).ifPresent(receivingAddress -> {
+                        ReceivingAddress currentReceivingAddress = receivingAddressesMap.get(receivingAddress.getAddress());
+                        currentReceivingAddress.setBalance(receivingAddress.getBalance());
+                        currentReceivingAddress.setConfirmations(receivingAddress.getConfirmations());
+                    })
+        );
+
+        return collectedAddressMap.size();
     }
 
     private List<Unspent> getUtxos(List<String> addressList, Date walletCreationDate) {
         multiAddressesImporter.importMultiAddresses(walletCreationDate, addressList.toArray(new String[0]));
         return bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, addressList.toArray(new String[0]));
-    }
-
-    private void updateReceivingAddress(Unspent utxo, Set<ReceivingAddress> changeSet) {
-        ReceivingAddress receivingAddress = receivingAddressesMap.get(utxo.address());
-        receivingAddress.setBalance(utxo.amount().add(new BigDecimal(receivingAddress.getBalance())).toString());
-        if (receivingAddress.getConfirmations() == -1 || utxo.confirmations() < receivingAddress.getConfirmations()) {
-            receivingAddress.setConfirmations(utxo.confirmations());
-        }
-        changeSet.add(receivingAddress);
     }
 
     public void updateNextAddress(String address, int updatedAddressesCount, String seed) {

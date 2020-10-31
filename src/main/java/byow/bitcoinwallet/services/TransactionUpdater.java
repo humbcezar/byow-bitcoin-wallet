@@ -1,12 +1,12 @@
 package byow.bitcoinwallet.services;
 
+import byow.bitcoinwallet.entities.NextReceivingAddress;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.RawTransaction;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 @Lazy
@@ -15,13 +15,17 @@ public class TransactionUpdater {
 
     private CurrentWalletManager currentWalletManager;
 
+    private NextReceivingAddress nextReceivingAddress;
+
     @Autowired
     public TransactionUpdater(
             CurrentReceivingAddressesManager currentReceivingAddressesManager,
-            CurrentWalletManager currentWalletManager
+            CurrentWalletManager currentWalletManager,
+            NextReceivingAddress nextReceivingAddress
     ) {
         this.currentReceivingAddressesManager = currentReceivingAddressesManager;
         this.currentWalletManager = currentWalletManager;
+        this.nextReceivingAddress = nextReceivingAddress;
     }
 
     public void update(RawTransaction transaction) {
@@ -39,16 +43,16 @@ public class TransactionUpdater {
                         )
                     )
                     .filter(address -> currentReceivingAddressesManager.contains(address))
-                    .map(address -> currentReceivingAddressesManager.updateReceivingAddresses(
+                    .peek(address -> currentReceivingAddressesManager.updateReceivingAddresses(
                             List.of(address),
                             currentWalletManager.getCurrentWallet().getCreatedAt()
                         )
                     )
-                    .reduce(Integer::sum)
-                    .ifPresent(sum ->
+                    .filter(address -> nextReceivingAddress.equalAddress(address))
+                    .forEach(address ->
                         currentReceivingAddressesManager.updateNextAddress(
                             "",
-                            sum,
+                            1,
                             currentWalletManager.getCurrentWallet().getSeed()
                         )
                     )

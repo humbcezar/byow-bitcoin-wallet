@@ -16,4 +16,8 @@ public class NextReceivingAddress extends ObservableValueBase<ReceivingAddress> 
     public synchronized ReceivingAddress getValue() {
         return receivingAddress;
     }
+
+    public boolean equalAddress(String address) {
+        return receivingAddress.getAddress().equals(address);
+    }
 }

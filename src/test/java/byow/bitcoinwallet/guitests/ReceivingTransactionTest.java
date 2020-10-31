@@ -1,5 +1,6 @@
 package byow.bitcoinwallet.guitests;
 
+import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.services.AddressSequentialGenerator;
 import byow.bitcoinwallet.services.SeedGenerator;
 import javafx.scene.control.TableView;
@@ -71,9 +72,46 @@ public class ReceivingTransactionTest extends TestBase {
         receiveNTransactions(robot, mnemonicSeed, 25);
     }
 
+    @Test
+    public void receiveTenSequentialTransactionsToTheSameAddress(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = createWallet(robot);
+        WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
+            TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+            String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+            return !address.isBlank();
+        });
+
+        int numberOfTransactions = 10;
+        String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+        IntStream.range(0, numberOfTransactions).forEach(i -> {
+            bitcoindRpcClient.sendToAddress(address, BigDecimal.ONE);
+        });
+        WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
+            TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+            return !tableView.getItems().isEmpty() && tableView.getItems().get(0).getBalance().equals("10.00000000");
+        });
+
+        TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+        MatcherAssert.assertThat(tableView, containsRow(
+                address,
+                "10.00000000",
+                0
+            )
+        );
+        MatcherAssert.assertThat(tableView, hasNumRows(1));
+
+        String seed = seedGenerator.generateSeed(mnemonicSeed,"");
+        String expectedNextAddress = addressSequentialGenerator
+                .deriveAddresses(1, seed, FIRST_BIP84_ADDRESS_PATH.next(1))
+                .get(0);
+        String nextAddress = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+        assertEquals(expectedNextAddress, nextAddress);
+    }
+
     //TODO: fazer testes com transacoes em sequencia
     //TODO: fazer testes com transacoes para um mesmo endereco
     //TODO: fazer testes com transacoes para um endereco cujos proximos estejam usados
+    //TODO: diferentes numeros de confirmacao
 
     private void receiveNTransactions(FxRobot robot, String mnemonicSeed, int numberOfTransactions) throws TimeoutException {
         try {
