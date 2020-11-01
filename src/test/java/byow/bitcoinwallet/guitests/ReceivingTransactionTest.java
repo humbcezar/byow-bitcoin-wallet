@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
@@ -112,40 +113,35 @@ public class ReceivingTransactionTest extends TestBase {
                 .map(ReceivingAddress::getBigDecimalBalance)
                 .reduce(BigDecimal::add)
                 .map(balance -> bigDecimalStringConverter.toString(balance))
-                .get();
-        System.out.println(expectedBalance);
-        int expectedConfirmations = addresses.stream()
-                .mapToInt(ReceivingAddress::getConfirmations)
-                .min()
-                .getAsInt();
-
-        addresses.forEach(receivingAddress -> {
-            bitcoindRpcClient.sendToAddress(receivingAddress.getAddress(), receivingAddress.getBigDecimalBalance());
-            String nodeAddress = bitcoindRpcClient.getNewAddress();
-            bitcoindRpcClient.generateToAddress(receivingAddress.getConfirmations(), nodeAddress);
-        });
-        WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
-            TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
-            return !tableView.getItems().isEmpty() && tableView.getItems().get(0).getBalance().equals(
-                    expectedBalance + "0000000"
-            );
-        });
-
-        TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
-        MatcherAssert.assertThat(tableView, containsRow(
-                address,
-                expectedBalance + "0000000",
-                expectedConfirmations
-            )
-        );
-        MatcherAssert.assertThat(tableView, hasNumRows(1));
-
+                .get() + "0000000";
         String seed = seedGenerator.generateSeed(mnemonicSeed,"");
         String expectedNextAddress = addressSequentialGenerator
                 .deriveAddresses(1, seed, FIRST_BIP84_ADDRESS_PATH.next(1))
                 .get(0);
-        String nextAddress = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
-        assertEquals(expectedNextAddress, nextAddress);
+        receiveVaryingTransactions(robot, address, addresses, expectedNextAddress, expectedBalance);
+    }
+
+    @Test
+    public void receiveTransactionNextAddressUsed(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = createWallet(robot);
+
+        WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
+            TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+            String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+            return !address.isBlank();
+        });
+        String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+
+        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        List<String> expectedAddresses = addressSequentialGenerator.deriveAddresses(2, seed, FIRST_BIP84_ADDRESS_PATH.next(1));
+        String secondAddress = expectedAddresses.get(0);
+        String expectedNextAddress = expectedAddresses.get(1);
+        List<ReceivingAddress> addresses = List.of(
+            new ReceivingAddress(new BigDecimal("2"),0,  secondAddress),
+            new ReceivingAddress(new BigDecimal("2.5"),0,  address)
+        );
+        String expectedBalance = "2.50000000";
+        receiveVaryingTransactions(robot, address, addresses, expectedNextAddress, expectedBalance);
     }
 
     private void receiveNSequentialTransactions(FxRobot robot, String mnemonicSeed, int numberOfTransactions) throws TimeoutException {
@@ -183,10 +179,6 @@ public class ReceivingTransactionTest extends TestBase {
         assertEquals(expectedNextAddress, nextAddress);
     }
 
-    //TODO: diferentes numeros de confirmacao
-    //TODO: fazer testes com transacoes para um endereco cujos proximos estejam usados
-    //TODO: calls do teste fodem o rescan, acho
-
     private void receiveNTransactions(FxRobot robot, String mnemonicSeed, int numberOfTransactions) throws TimeoutException {
         try {
             WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
@@ -209,13 +201,13 @@ public class ReceivingTransactionTest extends TestBase {
                 throw new RuntimeException(e);
             }
             TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+            MatcherAssert.assertThat(tableView, hasNumRows(i + 1));
             MatcherAssert.assertThat(tableView, containsRow(
                     address,
                     "1.00000000",
                     0
                 )
             );
-            MatcherAssert.assertThat(tableView, hasNumRows(i + 1));
 
             String seed = seedGenerator.generateSeed(mnemonicSeed,"");
             String expectedNextAddress = addressSequentialGenerator
@@ -225,6 +217,51 @@ public class ReceivingTransactionTest extends TestBase {
             assertEquals(expectedNextAddress, nextAddress);
         });
     }
+
+    private void receiveVaryingTransactions(
+            FxRobot robot,
+            String address,
+            List<ReceivingAddress> addresses,
+            String expectedNextAddress,
+            String expectedBalance
+    ) throws TimeoutException {
+        System.out.println(expectedBalance);
+        int expectedConfirmations = addresses.stream()
+                .mapToInt(ReceivingAddress::getConfirmations)
+                .min()
+                .getAsInt();
+
+        addresses.forEach(receivingAddress -> {
+            bitcoindRpcClient.sendToAddress(receivingAddress.getAddress(), receivingAddress.getBigDecimalBalance());
+            String nodeAddress = bitcoindRpcClient.getNewAddress();
+            bitcoindRpcClient.generateToAddress(receivingAddress.getConfirmations(), nodeAddress);
+        });
+        WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
+            TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+            return !tableView.getItems().isEmpty() && tableView.getItems().get(0).getBalance().equals(expectedBalance)
+                    && tableView.getItems().get(0).getConfirmations() == expectedConfirmations;
+        });
+
+        TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+        MatcherAssert.assertThat(tableView, containsRow(
+                address,
+                expectedBalance,
+                expectedConfirmations
+            )
+        );
+        MatcherAssert.assertThat(tableView, hasNumRows(
+                (int) addresses.stream().map(ReceivingAddress::getAddress).distinct().count()
+            )
+        );
+
+        WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
+            String nextAddress = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+            return expectedNextAddress.equals(nextAddress);
+        });
+        String nextAddress = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+        assertEquals(expectedNextAddress, nextAddress);
+    }
+
 
     private String createWallet(FxRobot robot) {
         robot.clickOn("#wallet");

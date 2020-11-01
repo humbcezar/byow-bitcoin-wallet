@@ -107,14 +107,18 @@ public class CurrentReceivingAddressesManager {
     public void updateNextAddress(String address, int updatedAddressesCount, String seed) {
         if (updatedAddressesCount > 0) {
             address = addressSequentialGenerator.deriveAddresses(
-                    1,
-                    seed,
-                    setNextCurrentDerivationPath(updatedAddressesCount)
+                1,
+                seed,
+                setNextCurrentDerivationPath(updatedAddressesCount)
             ).get(0);
         }
         nextReceivingAddress.setReceivingAddress(
             new ReceivingAddress(BigDecimal.ZERO, 0, address)
         );
+        initializeReceivingAddresses(1, seed, null);
+        if (!getUtxos(List.of(nextReceivingAddress.getValue().getAddress())).isEmpty()) {
+            updateNextAddress(address, 1, seed);
+        }
     }
 
     public ObservableList<ReceivingAddress> getReceivingAddresses() {

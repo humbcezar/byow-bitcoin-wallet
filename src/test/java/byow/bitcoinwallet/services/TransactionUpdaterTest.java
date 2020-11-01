@@ -1,7 +1,6 @@
 package byow.bitcoinwallet.services;
 
 import byow.bitcoinwallet.entities.NextReceivingAddress;
-import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.entities.Wallet;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,7 +10,6 @@ import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.RawTransaction;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.RawTransaction.Out;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.RawTransaction.Out.ScriptPubKey;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
