@@ -90,6 +90,7 @@ public class ReceivingTransactionTest extends TestBase {
         receiveNSequentialTransactions(robot, mnemonicSeed, numberOfTransactions);
     }
 
+    @Test
     public void receiveFiveSequentialTransactionsToTheSameAddressWithDifferentValuesAndConfirmations(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = createWallet(robot);
 
