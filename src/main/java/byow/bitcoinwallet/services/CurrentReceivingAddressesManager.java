@@ -84,6 +84,7 @@ public class CurrentReceivingAddressesManager {
         collectedAddressMap.forEach(
             (address, receivingAddresses) ->
                 receivingAddresses.stream()
+                    .filter(receivingAddress -> receivingAddressesMap.containsKey(receivingAddress.getAddress()))
                     .reduce(
                         (address1, address2) -> new ReceivingAddress(
                             new BigDecimal(address1.getBalance()).add(new BigDecimal(address2.getBalance())),
@@ -100,11 +101,19 @@ public class CurrentReceivingAddressesManager {
         return collectedAddressMap.size();
     }
 
+    public void updateReceivingAddresses() {
+        updateReceivingAddresses(
+            receivingAddresses.stream()
+                    .map(ReceivingAddress::getAddress)
+                    .collect(Collectors.toList())
+        );
+    }
+
     private List<Unspent> getUtxos(List<String> addressList) {
         return bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, addressList.toArray(new String[0]));
     }
 
-    public void updateNextAddress(String address, int updatedAddressesCount, String seed) {
+    public void updateNextAddress(String address, int updatedAddressesCount, String seed, Date walletCreationDate) {
         if (updatedAddressesCount > 0) {
             address = addressSequentialGenerator.deriveAddresses(
                 1,
@@ -112,12 +121,12 @@ public class CurrentReceivingAddressesManager {
                 setNextCurrentDerivationPath(updatedAddressesCount)
             ).get(0);
         }
+        initializeReceivingAddresses(1, seed, walletCreationDate);
         nextReceivingAddress.setReceivingAddress(
             new ReceivingAddress(BigDecimal.ZERO, 0, address)
         );
-        initializeReceivingAddresses(1, seed, null);
         if (!getUtxos(List.of(nextReceivingAddress.getValue().getAddress())).isEmpty()) {
-            updateNextAddress(address, 1, seed);
+            updateNextAddress(address, 1, seed, walletCreationDate);
         }
     }
 

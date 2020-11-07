@@ -2,8 +2,8 @@ package byow.bitcoinwallet.controllers;
 
 import byow.bitcoinwallet.services.CurrentWalletManager;
 import byow.bitcoinwallet.services.WalletsMenuManager;
-import byow.bitcoinwallet.tasks.TransactionTask;
-import byow.bitcoinwallet.tasks.UpdateCurrentWalletTask;
+import byow.bitcoinwallet.tasks.NodeMonitorTask;
+import byow.bitcoinwallet.services.WalletUpdater;
 import javafx.application.Platform;
 import javafx.collections.SetChangeListener;
 import javafx.fxml.FXML;
@@ -21,12 +21,9 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Lazy
 @Component
@@ -45,7 +42,7 @@ public class MainController {
     private Resource importWalletDialog;
 
     @Autowired
-    private UpdateCurrentWalletTask updateCurrentWalletTask;
+    private WalletUpdater walletUpdater;
 
     @Autowired
     private ApplicationContext context;
@@ -57,7 +54,7 @@ public class MainController {
     private CurrentWalletManager currentWalletManager;
 
     @Autowired
-    private TransactionTask transactionTask;
+    private NodeMonitorTask nodeMonitorTask;
 
     @FXML
     public void initialize() {
@@ -77,14 +74,14 @@ public class MainController {
             })
         );
         walletsMenuManager.load();
-        Thread thread = new Thread(transactionTask.getTask());
+        Thread thread = new Thread(nodeMonitorTask.getTask());
         thread.setDaemon(true);
         thread.start();
+        nodeMonitorTask.subscribe();
     }
 
     public void exit() {
-        transactionTask.close();
-        updateCurrentWalletTask.cancel();
+        nodeMonitorTask.close();
         Platform.exit();
     }
 

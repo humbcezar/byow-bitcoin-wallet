@@ -136,8 +136,12 @@ public class BalanceTableTest extends TestBase {
             )
         );
         MatcherAssert.assertThat(tableView, hasNumRows(numberOfReceivingAddresses));
-        String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
         String expectedReceivingAddress = addressGenerator.generate(seed, new DerivationPath("84'/0'/0'/0/" + numberOfReceivingAddresses));
+        WaitForAsyncUtils.waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
+            String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+            return address != null && address.equals(expectedReceivingAddress);
+        });
+        String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
         assertEquals(expectedReceivingAddress, address);
     }
 
@@ -167,8 +171,12 @@ public class BalanceTableTest extends TestBase {
             );
         });
         MatcherAssert.assertThat(tableView, hasNumRows(numberOfReceivingAddresses));
-        String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
         String expectedReceivingAddress = addressGenerator.generate(seed, new DerivationPath("84'/0'/0'/0/" + numberOfReceivingAddresses));
+        WaitForAsyncUtils.waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
+            String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+            return address != null && address.equals(expectedReceivingAddress);
+        });
+        String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
         assertEquals(expectedReceivingAddress, address);
     }
 

@@ -6,6 +6,7 @@
 <?import byow.bitcoinwallet.controllers.ReceiveTabController?>
 <?import byow.bitcoinwallet.controllers.BalanceTableController?>
 <?import byow.bitcoinwallet.controllers.ProgressBarController?>
+<?import byow.bitcoinwallet.controllers.FooterController?>
 <BorderPane fx:id="borderPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="byow.bitcoinwallet.controllers.MainController">
    <top>
       <MenuBar BorderPane.alignment="CENTER">
@@ -42,6 +43,7 @@
         <HBox prefHeight="19.0" prefWidth="600.0" BorderPane.alignment="CENTER">
             <children>
                 <ProgressBarController/>
+                <FooterController/>
             </children>
         </HBox>
     </bottom>

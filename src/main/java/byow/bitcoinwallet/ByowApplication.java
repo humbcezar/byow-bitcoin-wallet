@@ -7,9 +7,13 @@ import javafx.util.converter.BigDecimalStringConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.zeromq.SocketType;
 import org.zeromq.ZContext;
+import org.zeromq.ZMQ.Socket;
 import wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
+
+import java.util.concurrent.locks.ReentrantLock;
 
 import static wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient.DEFAULT_JSONRPC_REGTEST_URL;
 
@@ -42,5 +46,15 @@ public class ByowApplication {
     @Bean
     public ZContext zContext() {
         return new ZContext();
+    }
+
+    @Bean
+    public Socket subscriber(ZContext zContext) {
+        return zContext.createSocket(SocketType.SUB);
+    }
+
+    @Bean
+    public ReentrantLock reentrantLock() {
+        return new ReentrantLock();
     }
 }

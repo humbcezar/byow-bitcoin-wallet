@@ -50,9 +50,10 @@ public class TransactionUpdater {
                         currentReceivingAddressesManager.updateNextAddress(
                             "",
                             1,
-                            currentWalletManager.getCurrentWallet().getSeed()
+                            currentWalletManager.getCurrentWallet().getSeed(),
+                            currentWalletManager.getCurrentWallet().getCreatedAt()
                         )
                     )
-            );
+        );
     }
 }

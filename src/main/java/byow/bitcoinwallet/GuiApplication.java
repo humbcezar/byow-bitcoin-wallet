@@ -1,8 +1,7 @@
 package byow.bitcoinwallet;
 
 import byow.bitcoinwallet.events.GuiStartedEvent;
-import byow.bitcoinwallet.tasks.TransactionTask;
-import byow.bitcoinwallet.tasks.UpdateCurrentWalletTask;
+import byow.bitcoinwallet.tasks.NodeMonitorTask;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
@@ -24,8 +23,7 @@ public class GuiApplication extends Application {
 
     @Override
     public void stop() throws Exception {
-        this.context.getBean(TransactionTask.class).close();
-        this.context.getBean(UpdateCurrentWalletTask.class).cancel();
+        this.context.getBean(NodeMonitorTask.class).close();
         this.context.close();
         Platform.exit();
     }

@@ -1,4 +1,4 @@
-package byow.bitcoinwallet.tasks;
+package byow.bitcoinwallet.services;
 
 import byow.bitcoinwallet.entities.NextReceivingAddress;
 import byow.bitcoinwallet.entities.ReceivingAddress;
@@ -44,7 +44,7 @@ import static org.mockito.Mockito.*;
 })
 @ActiveProfiles("test")
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class UpdateCurrentWalletTaskTest {
+public class WalletUpdaterTest {
 
     @MockBean
     private MultiAddressesImporter multiAddressesImporter;
@@ -56,7 +56,7 @@ public class UpdateCurrentWalletTaskTest {
     private RescanAborter rescanAborter;
 
     @Mock
-    private UpdateCurrentWalletTaskBuilder taskBuilder;
+    private TaskConfigurer taskConfigurer;
 
     @Autowired
     private DefaultAddressGenerator addressGenerator;
@@ -70,14 +70,14 @@ public class UpdateCurrentWalletTaskTest {
 
     private SeedGenerator seedGenerator = new SeedGenerator(Wally.bip39_get_wordlist(Languages.EN), new EntropyCreator());
 
-    private UpdateCurrentWalletTask updateCurrentWalletTask;
+    private WalletUpdater walletUpdater;
 
 
     @BeforeEach
     void setUp() {
         currentReceivingAddressesManager.clear();
-        updateCurrentWalletTask = new UpdateCurrentWalletTask(
-                taskBuilder,
+        walletUpdater = new WalletUpdater(
+                taskConfigurer,
                 currentReceivingAddressesManager,
                 rescanAborter
         );
@@ -93,8 +93,8 @@ public class UpdateCurrentWalletTaskTest {
 
         Date date = new Date();
 
-        updateCurrentWalletTask.setInitialAddressToMonitor(20);
-        updateCurrentWalletTask.setDate(date).setSeed(seed).update();
+        walletUpdater.setInitialAddressToMonitor(20);
+        walletUpdater.setDate(date).setSeed(seed).update();
 
         verify(multiAddressesImporter).importMultiAddresses(date, expectedAddresses);
         assertTrue(
@@ -116,8 +116,8 @@ public class UpdateCurrentWalletTaskTest {
 
         Date date = new Date();
 
-        updateCurrentWalletTask.setInitialAddressToMonitor(20);
-        updateCurrentWalletTask.setDate(date).setSeed(seed).update();
+        walletUpdater.setInitialAddressToMonitor(20);
+        walletUpdater.setDate(date).setSeed(seed).update();
 
         verify(multiAddressesImporter).importMultiAddresses(date, expectedAddresses);
         assertTrue(
@@ -157,8 +157,8 @@ public class UpdateCurrentWalletTaskTest {
 
         Date date = new Date();
 
-        updateCurrentWalletTask.setInitialAddressToMonitor(20);
-        updateCurrentWalletTask.setDate(date).setSeed(seed).update();
+        walletUpdater.setInitialAddressToMonitor(20);
+        walletUpdater.setDate(date).setSeed(seed).update();
 
         verify(multiAddressesImporter).importMultiAddresses(date, expectedAddresses);
         assertTrue(
@@ -201,8 +201,8 @@ public class UpdateCurrentWalletTaskTest {
 
         Date date = new Date();
 
-        updateCurrentWalletTask.setInitialAddressToMonitor(20);
-        updateCurrentWalletTask.setDate(date).setSeed(seed).update();
+        walletUpdater.setInitialAddressToMonitor(20);
+        walletUpdater.setDate(date).setSeed(seed).update();
 
         verify(multiAddressesImporter).importMultiAddresses(date, expectedAddresses);
         assertTrue(
@@ -244,8 +244,8 @@ public class UpdateCurrentWalletTaskTest {
 
         Date date = new Date();
 
-        updateCurrentWalletTask.setInitialAddressToMonitor(20);
-        updateCurrentWalletTask.setDate(date).setSeed(seed).update();
+        walletUpdater.setInitialAddressToMonitor(20);
+        walletUpdater.setDate(date).setSeed(seed).update();
 
         ArgumentCaptor<String[]> expectedAddressesCaptured = ArgumentCaptor.forClass(String[].class);
         ArgumentCaptor<Date> expectedDateCaptured = ArgumentCaptor.forClass(Date.class);

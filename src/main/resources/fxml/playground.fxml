@@ -69,6 +69,11 @@
       <HBox prefHeight="19.0" prefWidth="600.0" BorderPane.alignment="CENTER">
          <children>
             <ProgressBar prefHeight="33.0" prefWidth="200.0" progress="0.0" />
+            <Label text="Loading Transaction">
+               <HBox.margin>
+                  <Insets left="10.0" />
+               </HBox.margin>
+            </Label>
          </children>
       </HBox>
    </bottom>

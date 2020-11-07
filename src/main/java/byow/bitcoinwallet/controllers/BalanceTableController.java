@@ -55,6 +55,7 @@ public class BalanceTableController extends TableView<ReceivingAddress> implemen
             new FilteredList<>(
                 currentReceivingAddressesManager.getReceivingAddresses(),
                 receivingAddress -> new BigDecimal(receivingAddress.getBalance()).compareTo(BigDecimal.ZERO) > 0
+                    && receivingAddress.getConfirmations() > -1
             )
         );
         columnAddress.setCellValueFactory(new PropertyValueFactory<>("address"));

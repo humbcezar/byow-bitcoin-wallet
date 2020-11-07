@@ -61,7 +61,8 @@ public class TransactionUpdaterTest {
         addresses.forEach(address -> when(currentReceivingAddressesManager.contains(address)).thenReturn(true));
         String seed = "testseed";
         Wallet wallet = new Wallet("testname", seed);
-        wallet.setCreatedAt(new Date());
+        Date date = new Date();
+        wallet.setCreatedAt(date);
         when(currentWalletManager.getCurrentWallet()).thenReturn(wallet);
         when(nextReceivingAddress.equalAddress(any())).thenReturn(true);
         addresses.forEach(address ->
@@ -70,6 +71,6 @@ public class TransactionUpdaterTest {
 
         transactionUpdater.update(rawTransaction);
 
-        verify(currentReceivingAddressesManager, times(addresses.size())).updateNextAddress("", 1, seed);
+        verify(currentReceivingAddressesManager, times(addresses.size())).updateNextAddress("", 1, seed, date);
     }
 }

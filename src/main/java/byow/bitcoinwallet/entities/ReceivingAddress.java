@@ -25,7 +25,7 @@ public class ReceivingAddress {
         this.address.setValue(address);
     }
 
-    public String getBalance() {
+    public synchronized String getBalance() {
         return balance.get();
     }
 
@@ -33,11 +33,11 @@ public class ReceivingAddress {
         return balance;
     }
 
-    public void setBalance(String balance) {
+    public synchronized void setBalance(String balance) {
         this.balance.set(balance);
     }
 
-    public int getConfirmations() {
+    public synchronized int getConfirmations() {
         return confirmations.get();
     }
 
@@ -45,11 +45,11 @@ public class ReceivingAddress {
         return confirmations;
     }
 
-    public void setConfirmations(int confirmations) {
+    public synchronized void setConfirmations(int confirmations) {
         this.confirmations.set(confirmations);
     }
 
-    public String getAddress() {
+    public synchronized String getAddress() {
         return address.get();
     }
 
