@@ -1,6 +1,7 @@
 package byow.bitcoinwallet.listeners;
 
 import byow.bitcoinwallet.events.TransactionReceivedEvent;
+import byow.bitcoinwallet.services.CurrentWalletManager;
 import byow.bitcoinwallet.services.TransactionUpdater;
 import byow.bitcoinwallet.services.TaskConfigurer;
 import javafx.concurrent.Task;
@@ -23,9 +24,14 @@ public class TransactionReceivedListener implements ApplicationListener<Transact
     @Autowired
     private TaskConfigurer taskConfigurer;
 
+    @Autowired
+    private CurrentWalletManager currentWalletManager;
+
     @Override
     public void onApplicationEvent(TransactionReceivedEvent event) {
-        new Thread(buildTask(event)).start();
+        if (currentWalletManager.getCurrentWallet() != null) {
+            new Thread(buildTask(event)).start();
+        }
     }
 
     private Task<Void> buildTask(TransactionReceivedEvent event) {

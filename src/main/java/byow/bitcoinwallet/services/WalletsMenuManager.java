@@ -5,12 +5,14 @@ import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.repositories.WalletRepository;
 import com.sun.javafx.collections.ObservableSetWrapper;
 import javafx.collections.ObservableSet;
+import javafx.concurrent.Task;
 import javafx.scene.control.MenuItem;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.LinkedHashSet;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Lazy
 @Component
@@ -21,6 +23,12 @@ public class WalletsMenuManager {
     @Autowired
     private CurrentWalletManager currentWalletManager;
 
+    @Autowired
+    private ReentrantLock reentrantLock;
+
+    @Autowired
+    private TaskConfigurer taskConfigurer;
+
     private final ObservableSet<MenuItem> menuItems = new ObservableSetWrapper<>(new LinkedHashSet<>());
 
     public void load() {
@@ -29,8 +37,23 @@ public class WalletsMenuManager {
 
     public void addWallet(Wallet wallet) {
         LoadWalletMenuItem menuItem = new LoadWalletMenuItem(wallet.getName());
-        menuItem.setOnAction(click -> currentWalletManager.updateCurrentWallet(wallet));
+        menuItem.setOnAction(click -> new Thread(buildTask(wallet)).start());
         menuItems.add(menuItem);
+    }
+
+    private Task<Void> buildTask(Wallet wallet) {
+        return taskConfigurer.configure(
+            new Task<>() {
+                @Override
+                protected Void call() {
+                    synchronized (reentrantLock) {
+                        currentWalletManager.updateCurrentWallet(wallet);
+                    }
+                    return null;
+                }
+            },
+            "Loading wallet..."
+        );
     }
 
     public ObservableSet<MenuItem> getMenuItems() {

@@ -87,7 +87,7 @@ public class CurrentReceivingAddressesManager {
                     .filter(receivingAddress -> receivingAddressesMap.containsKey(receivingAddress.getAddress()))
                     .reduce(
                         (address1, address2) -> new ReceivingAddress(
-                            new BigDecimal(address1.getBalance()).add(new BigDecimal(address2.getBalance())),
+                            address1.getBigDecimalBalance().add(address2.getBigDecimalBalance()),
                             min(address1.getConfirmations(), address2.getConfirmations()),
                             address1.getAddress()
                         )

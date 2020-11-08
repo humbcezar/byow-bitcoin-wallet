@@ -19,7 +19,8 @@ public class SpringComponentBuilderFactory implements BuilderFactory {
         ReceiveTabController.class,
         BalanceTableController.class,
         ProgressBarController.class,
-        FooterController.class
+        FooterController.class,
+        TotalBalanceController.class
     );
 
     @Override

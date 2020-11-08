@@ -54,7 +54,7 @@ public class BalanceTableController extends TableView<ReceivingAddress> implemen
         balanceTable.setItems(
             new FilteredList<>(
                 currentReceivingAddressesManager.getReceivingAddresses(),
-                receivingAddress -> new BigDecimal(receivingAddress.getBalance()).compareTo(BigDecimal.ZERO) > 0
+                receivingAddress -> receivingAddress.getBigDecimalBalance().compareTo(BigDecimal.ZERO) > 0
                     && receivingAddress.getConfirmations() > -1
             )
         );

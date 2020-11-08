@@ -128,7 +128,7 @@ public class WalletUpdaterTest {
         assertEquals(20, currentReceivingAddressesManager.getReceivingAddresses().size());
         FilteredList<ReceivingAddress> usedReceivingAddresses = currentReceivingAddressesManager
                 .getReceivingAddresses().filtered(receivingAddress ->
-            new BigDecimal(receivingAddress.getBalance()).compareTo(BigDecimal.ZERO) > 0
+            receivingAddress.getBigDecimalBalance().compareTo(BigDecimal.ZERO) > 0
         );
         assertEquals(1, usedReceivingAddresses.size());
         IntStream.range(0, usedReceivingAddresses.size()).forEach(i -> {
@@ -169,7 +169,7 @@ public class WalletUpdaterTest {
         assertEquals(20, currentReceivingAddressesManager.getReceivingAddresses().size());
         FilteredList<ReceivingAddress> usedReceivingAddresses = currentReceivingAddressesManager
                 .getReceivingAddresses().filtered(receivingAddress ->
-                        new BigDecimal(receivingAddress.getBalance()).compareTo(BigDecimal.ZERO) > 0
+                        receivingAddress.getBigDecimalBalance().compareTo(BigDecimal.ZERO) > 0
                 );
         assertEquals(5, usedReceivingAddresses.size());
         IntStream.range(0, usedReceivingAddresses.size()).forEach(i -> {
@@ -213,7 +213,7 @@ public class WalletUpdaterTest {
         assertEquals(20, currentReceivingAddressesManager.getReceivingAddresses().size());
         FilteredList<ReceivingAddress> usedReceivingAddresses = currentReceivingAddressesManager
                 .getReceivingAddresses().filtered(receivingAddress ->
-                        new BigDecimal(receivingAddress.getBalance()).compareTo(BigDecimal.ZERO) > 0
+                        receivingAddress.getBigDecimalBalance().compareTo(BigDecimal.ZERO) > 0
                 );
         assertEquals(5, usedReceivingAddresses.size());
         IntStream.range(0, usedReceivingAddresses.size() - 1).forEach(i -> {
@@ -260,7 +260,7 @@ public class WalletUpdaterTest {
         assertEquals(40, currentReceivingAddressesManager.getReceivingAddresses().size());
         FilteredList<ReceivingAddress> usedReceivingAddresses = currentReceivingAddressesManager
                 .getReceivingAddresses().filtered(receivingAddress ->
-                        new BigDecimal(receivingAddress.getBalance()).compareTo(BigDecimal.ZERO) > 0
+                        receivingAddress.getBigDecimalBalance().compareTo(BigDecimal.ZERO) > 0
                 );
         assertEquals(20, usedReceivingAddresses.size());
         IntStream.range(0, usedReceivingAddresses.size()).forEach(i -> {

@@ -2,6 +2,7 @@ package byow.bitcoinwallet.services;
 
 import byow.bitcoinwallet.controllers.FooterController;
 import byow.bitcoinwallet.controllers.ProgressBarController;
+import byow.bitcoinwallet.controllers.TotalBalanceController;
 import byow.bitcoinwallet.tasks.NodeMonitorTask;
 import javafx.concurrent.Task;
 import org.slf4j.Logger;
@@ -21,6 +22,9 @@ public class TaskConfigurer {
     @Autowired
     private FooterController footerController;
 
+    @Autowired
+    private TotalBalanceController totalBalanceController;
+
     public Task<Void> configure(Task<Void> task, String text) {
         task.setOnScheduled(
             event -> {
@@ -32,16 +36,19 @@ public class TaskConfigurer {
             progressBarController.progressBar.progressProperty().unbind();
             progressBarController.progressBar.progressProperty().setValue(0);
             footerController.setText("");
+            totalBalanceController.update();
         });
         task.setOnCancelled(event -> {
             progressBarController.progressBar.progressProperty().unbind();
             progressBarController.progressBar.progressProperty().setValue(0);
             footerController.setText("");
+            totalBalanceController.update();
         });
         task.setOnFailed(event -> {
             progressBarController.progressBar.progressProperty().unbind();
             progressBarController.progressBar.progressProperty().setValue(0);
             footerController.setText("");
+            totalBalanceController.update();
             try {
                 throw task.getException();
             } catch (Throwable throwable) {

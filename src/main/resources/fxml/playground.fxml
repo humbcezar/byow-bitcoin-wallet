@@ -23,9 +23,9 @@
       </MenuBar>
    </top>
     <center>
-        <VBox prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
+        <VBox prefHeight="300.0" prefWidth="100.0" BorderPane.alignment="CENTER">
             <children>
-                <TabPane prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+                <TabPane prefHeight="225.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
                     <tabs>
                         <Tab text="Send" />
                         <Tab text="Receive">
@@ -55,6 +55,11 @@
                         </Tab>
                     </tabs>
                 </TabPane>
+                <Label text="Total Balance: ">
+                    <VBox.margin>
+                        <Insets bottom="10.0" left="10.0" top="10.0" />
+                    </VBox.margin>
+                </Label>
                 <TableView>
                     <columns>
                         <TableColumn fx:id="columnAddress" editable="false" prefWidth="${balanceTable.width*0.60}" resizable="false" sortable="false" text="Address" />

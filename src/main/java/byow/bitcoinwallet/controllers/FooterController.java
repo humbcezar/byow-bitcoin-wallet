@@ -19,7 +19,7 @@ public class FooterController extends Label implements BaseController {
 
     @Autowired
     public FooterController(
-        @Value("classpath:/fxml/footer_controller.fxml") Resource fxml,
+        @Value("classpath:/fxml/footer.fxml") Resource fxml,
         ApplicationContext context
     ) throws IOException {
         this.fxml = fxml;

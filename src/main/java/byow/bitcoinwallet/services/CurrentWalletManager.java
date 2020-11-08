@@ -25,16 +25,16 @@ public class CurrentWalletManager {
         this.currentWallet = currentWallet;
         walletName.setValue(currentWallet.getName());
 
-        runUpdateTask(currentWallet);
+        updateWallet(currentWallet);
     }
 
     public void updateCurrentWallet() {
         if (currentWallet != null) {
-            runUpdateTask(currentWallet);
+            updateWallet(currentWallet);
         }
     }
 
-    private void runUpdateTask(Wallet currentWallet) {
+    private void updateWallet(Wallet currentWallet) {
         walletUpdater.setSeed(currentWallet.getSeed())
             .setDate(currentWallet.getCreatedAt())
             .update();

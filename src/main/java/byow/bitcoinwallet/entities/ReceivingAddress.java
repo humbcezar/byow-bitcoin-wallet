@@ -35,6 +35,7 @@ public class ReceivingAddress {
 
     public synchronized void setBalance(String balance) {
         this.balance.set(balance);
+        this.bigDecimalBalance = new BigDecimal(balance);
     }
 
     public synchronized int getConfirmations() {
@@ -83,7 +84,7 @@ public class ReceivingAddress {
         return Objects.hash(getAddress());
     }
 
-    public BigDecimal getBigDecimalBalance() {
+    public synchronized BigDecimal getBigDecimalBalance() {
         return bigDecimalBalance;
     }
 }
