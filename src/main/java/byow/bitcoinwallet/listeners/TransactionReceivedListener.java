@@ -4,6 +4,7 @@ import byow.bitcoinwallet.events.TransactionReceivedEvent;
 import byow.bitcoinwallet.services.CurrentWalletManager;
 import byow.bitcoinwallet.services.TransactionUpdater;
 import byow.bitcoinwallet.services.TaskConfigurer;
+import byow.bitcoinwallet.tasks.UpdateTransactionTask;
 import javafx.concurrent.Task;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
@@ -36,15 +37,7 @@ public class TransactionReceivedListener implements ApplicationListener<Transact
 
     private Task<Void> buildTask(TransactionReceivedEvent event) {
         return taskConfigurer.configure(
-            new Task<>() {
-                @Override
-                protected Void call() {
-                    synchronized (reentrantLock) {
-                        transactionUpdater.update(event.getRawTransaction());
-                    }
-                    return null;
-                }
-            },
+            new UpdateTransactionTask(transactionUpdater, reentrantLock, event.getRawTransaction()),
             "Receiving transaction..."
         );
     }

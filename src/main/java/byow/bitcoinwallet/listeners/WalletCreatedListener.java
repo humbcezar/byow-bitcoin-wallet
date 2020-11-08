@@ -4,6 +4,7 @@ import byow.bitcoinwallet.events.WalletCreatedEvent;
 import byow.bitcoinwallet.services.CurrentWalletManager;
 import byow.bitcoinwallet.services.WalletsMenuManager;
 import byow.bitcoinwallet.services.TaskConfigurer;
+import byow.bitcoinwallet.tasks.UpdateCurrentWalletTask;
 import javafx.concurrent.Task;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
@@ -30,21 +31,13 @@ public class WalletCreatedListener implements ApplicationListener<WalletCreatedE
 
     @Override
     public void onApplicationEvent(WalletCreatedEvent event) {
+        walletsMenuManager.addWallet(event.getWallet());
         new Thread(buildTask(event)).start();
     }
 
     private Task<Void> buildTask(WalletCreatedEvent event) {
-        walletsMenuManager.addWallet(event.getWallet());
         return taskConfigurer.configure(
-            new Task<>() {
-                @Override
-                protected Void call() {
-                    synchronized (reentrantLock) {
-                        currentWalletManager.updateCurrentWallet(event.getWallet());
-                    }
-                    return null;
-                }
-            },
+            new UpdateCurrentWalletTask(currentWalletManager, reentrantLock, event.getWallet()),
             "Loading wallet..."
         );
     }

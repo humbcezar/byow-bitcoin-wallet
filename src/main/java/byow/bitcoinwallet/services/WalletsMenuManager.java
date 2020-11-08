@@ -3,6 +3,7 @@ package byow.bitcoinwallet.services;
 import byow.bitcoinwallet.entities.LoadWalletMenuItem;
 import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.repositories.WalletRepository;
+import byow.bitcoinwallet.tasks.UpdateCurrentWalletTask;
 import com.sun.javafx.collections.ObservableSetWrapper;
 import javafx.collections.ObservableSet;
 import javafx.concurrent.Task;
@@ -43,15 +44,7 @@ public class WalletsMenuManager {
 
     private Task<Void> buildTask(Wallet wallet) {
         return taskConfigurer.configure(
-            new Task<>() {
-                @Override
-                protected Void call() {
-                    synchronized (reentrantLock) {
-                        currentWalletManager.updateCurrentWallet(wallet);
-                    }
-                    return null;
-                }
-            },
+            new UpdateCurrentWalletTask(currentWalletManager, reentrantLock, wallet),
             "Loading wallet..."
         );
     }
