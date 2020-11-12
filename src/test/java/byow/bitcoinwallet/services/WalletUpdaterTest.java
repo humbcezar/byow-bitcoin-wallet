@@ -52,12 +52,6 @@ public class WalletUpdaterTest {
     @MockBean
     private BitcoindRpcClient bitcoindRpcClient;
 
-    @MockBean
-    private RescanAborter rescanAborter;
-
-    @Mock
-    private TaskConfigurer taskConfigurer;
-
     @Autowired
     private DefaultAddressGenerator addressGenerator;
 
@@ -76,11 +70,7 @@ public class WalletUpdaterTest {
     @BeforeEach
     void setUp() {
         currentReceivingAddressesManager.clear();
-        walletUpdater = new WalletUpdater(
-                taskConfigurer,
-                currentReceivingAddressesManager,
-                rescanAborter
-        );
+        walletUpdater = new WalletUpdater(currentReceivingAddressesManager);
     }
 
     @Test

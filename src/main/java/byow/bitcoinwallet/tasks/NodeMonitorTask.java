@@ -2,14 +2,10 @@ package byow.bitcoinwallet.tasks;
 
 import byow.bitcoinwallet.events.BlockReceivedEvent;
 import byow.bitcoinwallet.events.TransactionReceivedEvent;
-import byow.bitcoinwallet.services.RescanAborter;
 import javafx.concurrent.Task;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
-import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.Socket;
 import wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient;
@@ -20,19 +16,12 @@ import java.util.Set;
 
 @Component
 public class NodeMonitorTask {
-    private Logger logger = LoggerFactory.getLogger(NodeMonitorTask.class);
 
     @Autowired
     private BitcoinJSONRPCClient bitcoindRpcClient;
 
     @Autowired
-    private ZContext zContext;
-
-    @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
-
-    @Autowired
-    private RescanAborter rescanAborter;
 
     @Autowired
     private Socket subscriber;
@@ -59,7 +48,7 @@ public class NodeMonitorTask {
 
     class NodeTask extends Task<Void> {
         @Override
-        protected Void call() throws Exception {
+        protected Void call() {
             subscriber.connect("tcp://127.0.0.1:29000");
 
             while (!Thread.currentThread().isInterrupted()) {
@@ -110,5 +99,4 @@ public class NodeMonitorTask {
         }
         cancel();
     }
-
 }

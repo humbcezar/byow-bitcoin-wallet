@@ -1,6 +1,5 @@
 package byow.bitcoinwallet.services;
 
-import byow.bitcoinwallet.tasks.NodeMonitorTask;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -14,28 +13,15 @@ import java.util.List;
 public class WalletUpdater {
     private int initialAddressToMonitor;
 
-    private TaskConfigurer taskConfigurer;
-
     private CurrentReceivingAddressesManager currentReceivingAddressesManager;
-
-    private RescanAborter rescanAborter;
 
     private String seed;
 
     private Date walletCreationDate;
 
     @Autowired
-    private NodeMonitorTask nodeMonitorTask;
-
-    @Autowired
-    public WalletUpdater(
-            TaskConfigurer taskConfigurer,
-            CurrentReceivingAddressesManager currentReceivingAddressesManager,
-            RescanAborter rescanAborter
-    ) {
-        this.taskConfigurer = taskConfigurer;
+    public WalletUpdater(CurrentReceivingAddressesManager currentReceivingAddressesManager) {
         this.currentReceivingAddressesManager = currentReceivingAddressesManager;
-        this.rescanAborter = rescanAborter;
     }
 
     public void update() {
