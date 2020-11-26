@@ -1,16 +1,15 @@
 package byow.bitcoinwallet.guitests;
 
+import byow.bitcoinwallet.entities.Address;
 import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.services.AddressGenerator;
 import byow.bitcoinwallet.services.AddressSequentialGenerator;
 import byow.bitcoinwallet.services.SeedGenerator;
 import byow.bitcoinwallet.utils.WalletUtil;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import javafx.util.converter.BigDecimalStringConverter;
-import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +22,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
@@ -125,7 +125,7 @@ public class ReceivingTransactionTest extends TestBase {
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String expectedNextAddress = addressSequentialGenerator
                 .deriveAddresses(1, seed, FIRST_BIP84_ADDRESS_PATH.next(1))
-                .get(0);
+                .get(0).getAddress();
         receiveVaryingTransactions(robot, address, addresses, expectedNextAddress, expectedBalance);
     }
 
@@ -141,7 +141,11 @@ public class ReceivingTransactionTest extends TestBase {
         String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
 
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
-        List<String> expectedAddresses = addressSequentialGenerator.deriveAddresses(2, seed, FIRST_BIP84_ADDRESS_PATH.next(1));
+        List<String> expectedAddresses = addressSequentialGenerator.deriveAddresses(
+                2,
+                seed,
+                FIRST_BIP84_ADDRESS_PATH.next(1)
+        ).stream().map(Address::getAddress).collect(Collectors.toList());
         String secondAddress = expectedAddresses.get(0);
         String expectedNextAddress = expectedAddresses.get(1);
         List<ReceivingAddress> addresses = List.of(
@@ -182,7 +186,7 @@ public class ReceivingTransactionTest extends TestBase {
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String expectedNextAddress = addressSequentialGenerator
                 .deriveAddresses(1, seed, FIRST_BIP84_ADDRESS_PATH.next(1))
-                .get(0);
+                .get(0).getAddress();
         String nextAddress = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
         assertEquals(expectedNextAddress, nextAddress);
     }
@@ -217,7 +221,7 @@ public class ReceivingTransactionTest extends TestBase {
             String seed = seedGenerator.generateSeed(mnemonicSeed, "");
             String expectedNextAddress = addressSequentialGenerator
                     .deriveAddresses(1, seed, FIRST_BIP84_ADDRESS_PATH.next(i + 1))
-                    .get(0);
+                    .get(0).getAddress();
             try {
                 WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
                     String nextAddress = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();

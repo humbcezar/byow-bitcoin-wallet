@@ -13,30 +13,46 @@ import java.util.List;
 public class WalletUpdater {
     private int initialAddressToMonitor;
 
-    private CurrentReceivingAddressesManager currentReceivingAddressesManager;
+    private CurrentAddressesManager currentAddressesManager;
 
     private String seed;
 
     private Date walletCreationDate;
 
     @Autowired
-    public WalletUpdater(CurrentReceivingAddressesManager currentReceivingAddressesManager) {
-        this.currentReceivingAddressesManager = currentReceivingAddressesManager;
+    public WalletUpdater(CurrentAddressesManager currentAddressesManager) {
+        this.currentAddressesManager = currentAddressesManager;
     }
 
-    public void update() {
-        List<String> addressList = currentReceivingAddressesManager.initializeReceivingAddresses(
-                initialAddressToMonitor,
-                seed,
-                walletCreationDate
+    public WalletUpdater updateReceivingAddresses() {
+        List<String> addressList = currentAddressesManager.initializeReceivingAddresses(
+            initialAddressToMonitor,
+            seed,
+            walletCreationDate
         );
-        int updatedAddressesCount = currentReceivingAddressesManager.updateReceivingAddresses(addressList);
+        int updatedAddressesCount = currentAddressesManager.updateReceivingAddresses(addressList);
         if (updatedAddressesCount >= initialAddressToMonitor) {
-            currentReceivingAddressesManager.setNextCurrentDerivationPath(initialAddressToMonitor);
-            update();
+            currentAddressesManager.setNextCurrentDerivationPath(initialAddressToMonitor);
+            updateReceivingAddresses();
+            return this;
+        }
+        currentAddressesManager.updateNextReceivingAddress(addressList.get(0), updatedAddressesCount, seed, walletCreationDate);
+        return this;
+    }
+
+    public void updateChangeAddresses() {
+        List<String> addressList = currentAddressesManager.initializeChangeAddresses(
+            initialAddressToMonitor,
+            seed,
+            walletCreationDate
+        );
+        int updatedAddressesCount = currentAddressesManager.updateReceivingAddresses(addressList);
+        if (updatedAddressesCount >= initialAddressToMonitor) {
+            currentAddressesManager.setNextCurrentChangeDerivationPath(initialAddressToMonitor);
+            updateChangeAddresses();
             return;
         }
-        currentReceivingAddressesManager.updateNextAddress(addressList.get(0), updatedAddressesCount, seed, walletCreationDate);
+        currentAddressesManager.updateNextChangeAddress(addressList.get(0), updatedAddressesCount, seed, walletCreationDate);
     }
 
     public WalletUpdater setSeed(String seed) {
@@ -53,4 +69,5 @@ public class WalletUpdater {
     public void setInitialAddressToMonitor(@Value("${bitcoin.initial_addresses_to_monitor}") int initialAddressToMonitor) {
         this.initialAddressToMonitor = initialAddressToMonitor;
     }
+
 }

@@ -1,6 +1,7 @@
 package byow.bitcoinwallet.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient;
 
@@ -9,6 +10,7 @@ import java.util.*;
 import static java.util.Objects.isNull;
 
 @Component
+@Lazy
 public class MultiAddressesImporter {
     private BitcoinJSONRPCClient bitcoindRpcClient;
 

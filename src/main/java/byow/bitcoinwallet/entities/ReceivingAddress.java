@@ -1,5 +1,6 @@
 package byow.bitcoinwallet.entities;
 
+import byow.bitcoinwallet.services.DerivationPath;
 import javafx.beans.property.*;
 import javafx.util.converter.BigDecimalStringConverter;
 
@@ -18,11 +19,18 @@ public class ReceivingAddress {
 
     private StringProperty address = new SimpleStringProperty();
 
+    private DerivationPath derivationPath;
+
     public ReceivingAddress(BigDecimal balance, int confirmations, String address) {
         this.bigDecimalBalance = balance;
         this.balance.setValue(bigDecimalStringConverter.toString(balance));
         this.confirmations.set(confirmations);
         this.address.setValue(address);
+    }
+
+    public ReceivingAddress(BigDecimal balance, int confirmations, String address, DerivationPath derivationPath) {
+        this(balance, confirmations, address);
+        this.derivationPath = derivationPath;
     }
 
     public synchronized String getBalance() {
@@ -87,4 +95,13 @@ public class ReceivingAddress {
     public synchronized BigDecimal getBigDecimalBalance() {
         return bigDecimalBalance;
     }
+
+    public DerivationPath getDerivationPath() {
+        return derivationPath;
+    }
+
+    public void setDerivationPath(DerivationPath derivationPath) {
+        this.derivationPath = derivationPath;
+    }
+
 }

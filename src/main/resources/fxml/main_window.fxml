@@ -8,7 +8,8 @@
 <?import byow.bitcoinwallet.controllers.ProgressBarController?>
 <?import byow.bitcoinwallet.controllers.FooterController?>
 <?import byow.bitcoinwallet.controllers.TotalBalanceController?>
-<BorderPane fx:id="borderPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="byow.bitcoinwallet.controllers.MainController">
+<?import byow.bitcoinwallet.controllers.SendTabController?>
+<BorderPane fx:id="borderPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="byow.bitcoinwallet.controllers.MainController">
    <top>
       <MenuBar BorderPane.alignment="CENTER">
         <menus>
@@ -31,9 +32,7 @@
         <VBox prefHeight="300.0" prefWidth="100.0" BorderPane.alignment="CENTER">
             <children>
                 <TabPane prefHeight="225.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
-                    <tabs>
-                        <Tab text="Send" />
-                    </tabs>
+                    <SendTabController/>
                     <ReceiveTabController />
                 </TabPane>
                 <TotalBalanceController/>

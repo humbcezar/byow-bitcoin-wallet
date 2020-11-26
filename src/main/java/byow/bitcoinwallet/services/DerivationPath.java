@@ -8,6 +8,8 @@ public class DerivationPath {
 
     public static final DerivationPath FIRST_BIP84_ADDRESS_PATH = new DerivationPath("84'/0'/0'/0/0");
 
+    public static final DerivationPath FIRST_BIP84_CHANGE_PATH = new DerivationPath("84'/0'/0'/1/0");
+
     private String path;
 
     public DerivationPath() {

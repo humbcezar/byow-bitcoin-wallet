@@ -21,8 +21,10 @@ import static org.mockito.MockitoAnnotations.initMocks;
 @ActiveProfiles("test")
 @SpringBootTest
 public class DefaultAddressGeneratorTest {
-    @Autowired
     private DefaultAddressGenerator addressGenerator;
+
+    @Autowired
+    private DefaultKeyGenerator defaultKeyGenerator;
 
     @Autowired
     private WalletCreator walletCreator;
@@ -38,7 +40,7 @@ public class DefaultAddressGeneratorTest {
         initMocks(this);
         walletRepository.deleteAll();
         walletCreator.setApplicationEventPublisher(this.applicationEventPublisher);
-        addressGenerator.setBitcoinEnvironment("mainnet");
+        addressGenerator = new DefaultAddressGenerator(defaultKeyGenerator, "bc");
     }
 
     @ParameterizedTest

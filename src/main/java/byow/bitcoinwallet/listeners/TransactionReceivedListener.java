@@ -37,7 +37,7 @@ public class TransactionReceivedListener implements ApplicationListener<Transact
 
     private Task<Void> buildTask(TransactionReceivedEvent event) {
         return taskConfigurer.configure(
-            new UpdateTransactionTask(transactionUpdater, reentrantLock, event.getRawTransaction()),
+            new UpdateTransactionTask(transactionUpdater, reentrantLock, event.getTransaction()),
             "Receiving transaction..."
         );
     }

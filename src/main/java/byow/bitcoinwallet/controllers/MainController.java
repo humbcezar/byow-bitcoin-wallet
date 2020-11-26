@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 public class MainController {
 
     @FXML
-    private BorderPane borderPane;
+    public BorderPane borderPane;
 
     @FXML
     private Menu load;
@@ -130,7 +130,7 @@ public class MainController {
         }
     }
 
-    private void initializeFxml(Dialog<ButtonType> dialog, FXMLLoader fxmlLoader, URL resourceUrl) {
+    public void initializeFxml(Dialog<ButtonType> dialog, FXMLLoader fxmlLoader, URL resourceUrl) {
         dialog.initOwner(borderPane.getScene().getWindow());
         fxmlLoader.setControllerFactory(context::getBean);
         try {

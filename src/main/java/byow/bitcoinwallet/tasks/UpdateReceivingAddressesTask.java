@@ -1,27 +1,27 @@
 package byow.bitcoinwallet.tasks;
 
-import byow.bitcoinwallet.services.CurrentReceivingAddressesManager;
+import byow.bitcoinwallet.services.CurrentAddressesManager;
 import javafx.concurrent.Task;
 
 import java.util.concurrent.locks.ReentrantLock;
 
 public class UpdateReceivingAddressesTask extends Task<Void> {
-    private CurrentReceivingAddressesManager currentReceivingAddressesManager;
+    private CurrentAddressesManager currentAddressesManager;
 
     private ReentrantLock reentrantLock;
 
     public UpdateReceivingAddressesTask(
-            CurrentReceivingAddressesManager currentReceivingAddressesManager,
+            CurrentAddressesManager currentAddressesManager,
             ReentrantLock reentrantLock
     ) {
-        this.currentReceivingAddressesManager = currentReceivingAddressesManager;
+        this.currentAddressesManager = currentAddressesManager;
         this.reentrantLock = reentrantLock;
     }
 
     @Override
     protected Void call() {
         synchronized (reentrantLock) {
-            currentReceivingAddressesManager.updateReceivingAddresses();
+            currentAddressesManager.updateReceivingAddresses();
         }
         return null;
     }

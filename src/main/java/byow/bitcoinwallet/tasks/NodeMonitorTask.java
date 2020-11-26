@@ -5,16 +5,18 @@ import byow.bitcoinwallet.events.TransactionReceivedEvent;
 import javafx.concurrent.Task;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.Socket;
 import wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient;
-import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.RawTransaction;
-import wf.bitcoin.krotjson.HexCoder;
-
 import java.util.Set;
 
+import static com.blockstream.libwally.Wally.*;
+import static wf.bitcoin.krotjson.HexCoder.encode;
+
 @Component
+@Lazy
 public class NodeMonitorTask {
 
     @Autowired
@@ -67,8 +69,9 @@ public class NodeMonitorTask {
 
                 switch (topic) {
                     case "rawtx" -> {
-                        RawTransaction rawTransaction = bitcoindRpcClient.decodeRawTransaction(HexCoder.encode(contents));
-                        applicationEventPublisher.publishEvent(new TransactionReceivedEvent(this, rawTransaction));
+                        applicationEventPublisher.publishEvent(
+                            new TransactionReceivedEvent(this, tx_from_hex(encode(contents), WALLY_TX_FLAG_USE_WITNESS))
+                        );
                     }
                     case "hashblock" -> {
                         applicationEventPublisher.publishEvent(new BlockReceivedEvent(this));
@@ -76,13 +79,6 @@ public class NodeMonitorTask {
                 }
             }
             return null;
-        }
-    }
-
-    public void unsubscribe() {
-        synchronized (subscriber) {
-            subscriber.unsubscribe("rawtx".getBytes());
-            subscriber.unsubscribe("hashblock".getBytes());
         }
     }
 

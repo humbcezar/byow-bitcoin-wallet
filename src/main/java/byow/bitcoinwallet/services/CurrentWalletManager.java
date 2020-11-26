@@ -14,30 +14,25 @@ public class CurrentWalletManager {
     private WalletUpdater walletUpdater;
 
     @Autowired
-    private CurrentReceivingAddressesManager currentReceivingAddressesManager;
+    private CurrentAddressesManager currentAddressesManager;
 
     private Wallet currentWallet;
 
     private final SimpleStringProperty walletName = new SimpleStringProperty();
 
     public void updateCurrentWallet(Wallet currentWallet) {
-        currentReceivingAddressesManager.clear();
+        currentAddressesManager.clear();
         this.currentWallet = currentWallet;
         walletName.setValue(currentWallet.getName());
 
         updateWallet(currentWallet);
     }
 
-    public void updateCurrentWallet() {
-        if (currentWallet != null) {
-            updateWallet(currentWallet);
-        }
-    }
-
     private void updateWallet(Wallet currentWallet) {
         walletUpdater.setSeed(currentWallet.getSeed())
             .setDate(currentWallet.getCreatedAt())
-            .update();
+            .updateReceivingAddresses()
+            .updateChangeAddresses();
     }
 
     public String getWalletName() {
@@ -51,5 +46,4 @@ public class CurrentWalletManager {
     public Wallet getCurrentWallet() {
         return currentWallet;
     }
-
 }

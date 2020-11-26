@@ -1,7 +1,7 @@
 package byow.bitcoinwallet.controllers;
 
 import byow.bitcoinwallet.entities.ReceivingAddress;
-import byow.bitcoinwallet.services.CurrentReceivingAddressesManager;
+import byow.bitcoinwallet.services.CurrentAddressesManager;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.TableColumn;
@@ -36,24 +36,24 @@ public class BalanceTableController extends TableView<ReceivingAddress> implemen
 
     private ApplicationContext context;
 
-    private CurrentReceivingAddressesManager currentReceivingAddressesManager;
+    private CurrentAddressesManager currentAddressesManager;
 
     @Autowired
     public BalanceTableController(
             @Value("classpath:/fxml/balance_table.fxml") Resource fxml,
             @Autowired ApplicationContext context,
-            @Autowired CurrentReceivingAddressesManager currentReceivingAddressesManager
+            @Autowired CurrentAddressesManager currentAddressesManager
     ) throws IOException {
         this.fxml = fxml;
         this.context = context;
-        this.currentReceivingAddressesManager = currentReceivingAddressesManager;
+        this.currentAddressesManager = currentAddressesManager;
         construct(this.fxml, this.context);
     }
 
     public void initialize() {
         balanceTable.setItems(
             new FilteredList<>(
-                currentReceivingAddressesManager.getReceivingAddresses(),
+                currentAddressesManager.getReceivingAddresses(),
                 receivingAddress -> receivingAddress.getBigDecimalBalance().compareTo(BigDecimal.ZERO) > 0
                     && receivingAddress.getConfirmations() > -1
             )

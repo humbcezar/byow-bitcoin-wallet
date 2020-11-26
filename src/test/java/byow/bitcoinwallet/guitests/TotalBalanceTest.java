@@ -1,5 +1,6 @@
 package byow.bitcoinwallet.guitests;
 
+import byow.bitcoinwallet.entities.Address;
 import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.repositories.WalletRepository;
 import byow.bitcoinwallet.services.AddressSequentialGenerator;
@@ -21,6 +22,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -61,7 +63,10 @@ public class TotalBalanceTest extends TestBase {
     public void showPositiveBalanceWithOneUnconfirmedBalance(FxRobot robot) throws TimeoutException {
         int numberOfReceivingAddresses = 1;
 
-        List<String> addresses = addressSequentialGenerator.deriveAddresses(numberOfReceivingAddresses, seed, FIRST_BIP84_ADDRESS_PATH);
+        List<String> addresses = addressSequentialGenerator.deriveAddresses(
+                numberOfReceivingAddresses,
+                seed, FIRST_BIP84_ADDRESS_PATH
+        ).stream().map(Address::getAddress).collect(Collectors.toList());
         addresses.forEach(address -> bitcoindRpcClient.sendToAddress(address, BigDecimal.ONE));
         robot.clickOn("#wallet");
         robot.moveTo("#load");

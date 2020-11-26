@@ -3,23 +3,17 @@ package byow.bitcoinwallet.services;
 import byow.bitcoinwallet.entities.NextReceivingAddress;
 import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.enums.Languages;
-import byow.bitcoinwallet.services.*;
+import byow.bitcoinwallet.utils.UnspentUtil;
 import com.blockstream.libwally.Wally;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Unspent;
 
@@ -34,16 +28,8 @@ import static java.math.BigDecimal.TEN;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
-@ExtendWith(SpringExtension.class)
-@Import({
-    DefaultAddressGenerator.class,
-    AddressSequentialGenerator.class,
-    CurrentReceivingAddressesManager.class,
-    NextReceivingAddress.class
-})
 @ActiveProfiles("test")
-@MockitoSettings(strictness = Strictness.LENIENT)
+@SpringBootTest
 public class WalletUpdaterTest {
 
     @MockBean
@@ -56,11 +42,13 @@ public class WalletUpdaterTest {
     private DefaultAddressGenerator addressGenerator;
 
     @Autowired
-    private CurrentReceivingAddressesManager currentReceivingAddressesManager;
+    private CurrentAddressesManager currentAddressesManager;
 
     @Autowired
     private NextReceivingAddress nextReceivingAddress;
 
+    @Autowired
+    private UnspentUtil unspentUtil;
 
     private SeedGenerator seedGenerator = new SeedGenerator(Wally.bip39_get_wordlist(Languages.EN), new EntropyCreator());
 
@@ -69,8 +57,8 @@ public class WalletUpdaterTest {
 
     @BeforeEach
     void setUp() {
-        currentReceivingAddressesManager.clear();
-        walletUpdater = new WalletUpdater(currentReceivingAddressesManager);
+        currentAddressesManager.clear();
+        walletUpdater = new WalletUpdater(currentAddressesManager);
     }
 
     @Test
@@ -84,7 +72,7 @@ public class WalletUpdaterTest {
         Date date = new Date();
 
         walletUpdater.setInitialAddressToMonitor(20);
-        walletUpdater.setDate(date).setSeed(seed).update();
+        walletUpdater.setDate(date).setSeed(seed).updateReceivingAddresses();
 
         verify(multiAddressesImporter).importMultiAddresses(date, expectedAddresses);
         assertTrue(
@@ -92,7 +80,7 @@ public class WalletUpdaterTest {
             nextReceivingAddress.getValue().getConfirmations() == 0 &&
             nextReceivingAddress.getValue().getBalance().equals("0")
         );
-        assertEquals(20, currentReceivingAddressesManager.getReceivingAddresses().size());
+        assertEquals(20, currentAddressesManager.getReceivingAddresses().size());
     }
 
     @Test
@@ -100,14 +88,14 @@ public class WalletUpdaterTest {
         String seed = seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), "");
 
         String[] expectedAddresses = expectedAddresses(seed, 20, FIRST_BIP84_ADDRESS_PATH);
-        List<Unspent> unspents = List.of(unspent(expectedAddresses[0], TEN, 0));
+        List<Unspent> unspents = List.of(unspentUtil.unspent(expectedAddresses[0], TEN, 0));
         when(bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, expectedAddresses))
                 .thenReturn(unspents);
 
         Date date = new Date();
 
         walletUpdater.setInitialAddressToMonitor(20);
-        walletUpdater.setDate(date).setSeed(seed).update();
+        walletUpdater.setDate(date).setSeed(seed).updateReceivingAddresses();
 
         verify(multiAddressesImporter).importMultiAddresses(date, expectedAddresses);
         assertTrue(
@@ -115,8 +103,8 @@ public class WalletUpdaterTest {
             nextReceivingAddress.getValue().getConfirmations() == 0 &&
             nextReceivingAddress.getValue().getBalance().equals("0")
         );
-        assertEquals(20, currentReceivingAddressesManager.getReceivingAddresses().size());
-        FilteredList<ReceivingAddress> usedReceivingAddresses = currentReceivingAddressesManager
+        assertEquals(20, currentAddressesManager.getReceivingAddresses().size());
+        FilteredList<ReceivingAddress> usedReceivingAddresses = currentAddressesManager
                 .getReceivingAddresses().filtered(receivingAddress ->
             receivingAddress.getBigDecimalBalance().compareTo(BigDecimal.ZERO) > 0
         );
@@ -136,11 +124,11 @@ public class WalletUpdaterTest {
 
         String[] expectedAddresses = expectedAddresses(seed, 20, FIRST_BIP84_ADDRESS_PATH);
         List<Unspent> unspents = List.of(
-                unspent(expectedAddresses[0], TEN, 1),
-                unspent(expectedAddresses[1], TEN, 1),
-                unspent(expectedAddresses[2], TEN, 1),
-                unspent(expectedAddresses[3], TEN, 1),
-                unspent(expectedAddresses[4], TEN, 1)
+                unspentUtil.unspent(expectedAddresses[0], TEN, 1),
+                unspentUtil.unspent(expectedAddresses[1], TEN, 1),
+                unspentUtil.unspent(expectedAddresses[2], TEN, 1),
+                unspentUtil.unspent(expectedAddresses[3], TEN, 1),
+                unspentUtil.unspent(expectedAddresses[4], TEN, 1)
         );
         when(bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, expectedAddresses))
                 .thenReturn(unspents);
@@ -148,7 +136,7 @@ public class WalletUpdaterTest {
         Date date = new Date();
 
         walletUpdater.setInitialAddressToMonitor(20);
-        walletUpdater.setDate(date).setSeed(seed).update();
+        walletUpdater.setDate(date).setSeed(seed).updateReceivingAddresses();
 
         verify(multiAddressesImporter).importMultiAddresses(date, expectedAddresses);
         assertTrue(
@@ -156,8 +144,8 @@ public class WalletUpdaterTest {
             nextReceivingAddress.getValue().getConfirmations() == 0 &&
             nextReceivingAddress.getValue().getBalance().equals("0")
         );
-        assertEquals(20, currentReceivingAddressesManager.getReceivingAddresses().size());
-        FilteredList<ReceivingAddress> usedReceivingAddresses = currentReceivingAddressesManager
+        assertEquals(20, currentAddressesManager.getReceivingAddresses().size());
+        FilteredList<ReceivingAddress> usedReceivingAddresses = currentAddressesManager
                 .getReceivingAddresses().filtered(receivingAddress ->
                         receivingAddress.getBigDecimalBalance().compareTo(BigDecimal.ZERO) > 0
                 );
@@ -178,13 +166,13 @@ public class WalletUpdaterTest {
 
         String[] expectedAddresses = expectedAddresses(seed, 20, FIRST_BIP84_ADDRESS_PATH);
         List<Unspent> unspents = List.of(
-                unspent(expectedAddresses[0], TEN, 1),
-                unspent(expectedAddresses[1], TEN, 1),
-                unspent(expectedAddresses[2], TEN, 1),
-                unspent(expectedAddresses[3], TEN, 1),
-                unspent(expectedAddresses[4], TEN, 1),
-                unspent(expectedAddresses[4], new BigDecimal(1), 0),
-                unspent(expectedAddresses[4], new BigDecimal(2), 1)
+                unspentUtil.unspent(expectedAddresses[0], TEN, 1),
+                unspentUtil.unspent(expectedAddresses[1], TEN, 1),
+                unspentUtil.unspent(expectedAddresses[2], TEN, 1),
+                unspentUtil.unspent(expectedAddresses[3], TEN, 1),
+                unspentUtil.unspent(expectedAddresses[4], TEN, 1),
+                unspentUtil.unspent(expectedAddresses[4], new BigDecimal(1), 0),
+                unspentUtil.unspent(expectedAddresses[4], new BigDecimal(2), 1)
         );
         when(bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, expectedAddresses))
                 .thenReturn(unspents);
@@ -192,7 +180,7 @@ public class WalletUpdaterTest {
         Date date = new Date();
 
         walletUpdater.setInitialAddressToMonitor(20);
-        walletUpdater.setDate(date).setSeed(seed).update();
+        walletUpdater.setDate(date).setSeed(seed).updateReceivingAddresses();
 
         verify(multiAddressesImporter).importMultiAddresses(date, expectedAddresses);
         assertTrue(
@@ -200,8 +188,8 @@ public class WalletUpdaterTest {
             nextReceivingAddress.getValue().getConfirmations() == 0 &&
             nextReceivingAddress.getValue().getBalance().equals("0")
         );
-        assertEquals(20, currentReceivingAddressesManager.getReceivingAddresses().size());
-        FilteredList<ReceivingAddress> usedReceivingAddresses = currentReceivingAddressesManager
+        assertEquals(20, currentAddressesManager.getReceivingAddresses().size());
+        FilteredList<ReceivingAddress> usedReceivingAddresses = currentAddressesManager
                 .getReceivingAddresses().filtered(receivingAddress ->
                         receivingAddress.getBigDecimalBalance().compareTo(BigDecimal.ZERO) > 0
                 );
@@ -227,7 +215,7 @@ public class WalletUpdaterTest {
         String[] expectedAddresses = expectedAddresses(seed, 20, FIRST_BIP84_ADDRESS_PATH);
         String[] expectedAddresses2 = expectedAddresses(seed, 20, new DerivationPath("84'/0'/0'/0/20"));
         List<Unspent> unspents = IntStream.range(0, 20)
-                .mapToObj(i -> unspent(expectedAddresses[i], TEN, 1))
+                .mapToObj(i -> unspentUtil.unspent(expectedAddresses[i], TEN, 1))
                 .collect(Collectors.toList());
         when(bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, expectedAddresses)).thenReturn(unspents);
         when(bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, expectedAddresses2)).thenReturn(new ArrayList<>());
@@ -235,7 +223,7 @@ public class WalletUpdaterTest {
         Date date = new Date();
 
         walletUpdater.setInitialAddressToMonitor(20);
-        walletUpdater.setDate(date).setSeed(seed).update();
+        walletUpdater.setDate(date).setSeed(seed).updateReceivingAddresses();
 
         ArgumentCaptor<String[]> expectedAddressesCaptured = ArgumentCaptor.forClass(String[].class);
         ArgumentCaptor<Date> expectedDateCaptured = ArgumentCaptor.forClass(Date.class);
@@ -247,8 +235,8 @@ public class WalletUpdaterTest {
         List<Date> allDateValues = expectedDateCaptured.getAllValues();
         assertEquals(allDateValues.get(0), date);
 
-        assertEquals(40, currentReceivingAddressesManager.getReceivingAddresses().size());
-        FilteredList<ReceivingAddress> usedReceivingAddresses = currentReceivingAddressesManager
+        assertEquals(40, currentAddressesManager.getReceivingAddresses().size());
+        FilteredList<ReceivingAddress> usedReceivingAddresses = currentAddressesManager
                 .getReceivingAddresses().filtered(receivingAddress ->
                         receivingAddress.getBigDecimalBalance().compareTo(BigDecimal.ZERO) > 0
                 );
@@ -280,50 +268,6 @@ public class WalletUpdaterTest {
                     )
                 )
         );
-    }
-
-    private Unspent unspent(String expectedAddress, BigDecimal amount, int confirmations) {
-        return new Unspent() {
-            @Override
-            public String account() {
-                return "test";
-            }
-
-            @Override
-            public int confirmations() {
-                return confirmations;
-            }
-
-            @Override
-            public String txid() {
-                return null;
-            }
-
-            @Override
-            public Integer vout() {
-                return null;
-            }
-
-            @Override
-            public String scriptPubKey() {
-                return null;
-            }
-
-            @Override
-            public String address() {
-                return expectedAddress;
-            }
-
-            @Override
-            public BigDecimal amount() {
-                return amount;
-            }
-
-            @Override
-            public byte[] data() {
-                return new byte[0];
-            }
-        };
     }
 
     private String[] expectedAddresses(String seed, int numberOfAddresses, DerivationPath initialDerivationPath) {
