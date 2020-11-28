@@ -3,6 +3,7 @@ package byow.bitcoinwallet.guitests;
 import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.enums.Languages;
 import byow.bitcoinwallet.repositories.WalletRepository;
+import byow.bitcoinwallet.utils.WalletUtil;
 import com.blockstream.libwally.Wally;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
@@ -13,45 +14,47 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
-import org.testfx.matcher.control.TableViewMatchers;
 import org.testfx.service.query.NodeQuery;
 
+import java.util.concurrent.TimeoutException;
 import java.util.stream.IntStream;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.testfx.matcher.control.TableViewMatchers.containsRowAtIndex;
+import static org.testfx.util.WaitForAsyncUtils.waitFor;
 
 public class CreateWalletTest extends TestBase {
+
+    @Autowired
+    WalletRepository walletRepository;
+
+    @Autowired
+    WalletUtil walletUtil;
+
     @Override
     @Start
     public void start(Stage stage) throws Exception {
         super.start(stage);
     }
 
-    @Autowired
-    WalletRepository walletRepository;
-
     @Test
-    public void createWallet (FxRobot robot) throws InterruptedException {
-        robot.clickOn("#wallet");
-        robot.clickOn("#new");
-        robot.clickOn("#walletName");
-        robot.write("Test wallet");
-        robot.clickOn("#create");
-        String mnemonicSeed = robot.lookup("#mnemonicSeed").queryAs(TextArea.class).getText();
-        robot.clickOn("OK");
+    public void createWallet (FxRobot robot) throws InterruptedException, TimeoutException {
+        String mnemonicSeed = walletUtil.createWallet(robot, "test wallet");
         Object wordList = Wally.bip39_get_wordlist(Languages.EN);
-        Wallet wallet = walletRepository.findByName("Test wallet");
+        Wallet wallet = walletRepository.findByName("test wallet");
         try {
             Wally.bip39_mnemonic_validate(wordList, mnemonicSeed);
         } catch (final Exception e) {
             Assertions.fail(e);
         }
-        assertEquals("Test wallet", wallet.getName());
+        assertEquals("test wallet", wallet.getName());
         assertTrue(wallet.getSeed() != null && !wallet.getSeed().isEmpty());
-        assertEquals("BYOW Wallet - Test wallet", stage.getTitle());
+
+        waitFor(60, SECONDS, () -> "BYOW Wallet - test wallet".equals(stage.getTitle()));
+        assertEquals("BYOW Wallet - test wallet", stage.getTitle());
         robot.clickOn("Receive");
         String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
         assertNotNull(address);
@@ -60,7 +63,7 @@ public class CreateWalletTest extends TestBase {
     }
 
     @Test
-    public void createWalletWithPassword (FxRobot robot) throws InterruptedException {
+    public void createWalletWithPassword (FxRobot robot) throws InterruptedException, TimeoutException {
         robot.clickOn("#wallet");
         robot.clickOn("#new");
         robot.clickOn("#walletName");
@@ -79,6 +82,7 @@ public class CreateWalletTest extends TestBase {
         }
         assertEquals("Test wallet3", wallet.getName());
         assertTrue(wallet.getSeed() != null && !wallet.getSeed().isEmpty());
+        waitFor(60, SECONDS, () -> "BYOW Wallet - Test wallet3".equals(stage.getTitle()));
         assertEquals("BYOW Wallet - Test wallet3", stage.getTitle());
         String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
         assertNotNull(address);

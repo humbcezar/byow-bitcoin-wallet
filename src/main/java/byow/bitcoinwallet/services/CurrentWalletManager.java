@@ -23,7 +23,6 @@ public class CurrentWalletManager {
     public void updateCurrentWallet(Wallet currentWallet) {
         currentAddressesManager.clear();
         this.currentWallet = currentWallet;
-        walletName.setValue(currentWallet.getName());
 
         updateWallet(currentWallet);
     }
@@ -45,5 +44,9 @@ public class CurrentWalletManager {
 
     public Wallet getCurrentWallet() {
         return currentWallet;
+    }
+
+    public void setWalletName(String walletName) {
+        this.walletName.set(walletName);
     }
 }

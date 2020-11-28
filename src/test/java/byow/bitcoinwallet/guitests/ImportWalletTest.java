@@ -12,7 +12,9 @@ import org.testfx.util.WaitForAsyncUtils;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.testfx.util.WaitForAsyncUtils.waitFor;
 
 public class ImportWalletTest extends TestBase {
     @Autowired
@@ -38,6 +40,9 @@ public class ImportWalletTest extends TestBase {
         robot.clickOn("OK");
         robot.clickOn("Receive");
 
+        waitFor(40, SECONDS, () ->
+            "BYOW Wallet - Imported Wallet".equals(stage.getTitle())
+        );
         assertEquals("BYOW Wallet - Imported Wallet", stage.getTitle());
         WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
             String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();

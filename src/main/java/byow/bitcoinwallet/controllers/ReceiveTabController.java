@@ -28,9 +28,9 @@ public class ReceiveTabController extends Tab implements BaseController {
 
     @Autowired
     public ReceiveTabController(
-            @Value("classpath:/fxml/receive_tab.fxml") Resource fxml,
-            ApplicationContext context,
-            NextReceivingAddress nextReceivingAddress
+        @Value("classpath:/fxml/receive_tab.fxml") Resource fxml,
+        ApplicationContext context,
+        NextReceivingAddress nextReceivingAddress
     ) throws IOException {
         this.fxml = fxml;
         this.context = context;

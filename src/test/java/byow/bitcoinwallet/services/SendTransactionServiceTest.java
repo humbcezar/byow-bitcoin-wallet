@@ -5,6 +5,7 @@ import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.entities.Transaction;
 import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.utils.UnspentUtil;
+import javafx.scene.control.TextField;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

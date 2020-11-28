@@ -40,9 +40,9 @@ public class BalanceTableController extends TableView<ReceivingAddress> implemen
 
     @Autowired
     public BalanceTableController(
-            @Value("classpath:/fxml/balance_table.fxml") Resource fxml,
-            @Autowired ApplicationContext context,
-            @Autowired CurrentAddressesManager currentAddressesManager
+        @Value("classpath:/fxml/balance_table.fxml") Resource fxml,
+        @Autowired ApplicationContext context,
+        @Autowired CurrentAddressesManager currentAddressesManager
     ) throws IOException {
         this.fxml = fxml;
         this.context = context;

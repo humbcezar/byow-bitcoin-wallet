@@ -21,6 +21,7 @@ import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PAT
 import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_CHANGE_PATH;
 import static java.lang.Integer.min;
 import static java.math.BigDecimal.ZERO;
+import static javafx.application.Platform.runLater;
 
 @Component
 @Lazy
@@ -111,11 +112,11 @@ public class CurrentAddressesManager {
             .collect(Collectors.groupingBy(ReceivingAddress::getAddress));
         addressList.stream()
             .filter(address -> isSpent(collectedAddressMap, address))
-            .forEach(address -> collectedAddressMap.put(address, List.of(new ReceivingAddress(ZERO, 0, address))));
+            .forEach(address -> collectedAddressMap.put(address, List.of(new ReceivingAddress(ZERO, -1, address))));
 
         collectedAddressMap.forEach(
-            (address, receivingAddresses) ->
-                receivingAddresses.stream()
+            (address, addresses) ->
+                addresses.stream()
                     .filter(receivingAddress -> receivingAddressesMap.containsKey(receivingAddress.getAddress()))
                     .reduce(
                         (address1, address2) -> new ReceivingAddress(
@@ -125,8 +126,10 @@ public class CurrentAddressesManager {
                         )
                     ).ifPresent(receivingAddress -> {
                         ReceivingAddress currentReceivingAddress = receivingAddressesMap.get(receivingAddress.getAddress());
-                        currentReceivingAddress.setBalance(receivingAddress.getBalance());
-                        currentReceivingAddress.setConfirmations(receivingAddress.getConfirmations());
+                        runLater(() -> {
+                            currentReceivingAddress.setBalance(receivingAddress.getBalance());
+                            currentReceivingAddress.setConfirmations(receivingAddress.getConfirmations());
+                        });
                     })
         );
         return collectedAddressMap.size();
@@ -159,12 +162,12 @@ public class CurrentAddressesManager {
             ).get(0).getAddress();
         }
         initializeReceivingAddresses(1, seed, walletCreationDate);
-        nextReceivingAddress.setReceivingAddress(
-            new ReceivingAddress(ZERO, 0, address)
-        );
-        if (!getUtxos(List.of(nextReceivingAddress.getValue().getAddress())).isEmpty()) {
+        ReceivingAddress nextAddress = new ReceivingAddress(ZERO, 0, address);
+        if (!getUtxos(List.of(address)).isEmpty()) {
             updateNextReceivingAddress(address, 1, seed, walletCreationDate);
+            return;
         }
+        runLater(() -> nextReceivingAddress.setReceivingAddress(nextAddress));
     }
 
     public void updateNextChangeAddress(String address, int updatedAddressesCount, String seed, Date walletCreationDate) {
@@ -176,12 +179,12 @@ public class CurrentAddressesManager {
             ).get(0).getAddress();
         }
         initializeChangeAddresses(1, seed, walletCreationDate);
-        nextChangeAddress.setReceivingAddress(
-            new ReceivingAddress(ZERO, 0, address)
-        );
-        if (!getUtxos(List.of(nextChangeAddress.getReceivingAddress().getAddress())).isEmpty()) {
+        ReceivingAddress nextAddress = new ReceivingAddress(ZERO, 0, address);
+        if (!getUtxos(List.of(address)).isEmpty()) {
             updateNextChangeAddress(address, 1, seed, walletCreationDate);
+            return;
         }
+        runLater(() -> nextChangeAddress.setReceivingAddress(nextAddress));
     }
 
     public ObservableList<ReceivingAddress> getReceivingAddresses() {

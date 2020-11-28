@@ -2,12 +2,12 @@ package byow.bitcoinwallet.guitests;
 
 import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.services.AddressGenerator;
-import byow.bitcoinwallet.services.DerivationPath;
 import byow.bitcoinwallet.services.SeedGenerator;
 import byow.bitcoinwallet.utils.WalletUtil;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.testfx.api.FxRobot;
@@ -44,7 +44,7 @@ public class ReceivingHashBlockTest extends TestBase {
 
     @Test
     public void receiveOneHashBlock(FxRobot robot) throws TimeoutException, InterruptedException {
-        walletUtil.createWallet(robot);
+        walletUtil.createWallet(robot, RandomString.make());
         WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
             TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
             String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();

@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.concurrent.locks.ReentrantLock;
 
+import static javafx.concurrent.WorkerStateEvent.WORKER_STATE_SUCCEEDED;
+
 @Lazy
 @Component
 public class WalletCreatedListener implements ApplicationListener<WalletCreatedEvent> {
@@ -36,9 +38,13 @@ public class WalletCreatedListener implements ApplicationListener<WalletCreatedE
     }
 
     private Task<Void> buildTask(WalletCreatedEvent event) {
-        return taskConfigurer.configure(
+        Task<Void> task = taskConfigurer.configure(
             new UpdateCurrentWalletTask(currentWalletManager, reentrantLock, event.getWallet()),
             "Loading wallet..."
         );
+        task.addEventFilter(WORKER_STATE_SUCCEEDED, succeededEvent ->
+            currentWalletManager.setWalletName(event.getWallet().getName())
+        );
+        return task;
     }
 }

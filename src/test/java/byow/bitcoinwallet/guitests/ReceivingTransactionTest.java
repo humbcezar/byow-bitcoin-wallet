@@ -10,6 +10,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import javafx.util.converter.BigDecimalStringConverter;
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,51 +58,51 @@ public class ReceivingTransactionTest extends TestBase {
 
     @Test
     public void receiveOneTransaction(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot);
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
         receiveNTransactions(robot, mnemonicSeed, 1);
     }
 
     @Test
     public void receiveFiveTransactions(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot);
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
         receiveNTransactions(robot, mnemonicSeed, 5);
     }
 
     @Test
     public void receiveFifteenTransactions(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot);
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
         receiveNTransactions(robot, mnemonicSeed, 15);
     }
 
     @Test
     public void receiveTwentyTransactions(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot);
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
         receiveNTransactions(robot, mnemonicSeed, 20);
     }
 
     @Test
     public void receiveTwentyFiveTransactions(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot);
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
         receiveNTransactions(robot, mnemonicSeed, 25);
     }
 
     @Test
     public void receiveTenSequentialTransactionsToTheSameAddress(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot);
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
         int numberOfTransactions = 10;
         receiveNSequentialTransactions(robot, mnemonicSeed, numberOfTransactions);
     }
 
     @Test
     public void receiveTwentyTwoSequentialTransactionsToTheSameAddress(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot);
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
         int numberOfTransactions = 22;
         receiveNSequentialTransactions(robot, mnemonicSeed, numberOfTransactions);
     }
 
     @Test
     public void receiveFiveSequentialTransactionsToTheSameAddressWithDifferentValuesAndConfirmations(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot);
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
 
         WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
             TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
@@ -131,7 +132,7 @@ public class ReceivingTransactionTest extends TestBase {
 
     @Test
     public void receiveTransactionNextAddressUsed(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot);
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
 
         WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
             TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);

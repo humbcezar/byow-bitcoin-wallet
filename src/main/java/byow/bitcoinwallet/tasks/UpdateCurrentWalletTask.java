@@ -14,9 +14,9 @@ public class UpdateCurrentWalletTask extends Task<Void> {
     private Wallet wallet;
 
     public UpdateCurrentWalletTask(
-            CurrentWalletManager currentWalletManager,
-            ReentrantLock reentrantLock,
-            Wallet wallet
+        CurrentWalletManager currentWalletManager,
+        ReentrantLock reentrantLock,
+        Wallet wallet
     ) {
         this.currentWalletManager = currentWalletManager;
         this.reentrantLock = reentrantLock;
