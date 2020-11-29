@@ -21,13 +21,13 @@ public class DerivationPath {
 
     public int[] getParsedPath() {
         return Arrays.stream(path.split("/"))
-                .mapToInt(i -> {
-                    if (i.contains("'")) {
-                        return BIP32_INITIAL_HARDENED_CHILD + Integer.parseInt(i.replace("'", ""));
-                    }
-                    return Integer.parseInt(i);
-                })
-                .toArray();
+            .mapToInt(i -> {
+                if (i.contains("'")) {
+                    return BIP32_INITIAL_HARDENED_CHILD + Integer.parseInt(i.replace("'", ""));
+                }
+                return Integer.parseInt(i);
+            })
+            .toArray();
     }
 
     public DerivationPath next(int n) {

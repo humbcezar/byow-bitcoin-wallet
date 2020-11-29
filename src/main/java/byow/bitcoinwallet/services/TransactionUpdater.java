@@ -1,5 +1,6 @@
 package byow.bitcoinwallet.services;
 
+import byow.bitcoinwallet.entities.NextChangeAddress;
 import byow.bitcoinwallet.entities.NextReceivingAddress;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -24,6 +25,8 @@ public class TransactionUpdater {
 
     private NextReceivingAddress nextReceivingAddress;
 
+    private NextChangeAddress nextChangeAddress;
+
     private String addressPrefix;
 
     @Autowired
@@ -31,11 +34,13 @@ public class TransactionUpdater {
         CurrentAddressesManager currentAddressesManager,
         CurrentWalletManager currentWalletManager,
         NextReceivingAddress nextReceivingAddress,
+        NextChangeAddress nextChangeAddress,
         @Qualifier("addressPrefix") String addressPrefix
     ) {
         this.currentAddressesManager = currentAddressesManager;
         this.currentWalletManager = currentWalletManager;
         this.nextReceivingAddress = nextReceivingAddress;
+        this.nextChangeAddress = nextChangeAddress;
         this.addressPrefix = addressPrefix;
     }
 
@@ -58,15 +63,25 @@ public class TransactionUpdater {
             )
             .filter(address -> currentAddressesManager.contains(address))
             .peek(address -> currentAddressesManager.updateReceivingAddresses(List.of(address)))
-            .filter(address -> nextReceivingAddress.equalAddress(address))
-            .forEach(address ->
-                currentAddressesManager.updateNextReceivingAddress(
-                    "",
-                    1,
-                    currentWalletManager.getCurrentWallet().getSeed(),
-                    currentWalletManager.getCurrentWallet().getCreatedAt()
-                )
-            );
+            .forEach(address -> {
+                if(nextReceivingAddress.equalAddress(address)) {
+                    currentAddressesManager.updateNextReceivingAddress(
+                        "",
+                        1,
+                        currentWalletManager.getCurrentWallet().getSeed(),
+                        currentWalletManager.getCurrentWallet().getCreatedAt()
+                    );
+                    return;
+                }
+                if (nextChangeAddress.equalAddress(address)) {
+                    currentAddressesManager.updateNextChangeAddress(
+                        "",
+                        1,
+                        currentWalletManager.getCurrentWallet().getSeed(),
+                        currentWalletManager.getCurrentWallet().getCreatedAt()
+                    );
+                }
+            });
     }
 
     private Stream<String> parseInputAddresses(Object transaction) {
