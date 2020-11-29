@@ -65,6 +65,7 @@ public class SingleRandomDrawTransactionCreatorTest {
         assertEquals(9899973210L, transaction.getOutput(1).getAmount());
         assertEquals(utxo.txid(), transaction.getInput(0).getTxId());
     }
+    //TODO: testar com multiplos utxos e ver se change muda
     //TODO: testar com dust
     //TODO: testar com inputs insuficientes
     //TODO: testar com edge cases (ex: inputs == target, inputs == adjustedTarget)
