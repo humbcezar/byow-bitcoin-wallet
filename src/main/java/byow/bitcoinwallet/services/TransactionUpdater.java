@@ -89,7 +89,7 @@ public class TransactionUpdater {
         if(!tx_is_coinbase(transaction)) {
             int numInputs = tx_get_num_inputs(transaction);
             inputAddresses = range(0, numInputs).mapToObj(i -> {
-                byte[] publicKey = tx_get_input_witness(transaction, 0, 1);
+                byte[] publicKey = tx_get_input_witness(transaction, i, 1);
                 byte[] witness = witness_program_from_bytes(publicKey, WALLY_SCRIPT_HASH160);
                 return addr_segwit_from_bytes(witness, addressPrefix, 0);
             }).collect(Collectors.toList());
