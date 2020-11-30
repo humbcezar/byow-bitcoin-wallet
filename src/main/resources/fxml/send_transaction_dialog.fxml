@@ -2,6 +2,14 @@
 
 <?import javafx.scene.control.*?>
 
+<?import javafx.scene.layout.GridPane?>
 <DialogPane headerText="Confirm transaction?" minHeight="-Infinity" minWidth="-Infinity" prefHeight="300.0" prefWidth="450.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="byow.bitcoinwallet.controllers.SendTransactionDialogController">
-
+    <content>
+        <GridPane>
+            <Label text="Amount to send:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+            <Label fx:id="amountToSend" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+            <Label text="Address to send:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+            <Label fx:id="addressToSend" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+        </GridPane>
+    </content>
 </DialogPane>

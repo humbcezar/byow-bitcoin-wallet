@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
+import org.testfx.service.query.NodeQuery;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
 
 import java.math.BigDecimal;
@@ -28,6 +29,7 @@ import static java.util.Objects.isNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.IntStream.range;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.testfx.util.WaitForAsyncUtils.waitFor;
 
 public class SendTransactionTest extends TestBase {
@@ -91,13 +93,35 @@ public class SendTransactionTest extends TestBase {
     }
 
     @Test
-    public void sendOneTransactionsFromWalletWithThreeUtxosToNodeAddress(FxRobot robot) {
+    public void sendOneTransactionFromWalletWithThreeUtxosToNodeAddress(FxRobot robot) {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
 
         fundNAddresses(robot, seed, valueOf(2), 1, 3);
         sendNTransactions(robot, "5", 1, "5.00000000", 1);
     }
+
+    @Test
+    public void sendOneTransactionWithoutEnoughFundsFail(FxRobot robot) {
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
+        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+
+        fundNAddresses(robot, seed, valueOf(2), 1, 1);
+
+        String nodeAddress = bitcoindRpcClient.getNewAddress();
+        robot.clickOn("#sendTab");
+        robot.clickOn("#amountToSend");
+        robot.write("5");
+        robot.clickOn("#addressToSend");
+        robot.write(nodeAddress);
+        robot.clickOn("#send");
+        robot.clickOn("OK");
+
+        NodeQuery text = robot.lookup("Not enough available funds for transaction.");
+        robot.clickOn("OK");
+        assertNotNull(text.queryLabeled().getText());
+    }
+    //TODO: incluir fees na regra acima
 
     private void sendNTransactions(FxRobot robot, String amount, int scale, String expectedBalance, int numberOfTransactions) {
         range(0, numberOfTransactions).forEach(i -> {
