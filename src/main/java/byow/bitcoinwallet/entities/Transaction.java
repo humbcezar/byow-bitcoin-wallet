@@ -14,6 +14,10 @@ public class Transaction {
 
     private List<TransactionInput> inputs = new ArrayList<>();
 
+    private long feeRateInSatoshisPerByte;
+
+    private long totalFeeInSatoshis;
+
     public Transaction(int numberOfInputs, int numberOfOutputs) {
         tx = tx_init(2, 0, numberOfInputs, numberOfOutputs);
     }
@@ -89,5 +93,21 @@ public class Transaction {
 
     public TransactionOutput getOutput(int index) {
         return outputs.get(index);
+    }
+
+    public void setFeeRateInSatoshisPerByte(long feeRateInSatoshisPerByte) {
+        this.feeRateInSatoshisPerByte = feeRateInSatoshisPerByte;
+    }
+
+    public void setTotalFeeInSatoshis(long totalFeeInSatoshis) {
+        this.totalFeeInSatoshis = totalFeeInSatoshis;
+    }
+
+    public long getFeeRateInSatoshisPerByte() {
+        return feeRateInSatoshisPerByte;
+    }
+
+    public long getTotalFeeInSatoshis() {
+        return totalFeeInSatoshis;
     }
 }

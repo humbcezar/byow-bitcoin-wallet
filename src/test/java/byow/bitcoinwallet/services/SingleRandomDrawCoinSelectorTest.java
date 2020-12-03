@@ -20,9 +20,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 @ActiveProfiles("test")
-public class SingleRandomDrawTransactionCreatorTest {
+public class SingleRandomDrawCoinSelectorTest {
     @Autowired
-    private SingleRandomDrawTransactionCreator singleRandomDrawTransactionCreator;
+    private SingleRandomDrawCoinSelector singleRandomDrawTransactionCreator;
 
     @Autowired
     private UnspentUtil unspentUtil;
@@ -50,7 +50,7 @@ public class SingleRandomDrawTransactionCreatorTest {
         String outputAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1));
 
         Unspent utxo = unspentUtil.unspent(inputAddress, inputBalance, 922);
-        Transaction transaction = singleRandomDrawTransactionCreator.create(
+        Transaction transaction = singleRandomDrawTransactionCreator.select(
             List.of(utxo),
             ONE,
             new BigDecimal("0.002"),

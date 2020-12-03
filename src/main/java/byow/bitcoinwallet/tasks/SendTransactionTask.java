@@ -1,10 +1,9 @@
 package byow.bitcoinwallet.tasks;
 
+import byow.bitcoinwallet.entities.Transaction;
 import byow.bitcoinwallet.services.SendTransactionService;
 import javafx.concurrent.Task;
-import javafx.scene.control.TextField;
 
-import java.math.BigDecimal;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class SendTransactionTask extends Task<Void> {
@@ -12,29 +11,22 @@ public class SendTransactionTask extends Task<Void> {
 
     private SendTransactionService sendTransactionService;
 
-    private TextField amountToSend;
-
-    private TextField addressToSend;
+    private Transaction transaction;
 
     public SendTransactionTask(
         ReentrantLock reentrantLock,
         SendTransactionService sendTransactionService,
-        TextField amountToSend,
-        TextField addressToSend
+        Transaction transaction
     ) {
         this.reentrantLock = reentrantLock;
         this.sendTransactionService = sendTransactionService;
-        this.amountToSend = amountToSend;
-        this.addressToSend = addressToSend;
+        this.transaction = transaction;
     }
 
     @Override
-    protected Void call() throws Exception {
+    protected Void call() {
         synchronized (reentrantLock) {
-            sendTransactionService.send(
-                addressToSend.getText(),
-                new BigDecimal(amountToSend.getText())
-            );
+            sendTransactionService.signAndSend(transaction);
         }
         return null;
     }

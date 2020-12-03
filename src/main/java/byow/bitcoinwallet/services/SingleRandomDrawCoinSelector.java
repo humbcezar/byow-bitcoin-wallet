@@ -18,7 +18,7 @@ import static java.math.RoundingMode.FLOOR;
 import static java.util.Collections.shuffle;
 
 @Component
-public class SingleRandomDrawTransactionCreator implements TransactionCreator {
+public class SingleRandomDrawCoinSelector implements CoinSelector {
     public static final long N_SEQUENCE = 4294967295L;
 
     private static final long INITIAL_DEFAULT_CHANGE_VALUE = 1;
@@ -28,7 +28,7 @@ public class SingleRandomDrawTransactionCreator implements TransactionCreator {
     private String addressPrefix;
 
     @Autowired
-    public SingleRandomDrawTransactionCreator(
+    public SingleRandomDrawCoinSelector(
         DefaultKeyGenerator defaultKeyGenerator,
         @Qualifier("addressPrefix") String addressPrefix
     ) {
@@ -37,7 +37,7 @@ public class SingleRandomDrawTransactionCreator implements TransactionCreator {
     }
 
     @Override
-    public Transaction create(
+    public Transaction select(
         List<Unspent> utxos,
         BigDecimal target,
         BigDecimal feeRate,
@@ -76,6 +76,8 @@ public class SingleRandomDrawTransactionCreator implements TransactionCreator {
                     totalInputBalance - adjustedTarget
                 );
                 transaction.addOutput(changeOutput);
+                transaction.setFeeRateInSatoshisPerByte(feeRateInSatoshisPerByte);
+                transaction.setTotalFeeInSatoshis(totalFeeInSatoshis);
                 break;
             }
         }

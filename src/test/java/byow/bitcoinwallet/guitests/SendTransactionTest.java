@@ -115,13 +115,11 @@ public class SendTransactionTest extends TestBase {
         robot.clickOn("#addressToSend");
         robot.write(nodeAddress);
         robot.clickOn("#send");
-        robot.clickOn("OK");
 
-        NodeQuery text = robot.lookup("Not enough available funds for transaction.");
-        robot.clickOn("OK");
+        NodeQuery text = robot.lookup("Not enough funds available for transaction.");
         assertNotNull(text.queryLabeled().getText());
+        robot.clickOn("OK");
     }
-    //TODO: incluir fees na regra acima
 
     private void sendNTransactions(FxRobot robot, String amount, int scale, String expectedBalance, int numberOfTransactions) {
         range(0, numberOfTransactions).forEach(i -> {

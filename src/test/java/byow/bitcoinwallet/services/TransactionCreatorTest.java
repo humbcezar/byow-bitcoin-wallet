@@ -19,15 +19,17 @@ import java.util.Map;
 import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
 import static java.math.BigDecimal.ZERO;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
 
 @ActiveProfiles("test")
 @SpringBootTest
-public class SendTransactionServiceTest {
+public class TransactionCreatorTest {
+
     @Autowired
     private UnspentUtil unspentUtil;
 
     @Autowired
-    private SendTransactionService sendTransactionService;
+    private TransactionCreator transactionCreator;
 
     @Autowired
     private AddressGenerator addressGenerator;
@@ -42,10 +44,7 @@ public class SendTransactionServiceTest {
     private FeeEstimator feeEstimator;
 
     @MockBean
-    private TransactionCreator transactionCreator;
-
-    @MockBean
-    private TransactionSender transactionSender;
+    private CoinSelector coinSelector;
 
     @MockBean
     private CurrentAddressesManager currentAddressesManager;
@@ -57,7 +56,7 @@ public class SendTransactionServiceTest {
     private NextChangeAddress nextChangeAddress;
 
     @Test
-    public void sendOneTransaction() {
+    public void createOneTransaction() {
         String seed = seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), "");
         String addressToSend = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
 
@@ -79,7 +78,7 @@ public class SendTransactionServiceTest {
         Transaction transaction = mock(Transaction.class);
         when(transaction.getInputCount()).thenReturn(1);
         when(
-            transactionCreator.create(
+            coinSelector.select(
                 unspents,
                 new BigDecimal("0.5"),
                 new BigDecimal("0.0002"),
@@ -90,11 +89,10 @@ public class SendTransactionServiceTest {
             )
         ).thenReturn(transaction);
 
-        sendTransactionService.send(addressToSend, new BigDecimal("0.5"));
+        transactionCreator.create(addressToSend, new BigDecimal("0.5"));
 
         verify(feeEstimator).estimate();
-        verify(transaction).sign(0);
-        verify(transactionCreator).create(
+        verify(coinSelector).select(
                 unspents,
                 new BigDecimal("0.5"),
                 new BigDecimal("0.0002"),
@@ -103,8 +101,5 @@ public class SendTransactionServiceTest {
                 addressToSend,
                 changeAddress
         );
-        verify(transactionSender).send(transaction);
     }
-    //TODO: ver se change muda apos transaction
-
 }
