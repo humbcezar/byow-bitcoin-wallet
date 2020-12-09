@@ -17,6 +17,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
+import wf.bitcoin.javabitcoindrpcclient.BitcoinRPCException;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -25,6 +26,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.UnaryOperator;
 
 import static java.util.Objects.isNull;
+import static javafx.concurrent.WorkerStateEvent.WORKER_STATE_FAILED;
 import static javafx.concurrent.WorkerStateEvent.WORKER_STATE_SUCCEEDED;
 import static javafx.scene.control.Alert.AlertType.ERROR;
 import static javafx.scene.control.ButtonType.CANCEL;
@@ -143,6 +145,17 @@ public class SendTabController extends Tab implements BaseController {
         task.addEventFilter(WORKER_STATE_SUCCEEDED, event -> {
             amountToSend.setText("");
             addressToSend.setText("");
+        });
+        task.addEventFilter(WORKER_STATE_FAILED, event -> {
+            amountToSend.setText("");
+            addressToSend.setText("");
+            BitcoinRPCException exception = (BitcoinRPCException) event.getSource().getException();
+            if (exception.getRPCError().getMessage().equals("dust")) {
+                Alert alert = new Alert(ERROR);
+                alert.setTitle("Error");
+                alert.setContentText("Unable to send the transaction: the transaction has an output lower than the dust limit.");
+                alert.show();
+            }
         });
         return task;
     }

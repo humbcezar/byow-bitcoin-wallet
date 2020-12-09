@@ -121,35 +121,6 @@ public class SendTransactionTest extends TestBase {
         robot.clickOn("OK");
     }
 
-    private void sendNTransactions(FxRobot robot, String amount, int scale, String expectedBalance, int numberOfTransactions) {
-        range(0, numberOfTransactions).forEach(i -> {
-            BigDecimal previousBalance = totalBalanceCalculator.getTotalBalance();
-
-            String nodeAddress = bitcoindRpcClient.getNewAddress();
-            robot.clickOn("#sendTab");
-            robot.clickOn("#amountToSend");
-            robot.write(amount);
-            robot.clickOn("#addressToSend");
-            robot.write(nodeAddress);
-            robot.clickOn("#send");
-            robot.clickOn("OK");
-            try {
-                waitFor(60, SECONDS, () ->
-                    previousBalance.subtract(new BigDecimal(amount)).setScale(scale, HALF_UP)
-                        .equals(totalBalanceCalculator.getTotalBalance().setScale(scale, HALF_UP))
-                );
-            } catch (TimeoutException e) {
-                throw new RuntimeException(e);
-            }
-            assertEquals(
-                previousBalance.subtract(new BigDecimal(amount)).setScale(scale, HALF_UP),
-                totalBalanceCalculator.getTotalBalance().setScale(scale, HALF_UP)
-            );
-
-            BigDecimal nodeAddressBalance = bitcoindRpcClient.listUnspent(0, MAX_VALUE, nodeAddress).get(0).amount();
-            assertEquals(new BigDecimal(expectedBalance), nodeAddressBalance);
-        });
-    }
 
     @Test
     public void sendOneTransactionToAnotherByowWalletThenSpendIt(FxRobot robot) throws TimeoutException {
@@ -194,6 +165,31 @@ public class SendTransactionTest extends TestBase {
         assertEquals(new BigDecimal("0.5"), recipientTableView.getItems().get(0).getBigDecimalBalance().setScale(1, HALF_UP));
 
         sendNTransactions(robot, "0.25", 2, "0.25000000", 1, recipientSeed, 0);
+    }
+
+    @Test
+    public void sendOneTransactionWithDustOutputToNodeAddress(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
+        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
+        fundAddress(robot, firstAddress, ONE, 1);
+        waitFor(60, SECONDS, () -> {
+            TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+            return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
+        });
+
+        String nodeAddress = bitcoindRpcClient.getNewAddress();
+        robot.clickOn("#sendTab");
+        robot.clickOn("#amountToSend");
+        robot.write("0.00000001");
+        robot.clickOn("#addressToSend");
+        robot.write(nodeAddress);
+        robot.clickOn("#send");
+        robot.clickOn("OK");
+
+        NodeQuery text = robot.lookup("Unable to send the transaction: the transaction has an output lower than the dust limit.");
+        assertNotNull(text.queryLabeled().getText());
+        robot.clickOn("OK");
     }
 
     private void fundAddress(FxRobot robot, String firstAddress, BigDecimal amount, int confirmations) throws TimeoutException {
@@ -272,6 +268,36 @@ public class SendTransactionTest extends TestBase {
             assertEquals(
                 addressGenerator.generate(seed, FIRST_BIP84_CHANGE_PATH.next(i + firstChangeIndex)),
                 table.getItems().get(0).getAddress()
+            );
+
+            BigDecimal nodeAddressBalance = bitcoindRpcClient.listUnspent(0, MAX_VALUE, nodeAddress).get(0).amount();
+            assertEquals(new BigDecimal(expectedBalance), nodeAddressBalance);
+        });
+    }
+
+    private void sendNTransactions(FxRobot robot, String amount, int scale, String expectedBalance, int numberOfTransactions) {
+        range(0, numberOfTransactions).forEach(i -> {
+            BigDecimal previousBalance = totalBalanceCalculator.getTotalBalance();
+
+            String nodeAddress = bitcoindRpcClient.getNewAddress();
+            robot.clickOn("#sendTab");
+            robot.clickOn("#amountToSend");
+            robot.write(amount);
+            robot.clickOn("#addressToSend");
+            robot.write(nodeAddress);
+            robot.clickOn("#send");
+            robot.clickOn("OK");
+            try {
+                waitFor(60, SECONDS, () ->
+                        previousBalance.subtract(new BigDecimal(amount)).setScale(scale, HALF_UP)
+                                .equals(totalBalanceCalculator.getTotalBalance().setScale(scale, HALF_UP))
+                );
+            } catch (TimeoutException e) {
+                throw new RuntimeException(e);
+            }
+            assertEquals(
+                    previousBalance.subtract(new BigDecimal(amount)).setScale(scale, HALF_UP),
+                    totalBalanceCalculator.getTotalBalance().setScale(scale, HALF_UP)
             );
 
             BigDecimal nodeAddressBalance = bitcoindRpcClient.listUnspent(0, MAX_VALUE, nodeAddress).get(0).amount();

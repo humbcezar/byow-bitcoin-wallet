@@ -3,6 +3,7 @@ package byow.bitcoinwallet.services;
 import byow.bitcoinwallet.entities.NextReceivingAddress;
 import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.enums.Languages;
+import byow.bitcoinwallet.guitests.TestBase;
 import byow.bitcoinwallet.utils.UnspentUtil;
 import com.blockstream.libwally.Wally;
 import javafx.collections.ObservableList;
@@ -28,9 +29,7 @@ import static java.math.BigDecimal.TEN;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ActiveProfiles("test")
-@SpringBootTest
-public class WalletUpdaterTest {
+public class WalletUpdaterTest extends TestBase {
 
     @MockBean
     private MultiAddressesImporter multiAddressesImporter;
