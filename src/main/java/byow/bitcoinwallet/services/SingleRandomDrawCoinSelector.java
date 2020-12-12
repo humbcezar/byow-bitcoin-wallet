@@ -16,6 +16,7 @@ import static com.blockstream.libwally.Wally.WALLY_TX_DUMMY_SIG_LOW_R;
 import static java.math.BigDecimal.valueOf;
 import static java.math.RoundingMode.FLOOR;
 import static java.util.Collections.shuffle;
+import static java.util.Objects.isNull;
 
 @Component
 public class SingleRandomDrawCoinSelector implements CoinSelector {
@@ -27,13 +28,17 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
 
     private String addressPrefix;
 
+    private DustCalculator dustCalculator;
+
     @Autowired
     public SingleRandomDrawCoinSelector(
         DefaultKeyGenerator defaultKeyGenerator,
-        @Qualifier("addressPrefix") String addressPrefix
+        @Qualifier("addressPrefix") String addressPrefix,
+        DustCalculator dustCalculator
     ) {
         this.defaultKeyGenerator = defaultKeyGenerator;
         this.addressPrefix = addressPrefix;
+        this.dustCalculator = dustCalculator;
     }
 
     @Override
@@ -78,11 +83,24 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
                 transaction.addOutput(changeOutput);
                 transaction.setFeeRateInSatoshisPerByte(feeRateInSatoshisPerByte);
                 transaction.setTotalFeeInSatoshis(totalFeeInSatoshis);
+                transaction.setIntendedTotalFeeInSatoshis(totalFeeInSatoshis);
                 break;
             }
         }
+        if (changeIsDust(transaction)) {
+            transaction.removeOutput(1);
+            long intendedTotalFeeInSatoshis = transaction.vSize() * feeRateInSatoshisPerByte;
+            transaction.setIntendedTotalFeeInSatoshis(intendedTotalFeeInSatoshis);
+            long totalInputBalance = totalInputBalance(transactionInputs);
+            long totalFeeInSatoshis = totalInputBalance - targetInSatoshis;
+            transaction.setTotalFeeInSatoshis(totalFeeInSatoshis);
+        }
 
         return transaction;
+    }
+
+    private boolean changeIsDust(Transaction transaction) {
+        return !isNull(transaction) && transaction.getOutputCount() > 1 && dustCalculator.isDust(transaction.getOutput(1).getAmount());
     }
 
     private long btcPerKbToSatoshiPerByte(BigDecimal feeRate) {
@@ -126,8 +144,8 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
             .orElse(0L);
     }
 
-    private long adjustedTarget(long targetInSatoshis, long totalFeeRateInSatoshis) {
-        return targetInSatoshis + totalFeeRateInSatoshis;
+    private long adjustedTarget(long targetInSatoshis, long totalFeeInSatoshis) {
+        return targetInSatoshis + totalFeeInSatoshis;
     }
 
     private long satoshis(BigDecimal amount) {

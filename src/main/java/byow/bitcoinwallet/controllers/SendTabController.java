@@ -5,6 +5,7 @@ import byow.bitcoinwallet.services.SendTransactionService;
 import byow.bitcoinwallet.services.TaskConfigurer;
 import byow.bitcoinwallet.services.TotalBalanceCalculator;
 import byow.bitcoinwallet.services.TransactionCreator;
+import byow.bitcoinwallet.services.DustCalculator;
 import byow.bitcoinwallet.tasks.SendTransactionTask;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -61,6 +62,8 @@ public class SendTabController extends Tab implements BaseController {
 
     private TransactionCreator transactionCreator;
 
+    private DustCalculator dustCalculator;
+
     @Autowired
     public SendTabController(
         @Value("classpath:/fxml/send_tab.fxml") Resource fxml,
@@ -71,7 +74,8 @@ public class SendTabController extends Tab implements BaseController {
         TaskConfigurer taskConfigurer, ReentrantLock reentrantLock,
         TotalBalanceCalculator totalBalanceCalculator,
         SendTransactionDialogController sendTransactionDialogController,
-        TransactionCreator transactionCreator
+        TransactionCreator transactionCreator,
+        DustCalculator dustCalculator
     ) throws IOException {
         this.fxml = fxml;
         this.sendTransactionDialog = sendTransactionDialog;
@@ -83,6 +87,7 @@ public class SendTabController extends Tab implements BaseController {
         this.totalBalanceCalculator = totalBalanceCalculator;
         this.sendTransactionDialogController = sendTransactionDialogController;
         this.transactionCreator = transactionCreator;
+        this.dustCalculator = dustCalculator;
         setText("Send");
         construct(this.fxml, this.context);
     }
@@ -92,11 +97,18 @@ public class SendTabController extends Tab implements BaseController {
     }
 
     public void send() throws IOException {
+        BigDecimal amount = new BigDecimal(amountToSend.getText());
+        if (dustCalculator.isDust(amount)) {
+            showDustAlert();
+            addressToSend.setText("");
+            amountToSend.setText("");
+            return;
+        }
         Transaction transaction = transactionCreator.create(
             addressToSend.getText(),
-            new BigDecimal(amountToSend.getText())
+            amount
         );
-        if(validateFunds(transaction)) {
+        if(validateFunds(transaction) && validateTotalFee(transaction)) {
             showSendTransactionDialog(transaction);
             return;
         }
@@ -133,6 +145,17 @@ public class SendTabController extends Tab implements BaseController {
         return true;
     }
 
+    private boolean validateTotalFee(Transaction transaction) {
+        if(transaction.getTotalFeeInSatoshis() < transaction.getIntendedTotalFeeInSatoshis()) {
+            Alert alert = new Alert(ERROR);
+            alert.setTitle("Error");
+            alert.setContentText("Insufficient funds for desired fee.");
+            alert.show();
+            return false;
+        }
+        return true;
+    }
+
     private Task<Void> buildTask(Transaction transaction) {
         Task<Void> task = taskConfigurer.configure(
             new SendTransactionTask(
@@ -151,13 +174,17 @@ public class SendTabController extends Tab implements BaseController {
             addressToSend.setText("");
             BitcoinRPCException exception = (BitcoinRPCException) event.getSource().getException();
             if (exception.getRPCError().getMessage().equals("dust")) {
-                Alert alert = new Alert(ERROR);
-                alert.setTitle("Error");
-                alert.setContentText("Unable to send the transaction: the transaction has an output lower than the dust limit.");
-                alert.show();
+                showDustAlert();
             }
         });
         return task;
+    }
+
+    private void showDustAlert() {
+        Alert alert = new Alert(ERROR);
+        alert.setTitle("Error");
+        alert.setContentText("Unable to send the transaction: the transaction has an output lower than the dust limit.");
+        alert.show();
     }
 
     UnaryOperator<Change> digitsFilter = change -> {

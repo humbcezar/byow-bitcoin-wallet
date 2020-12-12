@@ -5,6 +5,7 @@ import byow.bitcoinwallet.services.AddressGenerator;
 import byow.bitcoinwallet.services.SeedGenerator;
 import byow.bitcoinwallet.services.TotalBalanceCalculator;
 import byow.bitcoinwallet.utils.WalletUtil;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
@@ -158,8 +159,10 @@ public class SendTransactionTest extends TestBase {
         robot.clickOn(recipientWallet);
         waitFor(60, SECONDS, () -> {
             TableView<ReceivingAddress> recipientTableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+            ProgressBar progressBar = robot.lookup("#progressBar").queryAs(ProgressBar.class);
             return recipientTableView.getItems().size() == 1 &&
-                recipientTableView.getItems().get(0).getBigDecimalBalance().compareTo(new BigDecimal("0.5")) == 0;
+                recipientTableView.getItems().get(0).getBigDecimalBalance().compareTo(new BigDecimal("0.5")) == 0 &&
+                !progressBar.isIndeterminate();
         });
         TableView<ReceivingAddress> recipientTableView = robot.lookup("#balanceTable").queryAs(TableView.class);
         assertEquals(new BigDecimal("0.5"), recipientTableView.getItems().get(0).getBigDecimalBalance().setScale(1, HALF_UP));
@@ -181,13 +184,36 @@ public class SendTransactionTest extends TestBase {
         String nodeAddress = bitcoindRpcClient.getNewAddress();
         robot.clickOn("#sendTab");
         robot.clickOn("#amountToSend");
-        robot.write("0.00000001");
+        robot.write("0.00000293");
         robot.clickOn("#addressToSend");
         robot.write(nodeAddress);
         robot.clickOn("#send");
-        robot.clickOn("OK");
 
         NodeQuery text = robot.lookup("Unable to send the transaction: the transaction has an output lower than the dust limit.");
+        assertNotNull(text.queryLabeled().getText());
+        robot.clickOn("OK");
+    }
+
+    @Test
+    public void sendOneTransactionWithDustChangeToNodeAddress(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
+        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
+        fundAddress(robot, firstAddress, ONE, 1);
+        waitFor(60, SECONDS, () -> {
+            TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+            return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
+        });
+
+        String nodeAddress = bitcoindRpcClient.getNewAddress();
+        robot.clickOn("#sendTab");
+        robot.clickOn("#amountToSend");
+        robot.write("0.99999999");
+        robot.clickOn("#addressToSend");
+        robot.write(nodeAddress);
+        robot.clickOn("#send");
+
+        NodeQuery text = robot.lookup("Insufficient funds for desired fee.");
         assertNotNull(text.queryLabeled().getText());
         robot.clickOn("OK");
     }

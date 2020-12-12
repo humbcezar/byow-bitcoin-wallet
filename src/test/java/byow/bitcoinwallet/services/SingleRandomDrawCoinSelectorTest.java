@@ -119,4 +119,6 @@ public class SingleRandomDrawCoinSelectorTest {
     //TODO: limpar transaction, inputs e outputs apos usa-las
     //TODO: considerar apenas utxos confirmados
     //TODO: testar com a change igual a dust pra ver se vai pra fee
+    //TODO: testar com fee baixa/insuficiente?
+    //TODO: testar com maior numero de casas decimais (> 8)
 }

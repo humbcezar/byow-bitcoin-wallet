@@ -18,6 +18,8 @@ public class Transaction {
 
     private long totalFeeInSatoshis;
 
+    private long intendedTotalFeeInSatoshis;
+
     public Transaction(int numberOfInputs, int numberOfOutputs) {
         tx = tx_init(2, 0, numberOfInputs, numberOfOutputs);
     }
@@ -109,5 +111,13 @@ public class Transaction {
 
     public long getTotalFeeInSatoshis() {
         return totalFeeInSatoshis;
+    }
+
+    public void setIntendedTotalFeeInSatoshis(long intendedTotalFeeInSatoshis) {
+        this.intendedTotalFeeInSatoshis = intendedTotalFeeInSatoshis;
+    }
+
+    public long getIntendedTotalFeeInSatoshis() {
+        return intendedTotalFeeInSatoshis;
     }
 }
