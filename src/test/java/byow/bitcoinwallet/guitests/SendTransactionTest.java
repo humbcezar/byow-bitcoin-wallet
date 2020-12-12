@@ -230,7 +230,22 @@ public class SendTransactionTest extends TestBase {
         });
 
         //1 - totalFee(which is 2679) - 200 sats -> generating dust change
-        sendNTransactions(robot, "0.99997121", 8, "5.00000000", 1);
+        sendNTransactions(robot, "0.99997121", 4, "0.99997121", 1);
+    }
+
+    @Test
+    public void sendOneTransactionWithInputsEqualAdjustedTargetToNodeAddress(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
+        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
+        fundAddress(robot, firstAddress, ONE, 1);
+        waitFor(60, SECONDS, () -> {
+            TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+            return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
+        });
+
+        //1 - totalFee(which is 2679)
+        sendNTransactions(robot, "0.99997321", 4, "0.99997321", 1);
     }
 
     private void fundAddress(FxRobot robot, String firstAddress, BigDecimal amount, int confirmations) throws TimeoutException {
@@ -330,15 +345,15 @@ public class SendTransactionTest extends TestBase {
             robot.clickOn("OK");
             try {
                 waitFor(60, SECONDS, () ->
-                        previousBalance.subtract(new BigDecimal(amount)).setScale(scale, HALF_UP)
-                                .equals(totalBalanceCalculator.getTotalBalance().setScale(scale, HALF_UP))
+                    previousBalance.subtract(new BigDecimal(amount)).setScale(scale, HALF_UP)
+                        .equals(totalBalanceCalculator.getTotalBalance().setScale(scale, HALF_UP))
                 );
             } catch (TimeoutException e) {
                 throw new RuntimeException(e);
             }
             assertEquals(
-                    previousBalance.subtract(new BigDecimal(amount)).setScale(scale, HALF_UP),
-                    totalBalanceCalculator.getTotalBalance().setScale(scale, HALF_UP)
+                previousBalance.subtract(new BigDecimal(amount)).setScale(scale, HALF_UP),
+                totalBalanceCalculator.getTotalBalance().setScale(scale, HALF_UP)
             );
 
             BigDecimal nodeAddressBalance = bitcoindRpcClient.listUnspent(0, MAX_VALUE, nodeAddress).get(0).amount();
