@@ -195,7 +195,7 @@ public class SendTransactionTest extends TestBase {
     }
 
     @Test
-    public void sendOneTransactionWithDustChangeToNodeAddress(FxRobot robot) throws TimeoutException {
+    public void sendOneTransactionWithDustChangeToNodeAddressWithInsufficientFundsForChange(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
@@ -216,6 +216,21 @@ public class SendTransactionTest extends TestBase {
         NodeQuery text = robot.lookup("Insufficient funds for desired fee.");
         assertNotNull(text.queryLabeled().getText());
         robot.clickOn("OK");
+    }
+
+    @Test
+    public void sendOneTransactionWithDustChangeToNodeAddress(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
+        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
+        fundAddress(robot, firstAddress, ONE, 1);
+        waitFor(60, SECONDS, () -> {
+            TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+            return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
+        });
+
+        //1 - totalFee(which is 2679) - 200 sats -> generating dust change
+        sendNTransactions(robot, "0.99997121", 8, "5.00000000", 1);
     }
 
     private void fundAddress(FxRobot robot, String firstAddress, BigDecimal amount, int confirmations) throws TimeoutException {
