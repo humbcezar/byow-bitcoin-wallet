@@ -87,8 +87,17 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
                 break;
             }
         }
+
         if (changeIsDust(transaction)) {
             transaction.removeOutput(1);
+            long intendedTotalFeeInSatoshis = transaction.vSize() * feeRateInSatoshisPerByte;
+            transaction.setIntendedTotalFeeInSatoshis(intendedTotalFeeInSatoshis);
+            long totalInputBalance = totalInputBalance(transactionInputs);
+            long totalFeeInSatoshis = totalInputBalance - targetInSatoshis;
+            transaction.setTotalFeeInSatoshis(totalFeeInSatoshis);
+        }
+
+        if (!isNull(transaction) && transaction.getOutputCount() == 1) {
             long intendedTotalFeeInSatoshis = transaction.vSize() * feeRateInSatoshisPerByte;
             transaction.setIntendedTotalFeeInSatoshis(intendedTotalFeeInSatoshis);
             long totalInputBalance = totalInputBalance(transactionInputs);

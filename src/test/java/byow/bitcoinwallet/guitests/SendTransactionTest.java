@@ -195,7 +195,7 @@ public class SendTransactionTest extends TestBase {
     }
 
     @Test
-    public void sendOneTransactionWithDustChangeToNodeAddressWithInsufficientFundsForChange(FxRobot robot) throws TimeoutException {
+    public void sendOneTransactionWithDustChangeToNodeAddressWithInsufficientFundsForChangeFail(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
@@ -213,7 +213,7 @@ public class SendTransactionTest extends TestBase {
         robot.write(nodeAddress);
         robot.clickOn("#send");
 
-        NodeQuery text = robot.lookup("Insufficient funds for desired fee.");
+        NodeQuery text = robot.lookup("Insufficient funds for calculated fee.");
         assertNotNull(text.queryLabeled().getText());
         robot.clickOn("OK");
     }
@@ -246,6 +246,54 @@ public class SendTransactionTest extends TestBase {
 
         //1 - totalFee(which is 2679)
         sendNTransactions(robot, "0.99997321", 4, "0.99997321", 1);
+    }
+
+    @Test
+    public void sendOneTransactionWithInputsEqualTargetToNodeAddressFail(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
+        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
+        fundAddress(robot, firstAddress, ONE, 1);
+        waitFor(60, SECONDS, () -> {
+            TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+            return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
+        });
+
+        String nodeAddress = bitcoindRpcClient.getNewAddress();
+        robot.clickOn("#sendTab");
+        robot.clickOn("#amountToSend");
+        robot.write("1");
+        robot.clickOn("#addressToSend");
+        robot.write(nodeAddress);
+        robot.clickOn("#send");
+
+        NodeQuery text = robot.lookup("Insufficient funds for calculated fee.");
+        assertNotNull(text.queryLabeled().getText());
+        robot.clickOn("OK");
+    }
+
+    @Test
+    public void sendOneTransactionWithTotalFeeGreaterThanDustButLesserThanIntendedFee(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
+        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
+        fundAddress(robot, firstAddress, valueOf(1.00000300), 1);
+        waitFor(60, SECONDS, () -> {
+            TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+            return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
+        });
+
+        String nodeAddress = bitcoindRpcClient.getNewAddress();
+        robot.clickOn("#sendTab");
+        robot.clickOn("#amountToSend");
+        robot.write("1");
+        robot.clickOn("#addressToSend");
+        robot.write(nodeAddress);
+        robot.clickOn("#send");
+
+        NodeQuery text = robot.lookup("Insufficient funds for calculated fee.");
+        assertNotNull(text.queryLabeled().getText());
+        robot.clickOn("OK");
     }
 
     private void fundAddress(FxRobot robot, String firstAddress, BigDecimal amount, int confirmations) throws TimeoutException {

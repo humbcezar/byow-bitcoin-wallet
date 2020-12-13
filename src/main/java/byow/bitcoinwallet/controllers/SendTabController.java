@@ -149,7 +149,7 @@ public class SendTabController extends Tab implements BaseController {
         if(transaction.getTotalFeeInSatoshis() < transaction.getIntendedTotalFeeInSatoshis()) {
             Alert alert = new Alert(ERROR);
             alert.setTitle("Error");
-            alert.setContentText("Insufficient funds for desired fee.");
+            alert.setContentText("Insufficient funds for calculated fee.");
             alert.show();
             return false;
         }
