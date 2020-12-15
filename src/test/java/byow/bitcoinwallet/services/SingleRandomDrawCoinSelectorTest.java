@@ -242,6 +242,34 @@ public class SingleRandomDrawCoinSelectorTest {
         assertEquals(20900, transaction.getIntendedTotalFeeInSatoshis());
     }
 
+    @Test
+    public void createTransactionWithOneInputWithZeroConfirmationReturnNull() {
+        String seed = seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), "");
+        String inputAddress = "bcrt1qp6lszgmk559zg6m9st08f85mc39aghwe8qlqd6";
+        String changeAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(3));
+        BigDecimal inputBalance = valueOf(100);
+        ReceivingAddress receivingInputAddress = new ReceivingAddress(
+            inputBalance,
+            0,
+            inputAddress,
+            FIRST_BIP84_ADDRESS_PATH
+        );
+        Map<String, ReceivingAddress> receivingAddressMap = Map.of(inputAddress, receivingInputAddress);
+
+        String outputAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1));
+
+        Unspent utxo = unspentUtil.unspent(inputAddress, inputBalance, 0);
+        Transaction transaction = singleRandomDrawTransactionCreator.select(
+                List.of(utxo),
+                ONE,
+                new BigDecimal("0.002"),
+                receivingAddressMap,
+                seed,
+                outputAddress,
+                changeAddress
+        );
+        assertNull(transaction);
+    }
     //TODO: limpar transaction, inputs e outputs apos usa-las
     //TODO: considerar apenas utxos confirmados
 }

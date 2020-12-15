@@ -11,6 +11,7 @@ import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.blockstream.libwally.Wally.WALLY_TX_DUMMY_SIG_LOW_R;
 import static java.math.BigDecimal.valueOf;
@@ -51,6 +52,8 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
         String toAddress,
         String changeAddress
     ) {
+        utxos = preProcess(utxos);
+
         long targetInSatoshis = satoshis(target);
         long feeRateInSatoshisPerByte = btcPerKbToSatoshiPerByte(feeRate);
 
@@ -106,6 +109,12 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
         }
 
         return transaction;
+    }
+
+    private List<Unspent> preProcess(List<Unspent> utxos) {
+        return utxos.stream()
+            .filter(utxo -> utxo.confirmations() > 0)
+            .collect(Collectors.toList());
     }
 
     private boolean changeIsDust(Transaction transaction) {

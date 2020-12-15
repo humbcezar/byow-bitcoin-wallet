@@ -153,6 +153,8 @@ public class SendTransactionTest extends TestBase {
         });
         TableView<ReceivingAddress> senderTableView = robot.lookup("#balanceTable").queryAs(TableView.class);
         assertEquals(new BigDecimal("0.5"), senderTableView.getItems().get(0).getBigDecimalBalance().setScale(1, HALF_UP));
+        String nodeAddress = bitcoindRpcClient.getNewAddress();
+        bitcoindRpcClient.generateToAddress(1, nodeAddress);
 
         robot.clickOn("#wallet");
         robot.moveTo("#load");
@@ -374,6 +376,9 @@ public class SendTransactionTest extends TestBase {
                 table.getItems().get(0).getAddress()
             );
 
+            String nodeConfirmationAddress = bitcoindRpcClient.getNewAddress();
+            bitcoindRpcClient.generateToAddress(1, nodeConfirmationAddress);
+
             BigDecimal nodeAddressBalance = bitcoindRpcClient.listUnspent(0, MAX_VALUE, nodeAddress).get(0).amount();
             assertEquals(new BigDecimal(expectedBalance), nodeAddressBalance);
         });
@@ -404,8 +409,12 @@ public class SendTransactionTest extends TestBase {
                 totalBalanceCalculator.getTotalBalance().setScale(scale, HALF_UP)
             );
 
+            String nodeConfirmationAddress = bitcoindRpcClient.getNewAddress();
+            bitcoindRpcClient.generateToAddress(1, nodeConfirmationAddress);
+
             BigDecimal nodeAddressBalance = bitcoindRpcClient.listUnspent(0, MAX_VALUE, nodeAddress).get(0).amount();
             assertEquals(new BigDecimal(expectedBalance), nodeAddressBalance);
+
         });
     }
 }
