@@ -14,7 +14,6 @@ import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Unspent;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 
 import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
 import static java.math.BigDecimal.ZERO;
@@ -47,13 +46,16 @@ public class TransactionCreatorTest {
     private CoinSelector coinSelector;
 
     @MockBean
-    private CurrentAddressesManager currentAddressesManager;
+    private UtxosGetter utxosGetter;
 
     @MockBean
     private CurrentWalletManager currentWalletManager;
 
     @MockBean
     private NextChangeAddress nextChangeAddress;
+
+    @MockBean
+    private CurrentReceivingAddresses currentReceivingAddresses;
 
     @Test
     public void createOneTransaction() {
@@ -66,14 +68,13 @@ public class TransactionCreatorTest {
 
         Unspent utxo = unspentUtil.unspent(unspentAddress, BigDecimal.ONE, 1);
         List<Unspent> unspents = List.of(utxo);
-        when(currentAddressesManager.getUtxos()).thenReturn(unspents);
+        when(utxosGetter.getUtxos()).thenReturn(unspents);
         ReceivingAddress receivingAddress = new ReceivingAddress(utxo.amount(), utxo.confirmations(), utxo.address());
-        Map<String, ReceivingAddress> receivingAddressMap = Map.of(unspentAddress, receivingAddress);
-        when(currentAddressesManager.getReceivingAddressesMap()).thenReturn(receivingAddressMap);
+        when(currentReceivingAddresses.getReceivingAddress(unspentAddress)).thenReturn(receivingAddress);
         Wallet wallet = new Wallet("test", seed2);
         when(currentWalletManager.getCurrentWallet()).thenReturn(wallet);
         ReceivingAddress changeReceivingAddress = new ReceivingAddress(ZERO, 0, changeAddress);
-        when(nextChangeAddress.getReceivingAddress()).thenReturn(changeReceivingAddress);
+        when(nextChangeAddress.getValue()).thenReturn(changeReceivingAddress);
         when(feeEstimator.estimate()).thenReturn(new BigDecimal("0.0002"));
         Transaction transaction = mock(Transaction.class);
         when(transaction.getInputCount()).thenReturn(1);
@@ -82,7 +83,6 @@ public class TransactionCreatorTest {
                 unspents,
                 new BigDecimal("0.5"),
                 new BigDecimal("0.0002"),
-                receivingAddressMap,
                 seed2,
                 addressToSend,
                 changeAddress
@@ -93,13 +93,12 @@ public class TransactionCreatorTest {
 
         verify(feeEstimator).estimate();
         verify(coinSelector).select(
-                unspents,
-                new BigDecimal("0.5"),
-                new BigDecimal("0.0002"),
-                receivingAddressMap,
-                seed2,
-                addressToSend,
-                changeAddress
+            unspents,
+            new BigDecimal("0.5"),
+            new BigDecimal("0.0002"),
+            seed2,
+            addressToSend,
+            changeAddress
         );
     }
 }

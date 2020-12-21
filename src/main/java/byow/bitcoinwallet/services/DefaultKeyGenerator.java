@@ -10,9 +10,9 @@ public class DefaultKeyGenerator {
     public Object getPrivateKey(String seed, DerivationPath derivationPath) {
         Object BIP32RootKey = buildBIP32RootKey(seed);
         return bip32_key_from_parent_path(
-                BIP32RootKey,
-                derivationPath.getParsedPath(),
-                BIP32_FLAG_KEY_PRIVATE
+            BIP32RootKey,
+            derivationPath.getParsedPath(),
+            BIP32_FLAG_KEY_PRIVATE
         );
     }
 

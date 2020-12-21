@@ -9,7 +9,7 @@
 <?import byow.bitcoinwallet.controllers.FooterController?>
 <?import byow.bitcoinwallet.controllers.TotalBalanceController?>
 <?import byow.bitcoinwallet.controllers.SendTabController?>
-<BorderPane fx:id="borderPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="byow.bitcoinwallet.controllers.MainController">
+<BorderPane fx:id="borderPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="650.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="byow.bitcoinwallet.controllers.MainController">
    <top>
       <MenuBar BorderPane.alignment="CENTER">
         <menus>

@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import static com.blockstream.libwally.Wally.*;
+
 @Configuration
 public class NodeConfiguration {
 
@@ -23,5 +25,13 @@ public class NodeConfiguration {
             return "bcrt";
         }
         return "tb";
+    }
+
+    @Bean(name = "nestedAddressVersion")
+    public int defineAddressVersion() {
+        if (bitcoinEnvironment.equals("mainnet")) {
+            return WALLY_ADDRESS_VERSION_P2SH_MAINNET;
+        }
+        return WALLY_ADDRESS_VERSION_P2SH_TESTNET;
     }
 }

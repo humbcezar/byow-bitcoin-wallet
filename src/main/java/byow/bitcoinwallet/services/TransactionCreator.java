@@ -13,8 +13,7 @@ import java.util.List;
 @Component
 @Lazy
 public class TransactionCreator {
-
-    private CurrentAddressesManager currentAddressesManager;
+    private UtxosGetter utxosGetter;
 
     private FeeEstimator feeEstimator;
 
@@ -26,13 +25,13 @@ public class TransactionCreator {
 
     @Autowired
     public TransactionCreator(
-        CurrentAddressesManager currentAddressesManager,
+        UtxosGetter utxosGetter,
         FeeEstimator feeEstimator,
         CoinSelector coinSelector,
         CurrentWalletManager currentWalletManager,
         NextChangeAddress nextChangeAddress
     ) {
-        this.currentAddressesManager = currentAddressesManager;
+        this.utxosGetter = utxosGetter;
         this.feeEstimator = feeEstimator;
         this.coinSelector = coinSelector;
         this.currentWalletManager = currentWalletManager;
@@ -40,16 +39,15 @@ public class TransactionCreator {
     }
 
     public Transaction create(String addressToSend, BigDecimal amountToSend) {
-        List<Unspent> utxos = currentAddressesManager.getUtxos();
+        List<Unspent> utxos = utxosGetter.getUtxos();
         BigDecimal feeRate = feeEstimator.estimate();
         return coinSelector.select(
             utxos,
             amountToSend,
             feeRate,
-            currentAddressesManager.getReceivingAddressesMap(),
             currentWalletManager.getCurrentWallet().getSeed(),
             addressToSend,
-            nextChangeAddress.getReceivingAddress().getAddress()
+            nextChangeAddress.getValue().getAddress()
         );
     }
 }

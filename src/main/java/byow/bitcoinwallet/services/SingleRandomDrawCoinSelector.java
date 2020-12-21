@@ -10,7 +10,6 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.blockstream.libwally.Wally.WALLY_TX_DUMMY_SIG_LOW_R;
@@ -31,15 +30,19 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
 
     private DustCalculator dustCalculator;
 
+    private CurrentReceivingAddresses currentReceivingAddresses;
+
     @Autowired
     public SingleRandomDrawCoinSelector(
         DefaultKeyGenerator defaultKeyGenerator,
         @Qualifier("addressPrefix") String addressPrefix,
-        DustCalculator dustCalculator
+        DustCalculator dustCalculator,
+        CurrentReceivingAddresses currentReceivingAddresses
     ) {
         this.defaultKeyGenerator = defaultKeyGenerator;
         this.addressPrefix = addressPrefix;
         this.dustCalculator = dustCalculator;
+        this.currentReceivingAddresses = currentReceivingAddresses;
     }
 
     @Override
@@ -47,7 +50,6 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
         List<Unspent> utxos,
         BigDecimal target,
         BigDecimal feeRate,
-        Map<String, ReceivingAddress> receivingAddressMap,
         String seed,
         String toAddress,
         String changeAddress
@@ -63,7 +65,7 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
         Transaction transaction = null;
 
         for (Unspent utxo : shuffledCoins) {
-            DerivationPath derivationPath = receivingAddressMap.get(utxo.address()).getDerivationPath();
+            DerivationPath derivationPath = currentReceivingAddresses.getReceivingAddress(utxo.address()).getDerivationPath();
             transactionInputs.add(createInput(utxo, derivationPath, seed));
             long totalInputBalance = totalInputBalance(transactionInputs);
             if (totalInputBalance < targetInSatoshis) {

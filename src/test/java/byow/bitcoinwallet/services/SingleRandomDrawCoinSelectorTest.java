@@ -6,6 +6,7 @@ import byow.bitcoinwallet.utils.UnspentUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Unspent;
 
@@ -18,6 +19,7 @@ import static java.math.BigDecimal.ONE;
 import static java.math.BigDecimal.valueOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -34,6 +36,9 @@ public class SingleRandomDrawCoinSelectorTest {
     @Autowired
     private DefaultAddressGenerator addressGenerator;
 
+    @MockBean
+    private CurrentReceivingAddresses currentReceivingAddresses;
+
     @Test
     public void createTransactionWithOneInputWithChange() {
         String seed = seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), "");
@@ -46,7 +51,7 @@ public class SingleRandomDrawCoinSelectorTest {
             inputAddress,
             FIRST_BIP84_ADDRESS_PATH
         );
-        Map<String, ReceivingAddress> receivingAddressMap = Map.of(inputAddress, receivingInputAddress);
+        when(currentReceivingAddresses.getReceivingAddress(inputAddress)).thenReturn(receivingInputAddress);
 
         String outputAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1));
 
@@ -55,7 +60,6 @@ public class SingleRandomDrawCoinSelectorTest {
             List.of(utxo),
             ONE,
             new BigDecimal("0.002"),
-            receivingAddressMap,
             seed,
             outputAddress,
             changeAddress
@@ -90,10 +94,8 @@ public class SingleRandomDrawCoinSelectorTest {
             FIRST_BIP84_ADDRESS_PATH.next(1)
         );
 
-        Map<String, ReceivingAddress> receivingAddressMap = Map.of(
-            inputAddress1, receivingInputAddress1,
-            inputAddress2, receivingInputAddress2
-        );
+        when(currentReceivingAddresses.getReceivingAddress(inputAddress1)).thenReturn(receivingInputAddress1);
+        when(currentReceivingAddresses.getReceivingAddress(inputAddress2)).thenReturn(receivingInputAddress2);
 
         String outputAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1));
 
@@ -103,7 +105,6 @@ public class SingleRandomDrawCoinSelectorTest {
             List.of(utxo1, utxo2),
             new BigDecimal(150),
             new BigDecimal("0.002"),
-            receivingAddressMap,
             seed,
             outputAddress,
             changeAddress
@@ -127,7 +128,7 @@ public class SingleRandomDrawCoinSelectorTest {
                 inputAddress,
                 FIRST_BIP84_ADDRESS_PATH
         );
-        Map<String, ReceivingAddress> receivingAddressMap = Map.of(inputAddress, receivingInputAddress);
+        when(currentReceivingAddresses.getReceivingAddress(inputAddress)).thenReturn(receivingInputAddress);
 
         String outputAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1));
 
@@ -136,7 +137,6 @@ public class SingleRandomDrawCoinSelectorTest {
                 List.of(utxo),
                 valueOf(110),
                 new BigDecimal("0.002"),
-                receivingAddressMap,
                 seed,
                 outputAddress,
                 changeAddress
@@ -156,7 +156,7 @@ public class SingleRandomDrawCoinSelectorTest {
             inputAddress,
             FIRST_BIP84_ADDRESS_PATH
         );
-        Map<String, ReceivingAddress> receivingAddressMap = Map.of(inputAddress, receivingInputAddress);
+        when(currentReceivingAddresses.getReceivingAddress(inputAddress)).thenReturn(receivingInputAddress);
 
         String outputAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1));
 
@@ -165,7 +165,6 @@ public class SingleRandomDrawCoinSelectorTest {
             List.of(utxo),
             valueOf(110),
             new BigDecimal("0.002"),
-            receivingAddressMap,
             seed,
             outputAddress,
             changeAddress
@@ -188,7 +187,7 @@ public class SingleRandomDrawCoinSelectorTest {
             inputAddress,
             FIRST_BIP84_ADDRESS_PATH
         );
-        Map<String, ReceivingAddress> receivingAddressMap = Map.of(inputAddress, receivingInputAddress);
+        when(currentReceivingAddresses.getReceivingAddress(inputAddress)).thenReturn(receivingInputAddress);
 
         String outputAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1));
 
@@ -197,7 +196,6 @@ public class SingleRandomDrawCoinSelectorTest {
             List.of(utxo),
             valueOf(1),
             new BigDecimal("0.002"),
-            receivingAddressMap,
             seed,
             outputAddress,
             changeAddress
@@ -221,7 +219,7 @@ public class SingleRandomDrawCoinSelectorTest {
             inputAddress,
             FIRST_BIP84_ADDRESS_PATH
         );
-        Map<String, ReceivingAddress> receivingAddressMap = Map.of(inputAddress, receivingInputAddress);
+        when(currentReceivingAddresses.getReceivingAddress(inputAddress)).thenReturn(receivingInputAddress);
 
         String outputAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1));
 
@@ -230,7 +228,6 @@ public class SingleRandomDrawCoinSelectorTest {
                 List.of(utxo),
                 valueOf(0.99999800),
                 new BigDecimal("0.002"),
-                receivingAddressMap,
                 seed,
                 outputAddress,
                 changeAddress
@@ -254,22 +251,20 @@ public class SingleRandomDrawCoinSelectorTest {
             inputAddress,
             FIRST_BIP84_ADDRESS_PATH
         );
-        Map<String, ReceivingAddress> receivingAddressMap = Map.of(inputAddress, receivingInputAddress);
+        when(currentReceivingAddresses.getReceivingAddress(inputAddress)).thenReturn(receivingInputAddress);
 
         String outputAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1));
 
         Unspent utxo = unspentUtil.unspent(inputAddress, inputBalance, 0);
         Transaction transaction = singleRandomDrawTransactionCreator.select(
-                List.of(utxo),
-                ONE,
-                new BigDecimal("0.002"),
-                receivingAddressMap,
-                seed,
-                outputAddress,
-                changeAddress
+            List.of(utxo),
+            ONE,
+            new BigDecimal("0.002"),
+            seed,
+            outputAddress,
+            changeAddress
         );
         assertNull(transaction);
     }
     //TODO: limpar transaction, inputs e outputs apos usa-las
-    //TODO: considerar apenas utxos confirmados
 }

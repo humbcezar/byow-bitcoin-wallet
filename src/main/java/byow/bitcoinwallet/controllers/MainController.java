@@ -3,7 +3,6 @@ package byow.bitcoinwallet.controllers;
 import byow.bitcoinwallet.services.CurrentWalletManager;
 import byow.bitcoinwallet.services.WalletsMenuManager;
 import byow.bitcoinwallet.tasks.NodeMonitorTask;
-import byow.bitcoinwallet.services.WalletUpdater;
 import javafx.application.Platform;
 import javafx.collections.SetChangeListener;
 import javafx.fxml.FXML;
@@ -40,9 +39,6 @@ public class MainController {
 
     @Value("fxml/import_wallet_dialog.fxml")
     private Resource importWalletDialog;
-
-    @Autowired
-    private WalletUpdater walletUpdater;
 
     @Autowired
     private ApplicationContext context;

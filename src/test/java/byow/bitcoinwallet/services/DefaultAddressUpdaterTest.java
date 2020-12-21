@@ -27,7 +27,7 @@ import static java.math.BigDecimal.TEN;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class WalletUpdaterTest extends TestBase {
+public class DefaultAddressUpdaterTest extends TestBase {
 
     @MockBean
     private MultiAddressesImporter multiAddressesImporter;
@@ -39,7 +39,10 @@ public class WalletUpdaterTest extends TestBase {
     private DefaultAddressGenerator addressGenerator;
 
     @Autowired
-    private CurrentAddressesManager currentAddressesManager;
+    private CurrentDefaultAddressesManager currentAddressesManager;
+
+    @Autowired
+    private CurrentReceivingAddresses currentReceivingAddresses;
 
     @Autowired
     private NextReceivingAddress nextReceivingAddress;
@@ -49,13 +52,13 @@ public class WalletUpdaterTest extends TestBase {
 
     private SeedGenerator seedGenerator = new SeedGenerator(Wally.bip39_get_wordlist(Languages.EN), new EntropyCreator());
 
-    private WalletUpdater walletUpdater;
-
+    private DefaultAddressUpdater defaultAddressUpdater;
 
     @BeforeEach
     void setUp() {
+        currentReceivingAddresses.clear();
         currentAddressesManager.clear();
-        walletUpdater = new WalletUpdater(currentAddressesManager);
+        defaultAddressUpdater = new DefaultAddressUpdater(currentAddressesManager);
     }
 
     @Test
@@ -68,8 +71,8 @@ public class WalletUpdaterTest extends TestBase {
 
         Date date = new Date();
 
-        walletUpdater.setInitialAddressToMonitor(20);
-        walletUpdater.setDate(date).setSeed(seed).updateReceivingAddresses();
+        defaultAddressUpdater.setInitialAddressToMonitor(20);
+        defaultAddressUpdater.update(seed, date);
 
         verify(multiAddressesImporter).importMultiAddresses(date, expectedAddresses);
         assertTrue(
@@ -77,7 +80,7 @@ public class WalletUpdaterTest extends TestBase {
             nextReceivingAddress.getValue().getConfirmations() == 0 &&
             nextReceivingAddress.getValue().getBalance().equals("0")
         );
-        assertEquals(20, currentAddressesManager.getReceivingAddresses().size());
+        assertEquals(20, currentReceivingAddresses.getReceivingAddresses().size());
     }
 
     @Test
@@ -91,8 +94,8 @@ public class WalletUpdaterTest extends TestBase {
 
         Date date = new Date();
 
-        walletUpdater.setInitialAddressToMonitor(20);
-        walletUpdater.setDate(date).setSeed(seed).updateReceivingAddresses();
+        defaultAddressUpdater.setInitialAddressToMonitor(20);
+        defaultAddressUpdater.update(seed, date);
 
         verify(multiAddressesImporter).importMultiAddresses(date, expectedAddresses);
         assertTrue(
@@ -100,8 +103,8 @@ public class WalletUpdaterTest extends TestBase {
             nextReceivingAddress.getValue().getConfirmations() == 0 &&
             nextReceivingAddress.getValue().getBalance().equals("0")
         );
-        assertEquals(20, currentAddressesManager.getReceivingAddresses().size());
-        FilteredList<ReceivingAddress> usedReceivingAddresses = currentAddressesManager
+        assertEquals(20, currentReceivingAddresses.getReceivingAddresses().size());
+        FilteredList<ReceivingAddress> usedReceivingAddresses = currentReceivingAddresses
                 .getReceivingAddresses().filtered(receivingAddress ->
             receivingAddress.getBigDecimalBalance().compareTo(BigDecimal.ZERO) > 0
         );
@@ -121,19 +124,19 @@ public class WalletUpdaterTest extends TestBase {
 
         String[] expectedAddresses = expectedAddresses(seed, 20, FIRST_BIP84_ADDRESS_PATH);
         List<Unspent> unspents = List.of(
-                unspentUtil.unspent(expectedAddresses[0], TEN, 1),
-                unspentUtil.unspent(expectedAddresses[1], TEN, 1),
-                unspentUtil.unspent(expectedAddresses[2], TEN, 1),
-                unspentUtil.unspent(expectedAddresses[3], TEN, 1),
-                unspentUtil.unspent(expectedAddresses[4], TEN, 1)
+            unspentUtil.unspent(expectedAddresses[0], TEN, 1),
+            unspentUtil.unspent(expectedAddresses[1], TEN, 1),
+            unspentUtil.unspent(expectedAddresses[2], TEN, 1),
+            unspentUtil.unspent(expectedAddresses[3], TEN, 1),
+            unspentUtil.unspent(expectedAddresses[4], TEN, 1)
         );
         when(bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, expectedAddresses))
                 .thenReturn(unspents);
 
         Date date = new Date();
 
-        walletUpdater.setInitialAddressToMonitor(20);
-        walletUpdater.setDate(date).setSeed(seed).updateReceivingAddresses();
+        defaultAddressUpdater.setInitialAddressToMonitor(20);
+        defaultAddressUpdater.update(seed, date);
 
         verify(multiAddressesImporter).importMultiAddresses(date, expectedAddresses);
         assertTrue(
@@ -141,8 +144,8 @@ public class WalletUpdaterTest extends TestBase {
             nextReceivingAddress.getValue().getConfirmations() == 0 &&
             nextReceivingAddress.getValue().getBalance().equals("0")
         );
-        assertEquals(20, currentAddressesManager.getReceivingAddresses().size());
-        FilteredList<ReceivingAddress> usedReceivingAddresses = currentAddressesManager
+        assertEquals(20, currentReceivingAddresses.getReceivingAddresses().size());
+        FilteredList<ReceivingAddress> usedReceivingAddresses = currentReceivingAddresses
                 .getReceivingAddresses().filtered(receivingAddress ->
                         receivingAddress.getBigDecimalBalance().compareTo(BigDecimal.ZERO) > 0
                 );
@@ -176,17 +179,18 @@ public class WalletUpdaterTest extends TestBase {
 
         Date date = new Date();
 
-        walletUpdater.setInitialAddressToMonitor(20);
-        walletUpdater.setDate(date).setSeed(seed).updateReceivingAddresses();
+        defaultAddressUpdater.setInitialAddressToMonitor(20);
+        defaultAddressUpdater.update(seed, date);
 
         verify(multiAddressesImporter).importMultiAddresses(date, expectedAddresses);
+        //TODO: may fail due to runLater when setting nextReceivingAddress
         assertTrue(
-             nextReceivingAddress.getValue().getAddress().equals(expectedAddresses[5]) &&
+            nextReceivingAddress.getValue().getAddress().equals(expectedAddresses[5]) &&
             nextReceivingAddress.getValue().getConfirmations() == 0 &&
             nextReceivingAddress.getValue().getBalance().equals("0")
         );
-        assertEquals(20, currentAddressesManager.getReceivingAddresses().size());
-        FilteredList<ReceivingAddress> usedReceivingAddresses = currentAddressesManager
+        assertEquals(20, currentReceivingAddresses.getReceivingAddresses().size());
+        FilteredList<ReceivingAddress> usedReceivingAddresses = currentReceivingAddresses
                 .getReceivingAddresses().filtered(receivingAddress ->
                         receivingAddress.getBigDecimalBalance().compareTo(BigDecimal.ZERO) > 0
                 );
@@ -219,8 +223,8 @@ public class WalletUpdaterTest extends TestBase {
 
         Date date = new Date();
 
-        walletUpdater.setInitialAddressToMonitor(20);
-        walletUpdater.setDate(date).setSeed(seed).updateReceivingAddresses();
+        defaultAddressUpdater.setInitialAddressToMonitor(20);
+        defaultAddressUpdater.update(seed, date);
 
         ArgumentCaptor<String[]> expectedAddressesCaptured = ArgumentCaptor.forClass(String[].class);
         ArgumentCaptor<Date> expectedDateCaptured = ArgumentCaptor.forClass(Date.class);
@@ -232,8 +236,8 @@ public class WalletUpdaterTest extends TestBase {
         List<Date> allDateValues = expectedDateCaptured.getAllValues();
         assertEquals(allDateValues.get(0), date);
 
-        assertEquals(40, currentAddressesManager.getReceivingAddresses().size());
-        FilteredList<ReceivingAddress> usedReceivingAddresses = currentAddressesManager
+        assertEquals(40, currentReceivingAddresses.getReceivingAddresses().size());
+        FilteredList<ReceivingAddress> usedReceivingAddresses = currentReceivingAddresses
                 .getReceivingAddresses().filtered(receivingAddress ->
                         receivingAddress.getBigDecimalBalance().compareTo(BigDecimal.ZERO) > 0
                 );

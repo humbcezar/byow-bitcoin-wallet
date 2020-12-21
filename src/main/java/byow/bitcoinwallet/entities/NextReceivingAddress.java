@@ -4,7 +4,7 @@ import javafx.beans.value.ObservableValueBase;
 import org.springframework.stereotype.Component;
 
 @Component
-public class NextReceivingAddress extends ObservableValueBase<ReceivingAddress> {
+public class NextReceivingAddress extends ObservableValueBase<ReceivingAddress> implements NextAddress {
     private ReceivingAddress receivingAddress;
 
     public void setReceivingAddress(ReceivingAddress receivingAddress) {

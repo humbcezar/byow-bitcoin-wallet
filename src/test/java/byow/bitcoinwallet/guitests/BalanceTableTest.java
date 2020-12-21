@@ -286,10 +286,10 @@ public class BalanceTableTest extends TestBase {
     private void assertNextChangeAddress(int numberOfReceivingAddresses) throws TimeoutException {
         String expectedReceivingAddress = addressGenerator.generate(seed, new DerivationPath("84'/0'/0'/1/" + numberOfReceivingAddresses));
         WaitForAsyncUtils.waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
-            String address =  nextChangeAddress.getReceivingAddress().getAddress();
+            String address =  nextChangeAddress.getValue().getAddress();
             return address != null && address.equals(expectedReceivingAddress);
         });
-        String address =  nextChangeAddress.getReceivingAddress().getAddress();
+        String address =  nextChangeAddress.getValue().getAddress();
         assertEquals(expectedReceivingAddress, address);
     }
 

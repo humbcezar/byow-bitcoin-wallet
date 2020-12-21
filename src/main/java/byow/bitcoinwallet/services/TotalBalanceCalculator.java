@@ -18,17 +18,17 @@ public class TotalBalanceCalculator {
     private BigDecimal totalBalance = BigDecimal.ZERO;
 
     @Autowired
-    private CurrentAddressesManager currentAddressesManager;
+    private CurrentReceivingAddresses currentReceivingAddresses;
 
     public void calculate() {
-        unconfirmedBalance = currentAddressesManager.getReceivingAddresses()
+        unconfirmedBalance = currentReceivingAddresses.getReceivingAddresses()
             .stream()
             .filter(receivingAddress -> receivingAddress.getConfirmations() == 0)
             .map(ReceivingAddress::getBigDecimalBalance)
             .reduce(BigDecimal::add)
             .orElse(BigDecimal.ZERO);
 
-        confirmedBalance = currentAddressesManager.getReceivingAddresses()
+        confirmedBalance = currentReceivingAddresses.getReceivingAddresses()
             .stream()
             .filter(receivingAddress -> receivingAddress.getConfirmations() > 0)
             .map(ReceivingAddress::getBigDecimalBalance)

@@ -1,7 +1,7 @@
 package byow.bitcoinwallet.listeners;
 
 import byow.bitcoinwallet.events.BlockReceivedEvent;
-import byow.bitcoinwallet.services.CurrentAddressesManager;
+import byow.bitcoinwallet.services.CurrentReceivingAddressesUpdater;
 import byow.bitcoinwallet.services.CurrentWalletManager;
 import byow.bitcoinwallet.services.TaskConfigurer;
 import byow.bitcoinwallet.tasks.UpdateReceivingAddressesTask;
@@ -20,7 +20,7 @@ public class BlockReceivedListener implements ApplicationListener<BlockReceivedE
     private CurrentWalletManager currentWalletManager;
 
     @Autowired
-    private CurrentAddressesManager currentAddressesManager;
+    private CurrentReceivingAddressesUpdater currentReceivingAddressesUpdater;
 
     @Autowired
     private ReentrantLock reentrantLock;
@@ -37,7 +37,7 @@ public class BlockReceivedListener implements ApplicationListener<BlockReceivedE
 
     private Task<Void> buildTask() {
         return taskConfigurer.configure(
-            new UpdateReceivingAddressesTask(currentAddressesManager, reentrantLock),
+            new UpdateReceivingAddressesTask(currentReceivingAddressesUpdater, reentrantLock),
             "Synchronizing new block..."
         );
     }

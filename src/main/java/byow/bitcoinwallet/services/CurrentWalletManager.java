@@ -6,32 +6,31 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Lazy
 @Component
 public class CurrentWalletManager {
 
-    @Autowired
-    private WalletUpdater walletUpdater;
+    private List<CurrentAddressesManager> currentAddressesManagers;
 
-    @Autowired
-    private CurrentAddressesManager currentAddressesManager;
+    private MultiAddressUpdater multiAddressUpdater;
 
     private Wallet currentWallet;
 
     private final SimpleStringProperty walletName = new SimpleStringProperty();
 
-    public void updateCurrentWallet(Wallet currentWallet) {
-        currentAddressesManager.clear();
-        this.currentWallet = currentWallet;
-
-        updateWallet(currentWallet);
+    @Autowired
+    public CurrentWalletManager(List<CurrentAddressesManager> currentAddressesManagers, MultiAddressUpdater multiAddressUpdater) {
+        this.currentAddressesManagers = currentAddressesManagers;
+        this.multiAddressUpdater = multiAddressUpdater;
     }
 
-    private void updateWallet(Wallet currentWallet) {
-        walletUpdater.setSeed(currentWallet.getSeed())
-            .setDate(currentWallet.getCreatedAt())
-            .updateReceivingAddresses()
-            .updateChangeAddresses();
+    public void updateCurrentWallet(Wallet currentWallet) {
+        currentAddressesManagers.forEach(CurrentAddressesManager::clear);
+        this.currentWallet = currentWallet;
+
+        multiAddressUpdater.update(currentWallet);
     }
 
     public String getWalletName() {

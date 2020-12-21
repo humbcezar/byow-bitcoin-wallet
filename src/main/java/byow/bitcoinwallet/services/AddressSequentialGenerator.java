@@ -13,9 +13,9 @@ public class AddressSequentialGenerator {
     private AddressGenerator addressGenerator;
 
     public List<Address> deriveAddresses(
-            int numberOfAddresses,
-            String seed,
-            DerivationPath firstDerivationPath
+        int numberOfAddresses,
+        String seed,
+        DerivationPath firstDerivationPath
     ) {
         List<Address> addressList = new LinkedList<>();
         DerivationPath addressPath = firstDerivationPath;

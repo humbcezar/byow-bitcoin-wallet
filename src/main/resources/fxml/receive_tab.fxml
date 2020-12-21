@@ -17,6 +17,16 @@
                         <Insets top="10.0" left="10.0" right="10.0"/>
                     </GridPane.margin>
                 </TextField>
+                <Label text="P2SH(P2WPKH) receiving address" GridPane.columnIndex="0" GridPane.rowIndex="1" >
+                    <GridPane.margin>
+                        <Insets top="10.0" left="10.0" right="10.0"/>
+                    </GridPane.margin>
+                </Label>
+                <TextField fx:id="nestedReceivingAddress" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="350" editable="false">
+                    <GridPane.margin>
+                        <Insets top="10.0" left="10.0" right="10.0"/>
+                    </GridPane.margin>
+                </TextField>
             </children>
         </GridPane>
     </content>
