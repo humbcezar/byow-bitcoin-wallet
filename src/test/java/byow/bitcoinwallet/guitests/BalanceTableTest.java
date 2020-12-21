@@ -1,13 +1,8 @@
 package byow.bitcoinwallet.guitests;
 
-import byow.bitcoinwallet.entities.Address;
-import byow.bitcoinwallet.entities.NextChangeAddress;
-import byow.bitcoinwallet.entities.Wallet;
+import byow.bitcoinwallet.entities.*;
 import byow.bitcoinwallet.repositories.WalletRepository;
-import byow.bitcoinwallet.services.AddressGenerator;
-import byow.bitcoinwallet.services.AddressSequentialGenerator;
-import byow.bitcoinwallet.services.DerivationPath;
-import byow.bitcoinwallet.services.SeedGenerator;
+import byow.bitcoinwallet.services.*;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
@@ -15,6 +10,7 @@ import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
@@ -28,8 +24,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
-import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_CHANGE_PATH;
+import static byow.bitcoinwallet.services.DerivationPath.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.testfx.matcher.control.TableViewMatchers.*;
 
@@ -39,6 +34,9 @@ public class BalanceTableTest extends TestBase {
 
     @Autowired
     private NextChangeAddress nextChangeAddress;
+
+    @Autowired
+    private NextNestedSegwitAddress nextNestedSegwitAddress;
 
     @Autowired
     private BitcoindRpcClient bitcoindRpcClient;
@@ -53,7 +51,14 @@ public class BalanceTableTest extends TestBase {
     private WalletRepository walletRepository;
 
     @Autowired
-    private AddressSequentialGenerator addressSequentialGenerator;
+    private AddressSequentialGenerator defaultAddressSequentialGenerator;
+
+    @Autowired
+    private NestedSegwitAddressGenerator nestedSegwitAddressGenerator;
+
+    @Autowired
+    @Qualifier("nestedSegwitAddressSequentialGenerator")
+    private AddressSequentialGenerator nestedSegwitAddressSequentialGenerator;
 
     private String seed;
 
@@ -72,42 +77,42 @@ public class BalanceTableTest extends TestBase {
 
     @Test
     public void showAddressWithPositiveBalance(FxRobot robot) throws TimeoutException {
-        showNAddressesWithPositiveBalance(robot, 1, FIRST_BIP84_ADDRESS_PATH);
+        showNAddressesWithPositiveBalance(robot, 1, FIRST_BIP84_ADDRESS_PATH, defaultAddressSequentialGenerator);
         assertNextReceivingAddress(robot, 1);
         assertNextChangeAddress(0);
     }
 
     @Test
     public void showTenAddressWithPositiveBalance(FxRobot robot) throws TimeoutException {
-        showNAddressesWithPositiveBalance(robot, 10, FIRST_BIP84_ADDRESS_PATH);
+        showNAddressesWithPositiveBalance(robot, 10, FIRST_BIP84_ADDRESS_PATH, defaultAddressSequentialGenerator);
         assertNextReceivingAddress(robot, 10);
         assertNextChangeAddress(0);
     }
 
     @Test
     public void showTwentyFiveAddressWithPositiveBalance(FxRobot robot) throws TimeoutException {
-        showNAddressesWithPositiveBalance(robot, 25, FIRST_BIP84_ADDRESS_PATH);
+        showNAddressesWithPositiveBalance(robot, 25, FIRST_BIP84_ADDRESS_PATH, defaultAddressSequentialGenerator);
         assertNextReceivingAddress(robot, 25);
         assertNextChangeAddress(0);
     }
 
     @Test
     public void showAddressWithPositiveBalanceWithChangeAddresses(FxRobot robot) throws TimeoutException {
-        showNAddressesWithPositiveBalance(robot, 1, FIRST_BIP84_CHANGE_PATH);
+        showNAddressesWithPositiveBalance(robot, 1, FIRST_BIP84_CHANGE_PATH, defaultAddressSequentialGenerator);
         assertNextChangeAddress(1);
         assertNextReceivingAddress(robot, 0);
     }
 
     @Test
     public void showTenAddressWithPositiveBalanceWithChangeAddresses(FxRobot robot) throws TimeoutException {
-        showNAddressesWithPositiveBalance(robot, 10, FIRST_BIP84_CHANGE_PATH);
+        showNAddressesWithPositiveBalance(robot, 10, FIRST_BIP84_CHANGE_PATH, defaultAddressSequentialGenerator);
         assertNextChangeAddress(10);
         assertNextReceivingAddress(robot, 0);
     }
 
     @Test
     public void showTwentyFiveAddressWithPositiveBalanceWithChangeAddresses(FxRobot robot) throws TimeoutException {
-        showNAddressesWithPositiveBalance(robot, 25, FIRST_BIP84_CHANGE_PATH);
+        showNAddressesWithPositiveBalance(robot, 25, FIRST_BIP84_CHANGE_PATH, defaultAddressSequentialGenerator);
         assertNextChangeAddress(25);
         assertNextReceivingAddress(robot, 0);
     }
@@ -116,7 +121,7 @@ public class BalanceTableTest extends TestBase {
     public void showThreeAddressesWithPositiveValueWithVaryingTransactionsWithChangeAddresses(FxRobot robot) throws TimeoutException {
         int numberOfReceivingAddresses = 3;
 
-        List<String> addresses = addressSequentialGenerator.deriveAddresses(
+        List<String> addresses = defaultAddressSequentialGenerator.deriveAddresses(
                 numberOfReceivingAddresses,
                 seed, FIRST_BIP84_CHANGE_PATH
         ).stream().map(Address::getAddress).collect(Collectors.toList());
@@ -178,10 +183,18 @@ public class BalanceTableTest extends TestBase {
     }
 
     @Test
+    public void showAddressWithPositiveBalanceWithNestedSegwitAddresses(FxRobot robot) throws TimeoutException {
+        showNAddressesWithPositiveBalance(robot, 1, FIRST_BIP49_ADDRESS_PATH, nestedSegwitAddressSequentialGenerator);
+        assertNextNestedSegwitAddress(robot, 1);
+        assertNextChangeAddress(0);
+        assertNextReceivingAddress(robot, 0);
+    }
+
+    @Test
     public void showThreeAddressesWithPositiveValueWithVaryingTransactions(FxRobot robot) throws TimeoutException {
         int numberOfReceivingAddresses = 3;
 
-        List<String> addresses = addressSequentialGenerator.deriveAddresses(
+        List<String> addresses = defaultAddressSequentialGenerator.deriveAddresses(
                 numberOfReceivingAddresses,
                 seed, FIRST_BIP84_ADDRESS_PATH
         ).stream().map(Address::getAddress).collect(Collectors.toList());
@@ -242,7 +255,12 @@ public class BalanceTableTest extends TestBase {
         assertNextChangeAddress(0);
     }
 
-    private void showNAddressesWithPositiveBalance(FxRobot robot, int numberOfReceivingAddresses, DerivationPath firstDerivationPath) throws TimeoutException {
+    private void showNAddressesWithPositiveBalance(
+        FxRobot robot,
+        int numberOfReceivingAddresses,
+        DerivationPath firstDerivationPath,
+        AddressSequentialGenerator addressSequentialGenerator
+    ) throws TimeoutException {
         List<String> addresses = addressSequentialGenerator.deriveAddresses(
                 numberOfReceivingAddresses,
                 seed,
@@ -291,6 +309,20 @@ public class BalanceTableTest extends TestBase {
         });
         String address =  nextChangeAddress.getValue().getAddress();
         assertEquals(expectedReceivingAddress, address);
+    }
+
+    private void assertNextNestedSegwitAddress(FxRobot robot, int numberOfReceivingAddresses) throws TimeoutException {
+        String expectedReceivingAddress = nestedSegwitAddressGenerator.generate(
+            seed, new DerivationPath("49'/0'/0'/0/" + numberOfReceivingAddresses)
+        );
+        WaitForAsyncUtils.waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
+            String address =  nextNestedSegwitAddress.getValue().getAddress();
+            return address != null && address.equals(expectedReceivingAddress);
+        });
+        String address =  nextNestedSegwitAddress.getValue().getAddress();
+        assertEquals(expectedReceivingAddress, address);
+        String guiAddress = robot.lookup("#nestedReceivingAddress").queryAs(TextField.class).getText();
+        assertEquals(expectedReceivingAddress, guiAddress);
     }
 
     //TODO: testar com floating btc recebidos

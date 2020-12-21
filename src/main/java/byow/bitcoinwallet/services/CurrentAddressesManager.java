@@ -43,7 +43,7 @@ abstract public class CurrentAddressesManager {
 
     protected abstract DerivationPath getCurrentDerivationPath();
 
-    protected abstract DerivationPath setNextCurrentDerivationPath(int initialAddressToMonitor);
+    protected abstract DerivationPath setNextCurrentDerivationPath(int next);
 
     public abstract void clear();
 

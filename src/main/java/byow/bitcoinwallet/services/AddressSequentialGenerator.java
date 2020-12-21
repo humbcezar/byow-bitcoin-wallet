@@ -1,16 +1,16 @@
 package byow.bitcoinwallet.services;
 
 import byow.bitcoinwallet.entities.Address;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.util.LinkedList;
 import java.util.List;
 
-@Component
 public class AddressSequentialGenerator {
-    @Autowired
     private AddressGenerator addressGenerator;
+
+    public AddressSequentialGenerator(AddressGenerator addressGenerator) {
+        this.addressGenerator = addressGenerator;
+    }
 
     public List<Address> deriveAddresses(
         int numberOfAddresses,

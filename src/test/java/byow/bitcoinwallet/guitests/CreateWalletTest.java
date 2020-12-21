@@ -58,8 +58,10 @@ public class CreateWalletTest extends TestBase {
         robot.clickOn("Receive");
         String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
         assertNotNull(address);
+        assertNotEquals("", address);
         String nestedAddress = robot.lookup("#nestedReceivingAddress").queryAs(TextField.class).getText();
         assertNotNull(nestedAddress);
+        assertNotEquals("", nestedAddress);
         final TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
         MatcherAssert.assertThat(tableView, is(not(containsRowAtIndex(0))));
     }

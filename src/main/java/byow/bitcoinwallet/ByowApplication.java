@@ -1,12 +1,18 @@
 package byow.bitcoinwallet;
 
 import byow.bitcoinwallet.enums.Languages;
+import byow.bitcoinwallet.services.AddressGenerator;
+import byow.bitcoinwallet.services.AddressSequentialGenerator;
+import byow.bitcoinwallet.services.DefaultAddressGenerator;
+import byow.bitcoinwallet.services.NestedSegwitAddressGenerator;
 import com.blockstream.libwally.Wally;
 import javafx.application.Application;
 import javafx.util.converter.BigDecimalStringConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.zeromq.SocketType;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ.Socket;
@@ -22,7 +28,8 @@ import static wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient.DEFAULT_JSON
 public class ByowApplication {
 
     @Autowired
-    public BitcoindRpcClient bitcoindRpcClient;
+    ApplicationContext applicationContext;
+
 
     public static void main(String[] args) {
         Application.launch(GuiApplication.class, args);
@@ -56,5 +63,16 @@ public class ByowApplication {
     @Bean
     public ReentrantLock reentrantLock() {
         return new ReentrantLock();
+    }
+
+    @Bean
+    @Primary
+    public AddressSequentialGenerator defaultAddressSequentialGenerator() {
+        return new AddressSequentialGenerator(applicationContext.getBean(DefaultAddressGenerator.class));
+    }
+
+    @Bean
+    public AddressSequentialGenerator nestedSegwitAddressSequentialGenerator() {
+        return new AddressSequentialGenerator(applicationContext.getBean(NestedSegwitAddressGenerator.class));
     }
 }

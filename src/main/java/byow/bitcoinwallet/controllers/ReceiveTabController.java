@@ -1,5 +1,6 @@
 package byow.bitcoinwallet.controllers;
 
+import byow.bitcoinwallet.entities.NextNestedSegwitAddress;
 import byow.bitcoinwallet.entities.NextReceivingAddress;
 import javafx.fxml.FXML;
 import javafx.scene.control.Tab;
@@ -23,18 +24,25 @@ public class ReceiveTabController extends Tab implements BaseController {
 
     private NextReceivingAddress nextReceivingAddress;
 
+    private NextNestedSegwitAddress nextNestedSegwitAddress;
+
     @FXML
     public TextField receivingAddress;
+
+    @FXML
+    public TextField nestedReceivingAddress;
 
     @Autowired
     public ReceiveTabController(
         @Value("classpath:/fxml/receive_tab.fxml") Resource fxml,
         ApplicationContext context,
-        NextReceivingAddress nextReceivingAddress
+        NextReceivingAddress nextReceivingAddress,
+        NextNestedSegwitAddress nextNestedSegwitAddress
     ) throws IOException {
         this.fxml = fxml;
         this.context = context;
         this.nextReceivingAddress = nextReceivingAddress;
+        this.nextNestedSegwitAddress = nextNestedSegwitAddress;
         setText("Receive");
         construct(this.fxml, this.context);
     }
@@ -42,6 +50,9 @@ public class ReceiveTabController extends Tab implements BaseController {
     public void initialize() {
         nextReceivingAddress.addListener(
             (observable, oldValue, newValue) -> receivingAddress.setText(newValue.getAddress())
+        );
+        nextNestedSegwitAddress.addListener(
+            (observable, oldValue, newValue) -> nestedReceivingAddress.setText(newValue.getAddress())
         );
     }
 }
