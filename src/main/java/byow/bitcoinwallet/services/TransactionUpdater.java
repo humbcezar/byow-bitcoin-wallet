@@ -53,9 +53,7 @@ public class TransactionUpdater {
                 ))
             )
             .filter(address -> currentReceivingAddresses.contains(address))
-            .peek(address -> currentAddressesManagers.forEach(currentAddressManager ->
-                currentReceivingAddressesUpdater.updateReceivingAddresses(List.of(address))
-            ))
+            .peek(address -> currentReceivingAddressesUpdater.updateReceivingAddresses(List.of(address)))
             .forEach(address -> currentAddressesManagers.stream()
                 .filter(currentAddressManager -> currentAddressManager.getNextAddress().equalAddress(address))
                 .forEach(currentAddressManager -> currentAddressManager.updateNextAddress(

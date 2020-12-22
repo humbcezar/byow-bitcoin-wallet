@@ -253,10 +253,12 @@ public class ReceivingTransactionTest extends TestBase {
             String nodeAddress = bitcoindRpcClient.getNewAddress();
             bitcoindRpcClient.generateToAddress(receivingAddress.getConfirmations(), nodeAddress);
         });
+        int expectedNumberOfRows = (int) addresses.stream().map(ReceivingAddress::getAddress).distinct().count();
         WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
             return !tableView.getItems().isEmpty() && tableView.getItems().get(0).getBalance().equals(expectedBalance)
-                    && tableView.getItems().get(0).getConfirmations() == expectedConfirmations;
+                    && tableView.getItems().get(0).getConfirmations() == expectedConfirmations
+                    && tableView.getItems().size() == expectedNumberOfRows;
         });
 
         TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
@@ -266,9 +268,7 @@ public class ReceivingTransactionTest extends TestBase {
                 expectedConfirmations
                 )
         );
-        MatcherAssert.assertThat(tableView, hasNumRows(
-                (int) addresses.stream().map(ReceivingAddress::getAddress).distinct().count()
-                )
+        MatcherAssert.assertThat(tableView, hasNumRows(expectedNumberOfRows)
         );
 
         WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
