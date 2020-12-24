@@ -2,9 +2,7 @@ package byow.bitcoinwallet.guitests;
 
 import byow.bitcoinwallet.entities.Address;
 import byow.bitcoinwallet.entities.ReceivingAddress;
-import byow.bitcoinwallet.services.AddressGenerator;
-import byow.bitcoinwallet.services.AddressSequentialGenerator;
-import byow.bitcoinwallet.services.SeedGenerator;
+import byow.bitcoinwallet.services.*;
 import byow.bitcoinwallet.utils.WalletUtil;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -14,6 +12,7 @@ import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
@@ -26,6 +25,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP49_ADDRESS_PATH;
 import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.testfx.matcher.control.TableViewMatchers.containsRow;
@@ -43,7 +43,14 @@ public class ReceivingTransactionTest extends TestBase {
     private AddressSequentialGenerator addressSequentialGenerator;
 
     @Autowired
-    private AddressGenerator addressGenerator;
+    @Qualifier("nestedSegwitAddressSequentialGenerator")
+    private AddressSequentialGenerator nestedSegwitAddressSequentialGenerator;
+
+    @Autowired
+    private DefaultAddressGenerator defaultAddressGenerator;
+
+    @Autowired
+    private NestedSegwitAddressGenerator nestedSegwitAddressGenerator;
 
     @Autowired
     private WalletUtil walletUtil;
@@ -59,31 +66,31 @@ public class ReceivingTransactionTest extends TestBase {
     @Test
     public void receiveOneTransaction(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
-        receiveNTransactions(robot, mnemonicSeed, 1);
+        receiveNTransactions(robot, mnemonicSeed, 1, FIRST_BIP84_ADDRESS_PATH, defaultAddressGenerator, "#receivingAddress", addressSequentialGenerator);
     }
 
     @Test
     public void receiveFiveTransactions(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
-        receiveNTransactions(robot, mnemonicSeed, 5);
+        receiveNTransactions(robot, mnemonicSeed, 5, FIRST_BIP84_ADDRESS_PATH, defaultAddressGenerator, "#receivingAddress", addressSequentialGenerator);
     }
 
     @Test
     public void receiveFifteenTransactions(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
-        receiveNTransactions(robot, mnemonicSeed, 15);
+        receiveNTransactions(robot, mnemonicSeed, 15, FIRST_BIP84_ADDRESS_PATH, defaultAddressGenerator, "#receivingAddress", addressSequentialGenerator);
     }
 
     @Test
     public void receiveTwentyTransactions(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
-        receiveNTransactions(robot, mnemonicSeed, 20);
+        receiveNTransactions(robot, mnemonicSeed, 20, FIRST_BIP84_ADDRESS_PATH, defaultAddressGenerator, "#receivingAddress", addressSequentialGenerator);
     }
 
     @Test
     public void receiveTwentyFiveTransactions(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
-        receiveNTransactions(robot, mnemonicSeed, 25);
+        receiveNTransactions(robot, mnemonicSeed, 25, FIRST_BIP84_ADDRESS_PATH, defaultAddressGenerator, "#receivingAddress", addressSequentialGenerator);
     }
 
     @Test
@@ -192,15 +199,37 @@ public class ReceivingTransactionTest extends TestBase {
         assertEquals(expectedNextAddress, nextAddress);
     }
 
-    private void receiveNTransactions(FxRobot robot, String mnemonicSeed, int numberOfTransactions) throws TimeoutException {
-        String firstAddress = addressGenerator.generate(seedGenerator.generateSeed(mnemonicSeed, ""), FIRST_BIP84_ADDRESS_PATH);
+    @Test
+    public void receiveOneTransactionToNestedSegwitAddress(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
+        receiveNTransactions(
+            robot,
+            mnemonicSeed,
+            1,
+            FIRST_BIP49_ADDRESS_PATH,
+            nestedSegwitAddressGenerator,
+            "#nestedReceivingAddress",
+            nestedSegwitAddressSequentialGenerator
+        );
+    }
+
+    private void receiveNTransactions(
+            FxRobot robot,
+            String mnemonicSeed,
+            int numberOfTransactions,
+            DerivationPath firstDerivationPath,
+            AddressGenerator addressGenerator,
+            String receivingAddressQuery,
+            AddressSequentialGenerator addressSequentialGenerator
+    ) throws TimeoutException {
+        String firstAddress = addressGenerator.generate(seedGenerator.generateSeed(mnemonicSeed, ""), firstDerivationPath);
         WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
             robot.lookup("#balanceTable").queryAs(TableView.class);
-            String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+            String address = robot.lookup(receivingAddressQuery).queryAs(TextField.class).getText();
             return address != null && !address.isBlank() && address.equals(firstAddress);
         });
         IntStream.range(0, numberOfTransactions).forEach(i -> {
-            String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+            String address = robot.lookup(receivingAddressQuery).queryAs(TextField.class).getText();
             bitcoindRpcClient.sendToAddress(address, BigDecimal.ONE);
             try {
                 WaitForAsyncUtils.waitFor(60, TimeUnit.SECONDS, () -> {
@@ -221,17 +250,17 @@ public class ReceivingTransactionTest extends TestBase {
 
             String seed = seedGenerator.generateSeed(mnemonicSeed, "");
             String expectedNextAddress = addressSequentialGenerator
-                    .deriveAddresses(1, seed, FIRST_BIP84_ADDRESS_PATH.next(i + 1))
+                    .deriveAddresses(1, seed, firstDerivationPath.next(i + 1))
                     .get(0).getAddress();
             try {
                 WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
-                    String nextAddress = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+                    String nextAddress = robot.lookup(receivingAddressQuery).queryAs(TextField.class).getText();
                     return expectedNextAddress.equals(nextAddress);
                 });
             } catch (TimeoutException e) {
                 e.printStackTrace();
             }
-            String nextAddress = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+            String nextAddress = robot.lookup(receivingAddressQuery).queryAs(TextField.class).getText();
             assertEquals(expectedNextAddress, nextAddress);
         });
     }

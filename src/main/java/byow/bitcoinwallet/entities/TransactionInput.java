@@ -8,6 +8,8 @@ public class TransactionInput {
 
     private final byte[] privateKey;
 
+    private byte[] scriptSig;
+
     private Witness witness;
 
     private final long amountInSatoshis;
@@ -24,6 +26,7 @@ public class TransactionInput {
         Witness witness
     ) {
         this.txId = txid;
+        this.scriptSig = scriptSig;
         this.witness = witness;
         input = tx_input_init(
             parseHexBinary(toLittleEndian(txid)),
@@ -66,6 +69,14 @@ public class TransactionInput {
 
     public String getTxId() {
         return txId;
+    }
+
+    public byte[] getScriptSig() {
+        return scriptSig;
+    }
+
+    public void setScriptSig(byte[] scriptSig) {
+        this.scriptSig = scriptSig;
     }
 
 }

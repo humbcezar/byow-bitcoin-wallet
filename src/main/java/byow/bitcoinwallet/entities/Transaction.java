@@ -37,13 +37,13 @@ public class Transaction {
     public void sign(int inputIndex) {
         TransactionInput input = inputs.get(inputIndex);
         byte[] sigHash = tx_get_btc_signature_hash(
-                tx,
-                inputIndex,
-                input.getWitness().scriptCode(),
-                input.getAmountInSatoshis(),
-                WALLY_SIGHASH_ALL,
-                WALLY_TX_FLAG_USE_WITNESS,
-                null
+            tx,
+            inputIndex,
+            input.getWitness().scriptCode(),
+            input.getAmountInSatoshis(),
+            WALLY_SIGHASH_ALL,
+            WALLY_TX_FLAG_USE_WITNESS,
+            null
         );
         byte[] signature = ec_sig_to_der(
             ec_sig_normalize(

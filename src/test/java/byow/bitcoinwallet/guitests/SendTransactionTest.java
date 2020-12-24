@@ -2,6 +2,7 @@ package byow.bitcoinwallet.guitests;
 
 import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.services.AddressGenerator;
+import byow.bitcoinwallet.services.NestedSegwitAddressGenerator;
 import byow.bitcoinwallet.services.SeedGenerator;
 import byow.bitcoinwallet.services.TotalBalanceCalculator;
 import byow.bitcoinwallet.utils.WalletUtil;
@@ -20,8 +21,7 @@ import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
 import java.math.BigDecimal;
 import java.util.concurrent.TimeoutException;
 
-import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
-import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_CHANGE_PATH;
+import static byow.bitcoinwallet.services.DerivationPath.*;
 import static java.lang.Integer.MAX_VALUE;
 import static java.math.BigDecimal.ONE;
 import static java.math.BigDecimal.valueOf;
@@ -40,6 +40,9 @@ public class SendTransactionTest extends TestBase {
 
     @Autowired
     private AddressGenerator addressGenerator;
+
+    @Autowired
+    private NestedSegwitAddressGenerator nestedSegwitAddressGenerator;
 
     @Autowired
     private SeedGenerator seedGenerator;
@@ -61,7 +64,21 @@ public class SendTransactionTest extends TestBase {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
-        fundAddress(robot, firstAddress, ONE, 1);
+        fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
+        waitFor(60, SECONDS, () -> {
+            TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+            return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
+        });
+
+        sendNTransactions(robot, "0.5", 1, "0.50000000", 1, seed, 0);
+    }
+
+    @Test
+    public void sendOneTransactionToNodeAddressFromNestedSegwitUtxo(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
+        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String firstAddress = nestedSegwitAddressGenerator.generate(seed, FIRST_BIP49_ADDRESS_PATH);
+        fundAddress(robot, firstAddress, ONE, 1, "#nestedReceivingAddress");
         waitFor(60, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
@@ -75,7 +92,7 @@ public class SendTransactionTest extends TestBase {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
-        fundAddress(robot, firstAddress, valueOf(5), 1);
+        fundAddress(robot, firstAddress, valueOf(5), 1, "#receivingAddress");
         waitFor(60, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
@@ -137,7 +154,7 @@ public class SendTransactionTest extends TestBase {
         String senderMnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
         String seed = seedGenerator.generateSeed(senderMnemonicSeed, "");
         String senderWalletAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
-        fundAddress(robot, senderWalletAddress, ONE, 1);
+        fundAddress(robot, senderWalletAddress, ONE, 1, "#receivingAddress");
 
         robot.clickOn("#sendTab");
         robot.clickOn("#amountToSend");
@@ -177,7 +194,7 @@ public class SendTransactionTest extends TestBase {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
-        fundAddress(robot, firstAddress, ONE, 1);
+        fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
         waitFor(60, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
@@ -201,7 +218,7 @@ public class SendTransactionTest extends TestBase {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
-        fundAddress(robot, firstAddress, ONE, 1);
+        fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
         waitFor(60, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
@@ -225,7 +242,7 @@ public class SendTransactionTest extends TestBase {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
-        fundAddress(robot, firstAddress, ONE, 1);
+        fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
         waitFor(60, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
@@ -240,7 +257,7 @@ public class SendTransactionTest extends TestBase {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
-        fundAddress(robot, firstAddress, ONE, 1);
+        fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
         waitFor(60, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
@@ -255,7 +272,7 @@ public class SendTransactionTest extends TestBase {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
-        fundAddress(robot, firstAddress, ONE, 1);
+        fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
         waitFor(60, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
@@ -279,7 +296,7 @@ public class SendTransactionTest extends TestBase {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
-        fundAddress(robot, firstAddress, valueOf(1.00000300), 1);
+        fundAddress(robot, firstAddress, valueOf(1.00000300), 1, "#receivingAddress");
         waitFor(60, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
@@ -298,13 +315,13 @@ public class SendTransactionTest extends TestBase {
         robot.clickOn("OK");
     }
 
-    private void fundAddress(FxRobot robot, String firstAddress, BigDecimal amount, int confirmations) throws TimeoutException {
+    private void fundAddress(FxRobot robot, String firstAddress, BigDecimal amount, int confirmations, String fxmlAddress) throws TimeoutException {
         waitFor(40, SECONDS, () -> {
             robot.lookup("#balanceTable").queryAs(TableView.class);
-            String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+            String address = robot.lookup(fxmlAddress).queryAs(TextField.class).getText();
             return address != null && !address.isBlank() && address.equals(firstAddress);
         });
-        String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+        String address = robot.lookup(fxmlAddress).queryAs(TextField.class).getText();
         bitcoindRpcClient.sendToAddress(address, amount);
         String nodeAddress = bitcoindRpcClient.getNewAddress();
         bitcoindRpcClient.generateToAddress(confirmations, nodeAddress);
@@ -320,7 +337,7 @@ public class SendTransactionTest extends TestBase {
         range(0, numberOfAddresses).forEach(i -> {
             String address = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(i));
             try {
-                fundAddress(robot, address, amount, confirmations);
+                fundAddress(robot, address, amount, confirmations, "#receivingAddress");
             } catch (TimeoutException e) {
                 throw new RuntimeException(e);
             }

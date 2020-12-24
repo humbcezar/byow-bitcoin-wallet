@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Unspent;
 
+import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;
@@ -13,10 +14,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.blockstream.libwally.Wally.WALLY_TX_DUMMY_SIG_LOW_R;
+import static com.blockstream.libwally.Wally.hash160;
 import static java.math.BigDecimal.valueOf;
 import static java.math.RoundingMode.FLOOR;
 import static java.util.Collections.shuffle;
 import static java.util.Objects.isNull;
+import static wf.bitcoin.krotjson.HexCoder.decode;
 
 @Component
 public class SingleRandomDrawCoinSelector implements CoinSelector {
@@ -138,7 +141,7 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
         return List.of(toAddressOutput, changeOutput);
     }
 
-    private TransactionInput createInput(Unspent utxo, DerivationPath derivationPath, String seed) { //TODO: refactor
+    private TransactionInput createInput(Unspent utxo, DerivationPath derivationPath, String seed) {
         byte[] publicKey = defaultKeyGenerator.getPublicKeyAsByteArray(seed, derivationPath);
         byte[] privateKey = defaultKeyGenerator.getPrivateKeyAsByteArray(seed, derivationPath);
 
@@ -152,9 +155,25 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
             satoshis(utxo.amount()),
             privateKey,
             N_SEQUENCE,
-            null,
+            buildScriptSig(publicKey, utxo.address()),
             witness
         );
+    }
+
+    private byte[] buildScriptSig(byte[] publicKey, String address) {
+        if (address.startsWith(addressPrefix)) {
+            return null;
+        }
+
+        byte[] pubKeyHashBytes = hash160(publicKey);
+        ByteArrayOutputStream redeemScriptStream = new ByteArrayOutputStream();
+        redeemScriptStream.writeBytes(decode("0014"));
+        redeemScriptStream.writeBytes(pubKeyHashBytes);
+
+        ByteArrayOutputStream redeemScriptPlusSizeStream = new ByteArrayOutputStream();
+        redeemScriptPlusSizeStream.write(redeemScriptStream.size());
+        redeemScriptPlusSizeStream.writeBytes(redeemScriptStream.toByteArray());
+        return redeemScriptPlusSizeStream.toByteArray();
     }
 
     private long totalInputBalance(List<TransactionInput> transactionInputs) {
