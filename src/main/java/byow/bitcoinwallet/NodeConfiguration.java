@@ -27,6 +27,14 @@ public class NodeConfiguration {
         return "tb";
     }
 
+    @Bean(name = "networkVersion")
+    public int defineNetworkVersion() {
+        if (bitcoinEnvironment.equals("mainnet")) {
+            return WALLY_NETWORK_BITCOIN_MAINNET;
+        }
+        return WALLY_NETWORK_BITCOIN_TESTNET;
+    }
+
     @Bean(name = "nestedAddressVersion")
     public int defineAddressVersion() {
         if (bitcoinEnvironment.equals("mainnet")) {

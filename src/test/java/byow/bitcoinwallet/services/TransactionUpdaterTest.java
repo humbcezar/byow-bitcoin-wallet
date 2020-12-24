@@ -12,8 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Date;
 import java.util.List;
 
-import static com.blockstream.libwally.Wally.WALLY_TX_FLAG_USE_WITNESS;
-import static com.blockstream.libwally.Wally.tx_from_hex;
+import static com.blockstream.libwally.Wally.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -67,7 +66,9 @@ public class TransactionUpdaterTest {
             currentWalletManager,
             "bcrt",
             currentReceivingAddresses,
-            currentReceivingAddressesUpdater
+            currentReceivingAddressesUpdater,
+            WALLY_ADDRESS_VERSION_P2SH_TESTNET,
+            WALLY_NETWORK_BITCOIN_TESTNET
         );
         Object transaction = tx_from_hex(txHex, WALLY_TX_FLAG_USE_WITNESS);
 

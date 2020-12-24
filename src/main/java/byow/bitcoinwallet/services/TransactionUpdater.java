@@ -19,6 +19,10 @@ import static wf.bitcoin.krotjson.HexCoder.decode;
 @Component
 @Lazy
 public class TransactionUpdater {
+    private final int networkVersion;
+
+    private int nestedAddressVersion;
+
     private List<CurrentAddressesManager> currentAddressesManagers;
 
     private CurrentReceivingAddresses currentReceivingAddresses;
@@ -35,13 +39,17 @@ public class TransactionUpdater {
         CurrentWalletManager currentWalletManager,
         @Qualifier("addressPrefix") String addressPrefix,
         CurrentReceivingAddresses currentReceivingAddresses,
-        CurrentReceivingAddressesUpdater currentReceivingAddressesUpdater
+        CurrentReceivingAddressesUpdater currentReceivingAddressesUpdater,
+        @Qualifier("nestedAddressVersion") int nestedAddressVersion,
+        @Qualifier("networkVersion") int networkVersion
     ) {
         this.currentAddressesManagers = currentAddressesManagers;
         this.currentWalletManager = currentWalletManager;
         this.addressPrefix = addressPrefix;
         this.currentReceivingAddresses = currentReceivingAddresses;
         this.currentReceivingAddressesUpdater = currentReceivingAddressesUpdater;
+        this.nestedAddressVersion = nestedAddressVersion;
+        this.networkVersion = networkVersion;
     }
 
     public void update(Object transaction) {
@@ -90,7 +98,7 @@ public class TransactionUpdater {
         byte[] redeemScript = redeemScriptStream.toByteArray();
 
         ByteArrayOutputStream addressStream = new ByteArrayOutputStream();
-        addressStream.write(WALLY_ADDRESS_VERSION_P2SH_TESTNET);
+        addressStream.write(nestedAddressVersion);
         addressStream.writeBytes(hash160(redeemScript));
         return base58check_from_bytes(addressStream.toByteArray());
     }
@@ -104,7 +112,7 @@ public class TransactionUpdater {
         return range(0, tx_get_num_outputs(transaction)).mapToObj(i -> {
             try {
                 if (scriptpubkey_get_type(tx_get_output_script(transaction, i)) == WALLY_SCRIPT_TYPE_P2SH) {
-                    return scriptpubkey_to_address(tx_get_output_script(transaction, i), WALLY_NETWORK_BITCOIN_TESTNET);
+                    return scriptpubkey_to_address(tx_get_output_script(transaction, i), networkVersion);
                 }
                 return addr_segwit_from_bytes(tx_get_output_script(transaction, i), addressPrefix, 0);
             } catch (IllegalArgumentException ignored) {

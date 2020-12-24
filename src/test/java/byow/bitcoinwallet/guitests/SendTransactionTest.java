@@ -23,8 +23,7 @@ import java.util.concurrent.TimeoutException;
 
 import static byow.bitcoinwallet.services.DerivationPath.*;
 import static java.lang.Integer.MAX_VALUE;
-import static java.math.BigDecimal.ONE;
-import static java.math.BigDecimal.valueOf;
+import static java.math.BigDecimal.*;
 import static java.math.RoundingMode.HALF_UP;
 import static java.util.Objects.isNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -85,6 +84,23 @@ public class SendTransactionTest extends TestBase {
         });
 
         sendNTransactions(robot, "0.5", 1, "0.50000000", 1, seed, 0);
+    }
+
+    @Test
+    public void sendOneTransactionToNodeAddressFromNestedSegwitUtxoAndDefaultUtxo(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
+        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String firstAddress = nestedSegwitAddressGenerator.generate(seed, FIRST_BIP49_ADDRESS_PATH);
+        String secondAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
+        fundAddress(robot, firstAddress, ONE, 1, "#nestedReceivingAddress");
+        fundAddress(robot, secondAddress, ONE, 1, "#receivingAddress");
+        waitFor(60, SECONDS, () -> {
+            TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+            return tableView.getItems().size() == 2 && tableView.getItems().get(0).getConfirmations() == 1
+                    && tableView.getItems().get(1).getConfirmations() == 2;
+        });
+
+        sendNTransactions(robot, "1.5", 1, "1.50000000", 1, seed, 0);
     }
 
     @Test
@@ -364,7 +380,7 @@ public class SendTransactionTest extends TestBase {
     ) {
         range(0, numTransactions).forEach(i -> {
             TableView<ReceivingAddress> table = robot.lookup("#balanceTable").queryAs(TableView.class);
-            BigDecimal previousBalance = table.getItems().get(0).getBigDecimalBalance();
+            BigDecimal previousBalance = table.getItems().stream().map(ReceivingAddress::getBigDecimalBalance).reduce(BigDecimal::add).orElse(ZERO);
 
             String nodeAddress = bitcoindRpcClient.getNewAddress();
             robot.clickOn("#sendTab");
