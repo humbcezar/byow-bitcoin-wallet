@@ -4,16 +4,16 @@ import static com.blockstream.libwally.Wally.*;
 
 public class TransactionOutput {
 
-    private final byte[] scriptPubKey;
+    private byte[] scriptPubKey;
 
     private final Object output;
 
     private final long amount;
 
-    public TransactionOutput(String address, String addressPrefix, long amount) {
-        scriptPubKey = addr_segwit_to_bytes(address, addressPrefix, 0);
-        output = tx_output_init(amount, scriptPubKey);
+    public TransactionOutput(long amount, byte[] scriptPubKey) {
+        this.scriptPubKey = scriptPubKey;
         this.amount = amount;
+        output = tx_output_init(amount, scriptPubKey);
     }
 
     public Object getOutput() {

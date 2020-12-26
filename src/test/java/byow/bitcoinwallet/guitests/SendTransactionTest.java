@@ -69,7 +69,7 @@ public class SendTransactionTest extends TestBase {
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
         });
 
-        sendNTransactions(robot, "0.5", 1, "0.50000000", 1, seed, 0);
+        sendNTransactions(robot, "0.5", 1, "0.50000000", 1, seed, 0, "bech32");
     }
 
     @Test
@@ -83,7 +83,7 @@ public class SendTransactionTest extends TestBase {
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
         });
 
-        sendNTransactions(robot, "0.5", 1, "0.50000000", 1, seed, 0);
+        sendNTransactions(robot, "0.5", 1, "0.50000000", 1, seed, 0, "bech32");
     }
 
     @Test
@@ -100,7 +100,7 @@ public class SendTransactionTest extends TestBase {
                     && tableView.getItems().get(1).getConfirmations() == 2;
         });
 
-        sendNTransactions(robot, "1.5", 1, "1.50000000", 1, seed, 0);
+        sendNTransactions(robot, "1.5", 1, "1.50000000", 1, seed, 0, "bech32");
     }
 
     @Test
@@ -114,7 +114,7 @@ public class SendTransactionTest extends TestBase {
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
         });
 
-        sendNTransactions(robot, "0.8", 1, "0.80000000", 5, seed, 0);
+        sendNTransactions(robot, "0.8", 1, "0.80000000", 5, seed, 0, "bech32");
     }
 
     @Test
@@ -202,7 +202,7 @@ public class SendTransactionTest extends TestBase {
         TableView<ReceivingAddress> recipientTableView = robot.lookup("#balanceTable").queryAs(TableView.class);
         assertEquals(new BigDecimal("0.5"), recipientTableView.getItems().get(0).getBigDecimalBalance().setScale(1, HALF_UP));
 
-        sendNTransactions(robot, "0.25", 2, "0.25000000", 1, recipientSeed, 0);
+        sendNTransactions(robot, "0.25", 2, "0.25000000", 1, recipientSeed, 0, "bech32");
     }
 
     @Test
@@ -331,6 +331,34 @@ public class SendTransactionTest extends TestBase {
         robot.clickOn("OK");
     }
 
+    @Test
+    public void sendOneTransactionToNestedSegwitNodeAddress(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
+        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
+        fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
+        waitFor(60, SECONDS, () -> {
+            TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+            return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
+        });
+
+        sendNTransactions(robot, "0.5", 1, "0.50000000", 1, seed, 0, "p2sh-segwit");
+    }
+
+    @Test
+    public void sendOneTransactionToLegacyNodeAddress(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
+        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
+        fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
+        waitFor(60, SECONDS, () -> {
+            TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+            return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
+        });
+
+        sendNTransactions(robot, "0.5", 1, "0.50000000", 1, seed, 0, "legacy");
+    }
+
     private void fundAddress(FxRobot robot, String firstAddress, BigDecimal amount, int confirmations, String fxmlAddress) throws TimeoutException {
         waitFor(40, SECONDS, () -> {
             robot.lookup("#balanceTable").queryAs(TableView.class);
@@ -370,19 +398,20 @@ public class SendTransactionTest extends TestBase {
     }
 
     private void sendNTransactions(
-        FxRobot robot,
-        String amount,
-        int scale,
-        String expectedBalance,
-        int numTransactions,
-        String seed,
-        int firstChangeIndex
+            FxRobot robot,
+            String amount,
+            int scale,
+            String expectedBalance,
+            int numTransactions,
+            String seed,
+            int firstChangeIndex,
+            String toAddressType
     ) {
         range(0, numTransactions).forEach(i -> {
             TableView<ReceivingAddress> table = robot.lookup("#balanceTable").queryAs(TableView.class);
             BigDecimal previousBalance = table.getItems().stream().map(ReceivingAddress::getBigDecimalBalance).reduce(BigDecimal::add).orElse(ZERO);
 
-            String nodeAddress = bitcoindRpcClient.getNewAddress();
+            String nodeAddress = bitcoindRpcClient.getNewAddress("", toAddressType);
             robot.clickOn("#sendTab");
             robot.clickOn("#amountToSend");
             robot.write(amount);
