@@ -60,6 +60,15 @@ public class BalanceTableTest extends TestBase {
     @Qualifier("nestedSegwitAddressSequentialGenerator")
     private AddressSequentialGenerator nestedSegwitAddressSequentialGenerator;
 
+    @Autowired
+    private DefaultAddressUpdater defaultAddressUpdater;
+
+    @Autowired
+    private NestedSegwitAddressUpdater nestedSegwitAddressUpdater;
+
+    @Autowired
+    private DefaultChangeAddressUpdater defaultChangeAddressUpdater;
+
     private String seed;
 
     private String walletName;
@@ -83,58 +92,40 @@ public class BalanceTableTest extends TestBase {
     }
 
     @Test
-    public void showTenAddressWithPositiveBalance(FxRobot robot) throws TimeoutException {
-        showNAddressesWithPositiveBalance(robot, 10, FIRST_BIP84_ADDRESS_PATH, defaultAddressSequentialGenerator);
-        assertNextReceivingAddress(robot, 10);
+    public void showFiveAddressWithPositiveBalance(FxRobot robot) throws TimeoutException {
+        showNAddressesWithPositiveBalance(robot, 5, FIRST_BIP84_ADDRESS_PATH, defaultAddressSequentialGenerator);
+        assertNextReceivingAddress(robot, 5);
         assertNextChangeAddress(0);
     }
 
     @Test
-    public void showTwentyFiveAddressWithPositiveBalance(FxRobot robot) throws TimeoutException {
-        showNAddressesWithPositiveBalance(robot, 25, FIRST_BIP84_ADDRESS_PATH, defaultAddressSequentialGenerator);
-        assertNextReceivingAddress(robot, 25);
+    public void showSixAddressWithPositiveBalance(FxRobot robot) throws TimeoutException {
+        showNAddressesWithPositiveBalance(robot, 6, FIRST_BIP84_ADDRESS_PATH, defaultAddressSequentialGenerator);
+        assertNextReceivingAddress(robot, 6);
         assertNextChangeAddress(0);
     }
 
     @Test
-    public void showAddressWithPositiveBalanceWithChangeAddresses(FxRobot robot) throws TimeoutException {
-        showNAddressesWithPositiveBalance(robot, 1, FIRST_BIP84_CHANGE_PATH, defaultAddressSequentialGenerator);
-        assertNextChangeAddress(1);
+    public void showSixAddressWithPositiveBalanceWithChangeAddresses(FxRobot robot) throws TimeoutException {
+        showNAddressesWithPositiveBalance(robot, 6, FIRST_BIP84_CHANGE_PATH, defaultAddressSequentialGenerator);
+        assertNextChangeAddress(6);
         assertNextReceivingAddress(robot, 0);
     }
 
     @Test
-    public void showTenAddressWithPositiveBalanceWithChangeAddresses(FxRobot robot) throws TimeoutException {
-        showNAddressesWithPositiveBalance(robot, 10, FIRST_BIP84_CHANGE_PATH, defaultAddressSequentialGenerator);
-        assertNextChangeAddress(10);
-        assertNextReceivingAddress(robot, 0);
-    }
-
-    @Test
-    public void showTwentyFiveAddressWithPositiveBalanceWithChangeAddresses(FxRobot robot) throws TimeoutException {
-        showNAddressesWithPositiveBalance(robot, 25, FIRST_BIP84_CHANGE_PATH, defaultAddressSequentialGenerator);
-        assertNextChangeAddress(25);
-        assertNextReceivingAddress(robot, 0);
-    }
-
-    @Test
-    public void showAddressWithPositiveBalanceWithNestedSegwitAddresses(FxRobot robot) throws TimeoutException {
-        showNAddressesWithPositiveBalance(robot, 1, FIRST_BIP49_ADDRESS_PATH, nestedSegwitAddressSequentialGenerator);
-        assertNextNestedSegwitAddress(robot, 1);
-        assertNextChangeAddress(0);
-        assertNextReceivingAddress(robot, 0);
-    }
-
-    @Test
-    public void showTenAddressWithPositiveBalanceWithNestedSegwitAddresses(FxRobot robot) throws TimeoutException {
-        showNAddressesWithPositiveBalance(robot, 10, FIRST_BIP49_ADDRESS_PATH, nestedSegwitAddressSequentialGenerator);
-        assertNextNestedSegwitAddress(robot, 10);
+    public void showSixAddressWithPositiveBalanceWithNestedSegwitAddresses(FxRobot robot) throws TimeoutException {
+        showNAddressesWithPositiveBalance(robot, 6, FIRST_BIP49_ADDRESS_PATH, nestedSegwitAddressSequentialGenerator);
+        assertNextNestedSegwitAddress(robot, 6);
         assertNextReceivingAddress(robot, 0);
         assertNextChangeAddress(0);
     }
 
     @Test
     public void showThreeAddressesWithPositiveValueWithVaryingTransactionsWithChangeAddresses(FxRobot robot) throws TimeoutException {
+        defaultChangeAddressUpdater.setInitialAddressToMonitor(20);
+        defaultAddressUpdater.setInitialAddressToMonitor(20);
+        nestedSegwitAddressUpdater.setInitialAddressToMonitor(20);
+
         int numberOfReceivingAddresses = 3;
 
         List<String> addresses = defaultAddressSequentialGenerator.deriveAddresses(
@@ -200,6 +191,10 @@ public class BalanceTableTest extends TestBase {
 
     @Test
     public void showThreeAddressesWithPositiveValueWithVaryingTransactions(FxRobot robot) throws TimeoutException {
+        defaultChangeAddressUpdater.setInitialAddressToMonitor(20);
+        defaultAddressUpdater.setInitialAddressToMonitor(20);
+        nestedSegwitAddressUpdater.setInitialAddressToMonitor(20);
+
         int numberOfReceivingAddresses = 3;
 
         List<String> addresses = defaultAddressSequentialGenerator.deriveAddresses(

@@ -73,40 +73,15 @@ public class ReceivingTransactionTest extends TestBase {
     }
 
     @Test
-    public void receiveFiveTransactions(FxRobot robot) throws TimeoutException {
+    public void receiveSixTransactions(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
-        receiveNTransactions(robot, mnemonicSeed, 5, FIRST_BIP84_ADDRESS_PATH, defaultAddressGenerator, "#receivingAddress", addressSequentialGenerator);
+        receiveNTransactions(robot, mnemonicSeed, 6, FIRST_BIP84_ADDRESS_PATH, defaultAddressGenerator, "#receivingAddress", addressSequentialGenerator);
     }
 
     @Test
-    public void receiveFifteenTransactions(FxRobot robot) throws TimeoutException {
+    public void receiveSixSequentialTransactionsToTheSameAddress(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
-        receiveNTransactions(robot, mnemonicSeed, 15, FIRST_BIP84_ADDRESS_PATH, defaultAddressGenerator, "#receivingAddress", addressSequentialGenerator);
-    }
-
-    @Test
-    public void receiveTwentyTransactions(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
-        receiveNTransactions(robot, mnemonicSeed, 20, FIRST_BIP84_ADDRESS_PATH, defaultAddressGenerator, "#receivingAddress", addressSequentialGenerator);
-    }
-
-    @Test
-    public void receiveTwentyFiveTransactions(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
-        receiveNTransactions(robot, mnemonicSeed, 25, FIRST_BIP84_ADDRESS_PATH, defaultAddressGenerator, "#receivingAddress", addressSequentialGenerator);
-    }
-
-    @Test
-    public void receiveTenSequentialTransactionsToTheSameAddress(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
-        int numberOfTransactions = 10;
-        receiveNSequentialTransactions(robot, mnemonicSeed, numberOfTransactions);
-    }
-
-    @Test
-    public void receiveTwentyTwoSequentialTransactionsToTheSameAddress(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
-        int numberOfTransactions = 22;
+        int numberOfTransactions = 6;
         receiveNSequentialTransactions(robot, mnemonicSeed, numberOfTransactions);
     }
 
@@ -167,6 +142,33 @@ public class ReceivingTransactionTest extends TestBase {
         receiveVaryingTransactions(robot, address, addresses, expectedNextAddress, expectedBalance);
     }
 
+    @Test
+    public void receiveSixTransactionToNestedSegwitAddress(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
+        receiveNTransactions(
+                robot,
+                mnemonicSeed,
+                5,
+                FIRST_BIP49_ADDRESS_PATH,
+                nestedSegwitAddressGenerator,
+                "#nestedReceivingAddress",
+                nestedSegwitAddressSequentialGenerator
+        );
+    }
+
+    @Test
+    public void receiveSixTransactionToChangeAddress(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
+        receiveNTransactions(
+                robot,
+                mnemonicSeed,
+                5,
+                FIRST_BIP84_CHANGE_PATH,
+                defaultAddressGenerator,
+                addressSequentialGenerator
+        );
+    }
+
     private void receiveNSequentialTransactions(FxRobot robot, String mnemonicSeed, int numberOfTransactions) throws TimeoutException {
         WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
             TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
@@ -198,62 +200,13 @@ public class ReceivingTransactionTest extends TestBase {
         String expectedNextAddress = addressSequentialGenerator
                 .deriveAddresses(1, seed, FIRST_BIP84_ADDRESS_PATH.next(1))
                 .get(0).getAddress();
+        WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
+            String nextAddress = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+            return expectedNextAddress.equals(nextAddress);
+        });
+
         String nextAddress = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
         assertEquals(expectedNextAddress, nextAddress);
-    }
-
-    @Test
-    public void receiveOneTransactionToNestedSegwitAddress(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
-        receiveNTransactions(
-            robot,
-            mnemonicSeed,
-            1,
-            FIRST_BIP49_ADDRESS_PATH,
-            nestedSegwitAddressGenerator,
-            "#nestedReceivingAddress",
-            nestedSegwitAddressSequentialGenerator
-        );
-    }
-
-    @Test
-    public void receiveFiveTransactionToNestedSegwitAddress(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
-        receiveNTransactions(
-                robot,
-                mnemonicSeed,
-                5,
-                FIRST_BIP49_ADDRESS_PATH,
-                nestedSegwitAddressGenerator,
-                "#nestedReceivingAddress",
-                nestedSegwitAddressSequentialGenerator
-        );
-    }
-
-    @Test
-    public void receiveOneTransactionToChangeAddress(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
-        receiveNTransactions(
-                robot,
-                mnemonicSeed,
-                1,
-                FIRST_BIP84_CHANGE_PATH,
-                defaultAddressGenerator,
-                addressSequentialGenerator
-        );
-    }
-
-    @Test
-    public void receiveFiveTransactionToChangeAddress(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
-        receiveNTransactions(
-                robot,
-                mnemonicSeed,
-                5,
-                FIRST_BIP84_CHANGE_PATH,
-                defaultAddressGenerator,
-                addressSequentialGenerator
-        );
     }
 
     private void receiveNTransactions(
