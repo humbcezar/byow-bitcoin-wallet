@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import static com.blockstream.libwally.Wally.*;
 import static java.math.BigDecimal.valueOf;
+import static java.math.RoundingMode.CEILING;
 import static java.math.RoundingMode.FLOOR;
 import static java.util.Collections.shuffle;
 import static java.util.Objects.isNull;
@@ -130,9 +131,13 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
     }
 
     private long btcPerKbToSatoshiPerByte(BigDecimal feeRate) {
-        return feeRate.multiply(valueOf(100000000))
+        long rate = feeRate.multiply(valueOf(100000000))
             .divide(valueOf(1024), new MathContext(2, FLOOR))
             .longValue();
+        if (rate < 1) {
+            rate = 1;
+        }
+        return rate;
     }
 
     private List<TransactionOutput> createOutputs(long totalInputBalance, long targetInSatoshis, String toAddress, String changeAddress) {

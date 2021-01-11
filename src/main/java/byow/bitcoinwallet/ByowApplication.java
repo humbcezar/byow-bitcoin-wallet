@@ -13,13 +13,8 @@ import org.springframework.context.annotation.Primary;
 import org.zeromq.SocketType;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ.Socket;
-import wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient;
-import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
 
 import java.util.concurrent.locks.ReentrantLock;
-
-import static wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient.DEFAULT_JSONRPC_REGTEST_URL;
-
 
 @SpringBootApplication
 public class ByowApplication {
@@ -31,11 +26,6 @@ public class ByowApplication {
     @Bean
     public Object wordList() {
         return Wally.bip39_get_wordlist(Languages.EN);
-    }
-
-    @Bean
-    public BitcoindRpcClient bitcoindRpcClient() {
-        return new BitcoinJSONRPCClient(DEFAULT_JSONRPC_REGTEST_URL);
     }
 
     @Bean
