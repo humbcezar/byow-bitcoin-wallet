@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import static javafx.application.Platform.runLater;
+
 @Component
 @Lazy
 public class CurrentReceivingAddresses {
@@ -36,7 +38,7 @@ public class CurrentReceivingAddresses {
             derivationPath
         );
         receivingAddressesMap.put(address, receivingAddress);
-        receivingAddresses.add(receivingAddress);
+        runLater(() -> receivingAddresses.add(receivingAddress));
     }
 
     public void updateReceivingAddress(String address, String balance, int confirmations) {
