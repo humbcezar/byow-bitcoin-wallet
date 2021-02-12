@@ -4,6 +4,7 @@ import byow.bitcoinwallet.entities.ReceivingAddress;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
+import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Unspent;
 
 import java.util.List;
 import java.util.Map;
@@ -21,12 +22,8 @@ public class CurrentReceivingAddressesUpdater {
     @Autowired
     private BitcoindRpcClient bitcoindRpcClient;
 
-    @Autowired
-    private UtxosGetter utxosGetter;
-
-    public int updateReceivingAddresses(List<String> addressList) {
-        Map<String, List<ReceivingAddress>> collectedAddressMap = utxosGetter.getUtxos(addressList)
-            .stream()
+    public int updateReceivingAddresses(List<String> addressList, List<Unspent> utxos) {
+        Map<String, List<ReceivingAddress>> collectedAddressMap = utxos.stream()
             .map(utxo -> new ReceivingAddress(utxo.amount(), utxo.confirmations(), utxo.address()))
             .collect(Collectors.groupingBy(ReceivingAddress::getAddress));
         addressList.stream()
@@ -54,13 +51,13 @@ public class CurrentReceivingAddressesUpdater {
         return collectedAddressMap.size();
     }
 
-    public void updateReceivingAddresses() {
-        updateReceivingAddresses(currentReceivingAddresses.getAddresses());
+    public void updateReceivingAddresses(List<Unspent> utxos) {
+        updateReceivingAddresses(currentReceivingAddresses.getAddresses(), utxos);
     }
 
     private boolean isSpent(Map<String, List<ReceivingAddress>> collectedAddressMap, String address) {
         return !collectedAddressMap.containsKey(address) &&
-                currentReceivingAddresses.contains(address) &&
-                currentReceivingAddresses.getReceivingAddress(address).getBigDecimalBalance().compareTo(ZERO) > 0;
+                currentReceivingAddresses.contains(address)
+                && currentReceivingAddresses.getReceivingAddress(address).getBigDecimalBalance().compareTo(ZERO) > 0;
     }
 }

@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 
 import static com.blockstream.libwally.Wally.*;
 import static java.math.BigDecimal.valueOf;
-import static java.math.RoundingMode.CEILING;
 import static java.math.RoundingMode.FLOOR;
 import static java.util.Collections.shuffle;
 import static java.util.Objects.isNull;
@@ -53,7 +52,7 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
     }
 
     @Override
-    public Transaction select(
+    public WallyTransaction select(
         List<Unspent> utxos,
         BigDecimal target,
         BigDecimal feeRate,
@@ -66,10 +65,10 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
         long targetInSatoshis = satoshis(target);
         long feeRateInSatoshisPerByte = btcPerKbToSatoshiPerByte(feeRate);
 
-        List<TransactionInput> transactionInputs = new ArrayList<>();
+        List<WallyTransactionInput> transactionInputs = new ArrayList<>();
         List<Unspent> shuffledCoins = new ArrayList<>(utxos);
         shuffle(shuffledCoins);
-        Transaction transaction = null;
+        WallyTransaction transaction = null;
 
         for (Unspent utxo : shuffledCoins) {
             DerivationPath derivationPath = currentReceivingAddresses.getReceivingAddress(utxo.address()).getDerivationPath();
@@ -79,8 +78,8 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
                 continue;
             }
 
-            List<TransactionOutput> transactionOutputs = createOutputs(totalInputBalance, targetInSatoshis, toAddress, changeAddress);
-            transaction = new Transaction(transactionInputs.size(), transactionOutputs.size());
+            List<WallyTransactionOutput> transactionOutputs = createOutputs(totalInputBalance, targetInSatoshis, toAddress, changeAddress);
+            transaction = new WallyTransaction(transactionInputs.size(), transactionOutputs.size());
             transactionInputs.forEach(transaction::addInput);
             transactionOutputs.forEach(transaction::addOutput);
             long totalFeeInSatoshis = transaction.vSize() * feeRateInSatoshisPerByte;
@@ -88,9 +87,10 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
             if (totalInputBalance > adjustedTarget) {
                 transaction.removeOutput(1);
                 byte[] scriptPubKey = addr_segwit_to_bytes(changeAddress, addressPrefix, 0);
-                TransactionOutput changeOutput = new TransactionOutput(
+                WallyTransactionOutput changeOutput = new WallyTransactionOutput(
                     totalInputBalance - adjustedTarget,
-                    scriptPubKey
+                    scriptPubKey,
+                    changeAddress
                 );
                 transaction.addOutput(changeOutput);
                 transaction.setFeeRateInSatoshisPerByte(feeRateInSatoshisPerByte);
@@ -126,7 +126,7 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
             .collect(Collectors.toList());
     }
 
-    private boolean changeIsDust(Transaction transaction) {
+    private boolean changeIsDust(WallyTransaction transaction) {
         return !isNull(transaction) && transaction.getOutputCount() > 1 && dustCalculator.isDust(transaction.getOutput(1).getAmount());
     }
 
@@ -140,48 +140,49 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
         return rate;
     }
 
-    private List<TransactionOutput> createOutputs(long totalInputBalance, long targetInSatoshis, String toAddress, String changeAddress) {
-        TransactionOutput toAddressOutput = createTransactionOutput(targetInSatoshis, toAddress);
+    private List<WallyTransactionOutput> createOutputs(long totalInputBalance, long targetInSatoshis, String toAddress, String changeAddress) {
+        WallyTransactionOutput toAddressOutput = createTransactionOutput(targetInSatoshis, toAddress);
         if (totalInputBalance == targetInSatoshis) {
             return List.of(toAddressOutput);
         }
         byte[] scriptPubKey = addr_segwit_to_bytes(changeAddress, addressPrefix, 0);
-        TransactionOutput changeOutput = new TransactionOutput(INITIAL_DEFAULT_CHANGE_VALUE, scriptPubKey);
+        WallyTransactionOutput changeOutput = new WallyTransactionOutput(INITIAL_DEFAULT_CHANGE_VALUE, scriptPubKey, changeAddress);
         return List.of(toAddressOutput, changeOutput);
     }
 
-    private TransactionOutput createTransactionOutput(long targetInSatoshis, String toAddress) {
+    private WallyTransactionOutput createTransactionOutput(long targetInSatoshis, String toAddress) {
         byte[] scriptPubKey;
         if (toAddress.startsWith(addressPrefix)) {
             scriptPubKey = addr_segwit_to_bytes(toAddress, addressPrefix, 0);
-            return new TransactionOutput(targetInSatoshis, scriptPubKey);
+            return new WallyTransactionOutput(targetInSatoshis, scriptPubKey, toAddress);
         }
         if (toAddress.startsWith("3") || toAddress.startsWith("2")) {
             scriptPubKey = new byte[WALLY_SCRIPTPUBKEY_P2SH_LEN];
             address_to_scriptpubkey(toAddress, networkVersion, scriptPubKey);
-            return new TransactionOutput(targetInSatoshis, scriptPubKey);
+            return new WallyTransactionOutput(targetInSatoshis, scriptPubKey, toAddress);
         }
         scriptPubKey = new byte[WALLY_SCRIPTPUBKEY_P2PKH_LEN];
         address_to_scriptpubkey(toAddress, networkVersion, scriptPubKey);
-        return new TransactionOutput(targetInSatoshis, scriptPubKey);
+        return new WallyTransactionOutput(targetInSatoshis, scriptPubKey, toAddress);
     }
 
-    private TransactionInput createInput(Unspent utxo, DerivationPath derivationPath, String seed) {
+    private WallyTransactionInput createInput(Unspent utxo, DerivationPath derivationPath, String seed) {
         byte[] publicKey = defaultKeyGenerator.getPublicKeyAsByteArray(seed, derivationPath);
         byte[] privateKey = defaultKeyGenerator.getPrivateKeyAsByteArray(seed, derivationPath);
 
-        Witness witness = new Witness(2);
+        WallyWitness witness = new WallyWitness(2);
         witness.addDummySignature(WALLY_TX_DUMMY_SIG_LOW_R);
         witness.addPublicKey(publicKey);
 
-        return new TransactionInput(
+        return new WallyTransactionInput(
             utxo.txid(),
             utxo.vout(),
             satoshis(utxo.amount()),
             privateKey,
             N_SEQUENCE,
             buildScriptSig(publicKey, utxo.address()),
-            witness
+            witness,
+            utxo.address()
         );
     }
 
@@ -201,9 +202,9 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
         return redeemScriptPlusSizeStream.toByteArray();
     }
 
-    private long totalInputBalance(List<TransactionInput> transactionInputs) {
+    private long totalInputBalance(List<WallyTransactionInput> transactionInputs) {
         return transactionInputs.stream()
-            .map(TransactionInput::getAmountInSatoshis)
+            .map(WallyTransactionInput::getAmountInSatoshis)
             .reduce(Long::sum)
             .orElse(0L);
     }

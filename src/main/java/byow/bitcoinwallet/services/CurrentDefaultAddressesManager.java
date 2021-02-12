@@ -3,6 +3,8 @@ package byow.bitcoinwallet.services;
 import byow.bitcoinwallet.entities.NextAddress;
 import byow.bitcoinwallet.entities.NextReceivingAddress;
 import byow.bitcoinwallet.entities.ReceivingAddress;
+import byow.bitcoinwallet.repositories.TransactionOutputRepository;
+import byow.bitcoinwallet.repositories.WalletRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -24,14 +26,20 @@ public class CurrentDefaultAddressesManager extends CurrentAddressesManager {
         NextReceivingAddress nextReceivingAddress,
         MultiAddressesImporter multiAddressesImporter,
         CurrentReceivingAddressesUpdater currentReceivingAddressesUpdater,
-        UtxosGetter utxosGetter
+        UtxosGetter utxosGetter,
+        TransactionSaver transactionSaver,
+        TransactionOutputRepository transactionOutputRepository,
+        WalletRepository walletRepository
     ) {
         super(
             currentReceivingAddresses,
             addressSequentialGenerator,
             multiAddressesImporter,
             currentReceivingAddressesUpdater,
-            utxosGetter
+            utxosGetter,
+            transactionSaver,
+            transactionOutputRepository,
+            walletRepository
         );
         this.nextReceivingAddress = nextReceivingAddress;
     }

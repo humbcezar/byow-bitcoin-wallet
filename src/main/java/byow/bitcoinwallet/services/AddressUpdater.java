@@ -1,7 +1,7 @@
 package byow.bitcoinwallet.services;
 
-import java.util.Date;
+import byow.bitcoinwallet.entities.Wallet;
 
 public interface AddressUpdater {
-    void update(String seed, Date walletCreationDate);
+    void update(Wallet wallet);
 }

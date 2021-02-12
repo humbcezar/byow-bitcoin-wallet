@@ -46,7 +46,7 @@ public class ReceivingHashBlockTest extends TestBase {
     public void receiveOneHashBlock(FxRobot robot) throws TimeoutException, InterruptedException {
         walletUtil.createWallet(robot, RandomString.make());
         WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
-            TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+            TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
             return !address.isBlank();
         });
@@ -55,7 +55,7 @@ public class ReceivingHashBlockTest extends TestBase {
         bitcoindRpcClient.sendToAddress(address, BigDecimal.ONE);
 
         WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
-            TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+            TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             return tableView.getItems().size() == 1;
         });
 
@@ -66,10 +66,10 @@ public class ReceivingHashBlockTest extends TestBase {
         bitcoindRpcClient.generateToAddress(1, randomAddress);
 
         WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
-            TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+            TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             return tableView.getItems().get(0).getConfirmations() == 1;
         });
-        TableView<ReceivingAddress> tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+        TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
         assertEquals(1, tableView.getItems().get(0).getConfirmations());
     }
 }

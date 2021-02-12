@@ -3,6 +3,8 @@ package byow.bitcoinwallet.services;
 import byow.bitcoinwallet.entities.NextAddress;
 import byow.bitcoinwallet.entities.NextNestedSegwitAddress;
 import byow.bitcoinwallet.entities.ReceivingAddress;
+import byow.bitcoinwallet.repositories.TransactionOutputRepository;
+import byow.bitcoinwallet.repositories.WalletRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
@@ -25,14 +27,20 @@ public class CurrentNestedSegwitAddressesManager extends CurrentAddressesManager
         MultiAddressesImporter multiAddressesImporter,
         CurrentReceivingAddressesUpdater currentReceivingAddressesUpdater,
         UtxosGetter utxosGetter,
-        NextNestedSegwitAddress nextNestedSegwitAddress
+        NextNestedSegwitAddress nextNestedSegwitAddress,
+        TransactionSaver transactionSaver,
+        TransactionOutputRepository transactionOutputRepository,
+        WalletRepository walletRepository
     ) {
         super(
             currentReceivingAddresses,
             addressSequentialGenerator,
             multiAddressesImporter,
             currentReceivingAddressesUpdater,
-            utxosGetter
+            utxosGetter,
+            transactionSaver,
+            transactionOutputRepository,
+            walletRepository
         );
         this.nextNestedSegwitAddress = nextNestedSegwitAddress;
     }

@@ -1,14 +1,19 @@
 package byow.bitcoinwallet.services;
 
-import byow.bitcoinwallet.entities.Address;
-import byow.bitcoinwallet.entities.NextAddress;
-import byow.bitcoinwallet.entities.ReceivingAddress;
+import byow.bitcoinwallet.entities.*;
+import byow.bitcoinwallet.repositories.TransactionOutputRepository;
+import byow.bitcoinwallet.repositories.WalletRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Unspent;
 
+import javax.transaction.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static byow.bitcoinwallet.utils.SatoshiUtils.btcToSatoshi;
 import static java.math.BigDecimal.ZERO;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toSet;
 import static javafx.application.Platform.runLater;
 
 abstract public class CurrentAddressesManager {
@@ -22,19 +27,31 @@ abstract public class CurrentAddressesManager {
 
     private UtxosGetter utxosGetter;
 
+    private TransactionSaver transactionSaver;
+
+    private TransactionOutputRepository transactionOutputRepository;
+
+    private WalletRepository walletRepository;
+
     @Autowired
     public CurrentAddressesManager(
         CurrentReceivingAddresses currentReceivingAddresses,
         AddressSequentialGenerator addressSequentialGenerator,
         MultiAddressesImporter multiAddressesImporter,
         CurrentReceivingAddressesUpdater currentReceivingAddressesUpdater,
-        UtxosGetter utxosGetter
+        UtxosGetter utxosGetter,
+        TransactionSaver transactionSaver,
+        TransactionOutputRepository transactionOutputRepository,
+        WalletRepository walletRepository
     ) {
         this.currentReceivingAddresses = currentReceivingAddresses;
         this.addressSequentialGenerator = addressSequentialGenerator;
         this.multiAddressesImporter = multiAddressesImporter;
         this.currentReceivingAddressesUpdater = currentReceivingAddressesUpdater;
         this.utxosGetter = utxosGetter;
+        this.transactionSaver = transactionSaver;
+        this.transactionOutputRepository = transactionOutputRepository;
+        this.walletRepository = walletRepository;
     }
 
     protected abstract void setNextAddress(ReceivingAddress address);
@@ -65,19 +82,49 @@ abstract public class CurrentAddressesManager {
         return addresses;
     }
 
-    public void update(String seed, Date walletCreationDate, int initialAddressToMonitor) {
+    public void update(Wallet wallet, int initialAddressToMonitor) {
         List<String> addressList = initializeAddresses(
             initialAddressToMonitor,
-            seed,
-            walletCreationDate
+            wallet.getSeed(),
+            wallet.getCreatedAt()
         );
-        int updatedAddressesCount = currentReceivingAddressesUpdater.updateReceivingAddresses(addressList);
+        List<Unspent> utxos = utxosGetter.getUtxos(addressList);
+        saveTransaction(wallet, utxos);
+        int updatedAddressesCount = currentReceivingAddressesUpdater.updateReceivingAddresses(
+            addressList,
+            utxos
+        );
         if (updatedAddressesCount >= initialAddressToMonitor) {
             setNextCurrentDerivationPath(initialAddressToMonitor);
-            update(seed, walletCreationDate, initialAddressToMonitor);
+            update(wallet, initialAddressToMonitor);
             return;
         }
-        updateNextAddress(addressList.get(0), updatedAddressesCount, seed, walletCreationDate);
+        updateNextAddress(addressList.get(0), updatedAddressesCount, wallet.getSeed(), wallet.getCreatedAt());
+    }
+
+    @Transactional
+    private void saveTransaction(Wallet wallet, List<Unspent> utxos) {
+        utxos.stream()
+            .collect(groupingBy(Unspent::txid))
+            .forEach((txId, unspents) -> {
+                if (!walletContainsTransaction(wallet, txId)) {
+                    transactionSaver.save(
+                        txId,
+                        wallet,
+                        Set.of(),
+                        unspents.stream()
+                            .map(unspent -> new TransactionOutput(unspent.address(), btcToSatoshi(unspent.amount())))
+                            .map(transactionOutput -> transactionOutputRepository.save(transactionOutput))
+                            .collect(toSet()));
+                }
+            });
+    }
+
+    private boolean walletContainsTransaction(Wallet wallet, String txId) {
+        return walletRepository.findByName(wallet.getName())
+            .getTransactions()
+            .stream()
+            .anyMatch(transaction -> transaction.getTxId().equals(txId));
     }
 
     public void updateNextAddress(String address, int updatedAddressesCount, String seed, Date walletCreationDate) {

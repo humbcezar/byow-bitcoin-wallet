@@ -4,6 +4,10 @@ import org.springframework.data.annotation.CreatedDate;
 
 import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+
+import static javax.persistence.FetchType.EAGER;
 
 @Entity
 @Table(name = "wallet")
@@ -23,6 +27,9 @@ public class Wallet {
     @Column(name = "created_at")
     @CreatedDate
     private Date createdAt;
+
+    @ManyToMany(mappedBy = "wallets", fetch = EAGER)
+    private List<Transaction> transactions;
 
     public Wallet(String name, String seed) {
         this.name = name;
@@ -63,4 +70,20 @@ public class Wallet {
         this.createdAt = createdAt;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Wallet wallet = (Wallet) o;
+        return name.equals(wallet.name) && seed.equals(wallet.seed);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, seed);
+    }
+
+    public List<Transaction> getTransactions() {
+        return transactions;
+    }
 }

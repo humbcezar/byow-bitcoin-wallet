@@ -1,0 +1,9 @@
+<?import javafx.scene.control.TableColumn?>
+<fx:root type="javafx.scene.control.TableView" xmlns:fx="http://javafx.com/fxml" fx:id="transactionsTable" >
+<columns>
+    <TableColumn fx:id="columnTransaction" editable="false" resizable="false" sortable="false" text="Transaction" prefWidth="${transactionsTable.width*0.40}" />
+    <TableColumn fx:id="columnTransactionBalance" editable="false" resizable="false" sortable="false" text="Balance" prefWidth="${transactionsTable.width*0.20}"/>
+    <TableColumn fx:id="columnTransactionConfirmations" editable="false" resizable="false" sortable="false" text="Confirmations" prefWidth="${transactionsTable.width*0.15}"/>
+    <TableColumn fx:id="columnTransactionDate" editable="false" resizable="false" sortable="false" text="Date" prefWidth="${transactionsTable.width*0.25}"/>
+</columns>
+</fx:root>

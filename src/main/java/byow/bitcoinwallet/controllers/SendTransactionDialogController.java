@@ -1,6 +1,6 @@
 package byow.bitcoinwallet.controllers;
 
-import byow.bitcoinwallet.entities.Transaction;
+import byow.bitcoinwallet.entities.WallyTransaction;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import org.springframework.stereotype.Component;
@@ -54,7 +54,7 @@ public class SendTransactionDialogController {
         total.setText(new BigDecimal(amountToSend).add(totFee).toPlainString().concat(" BTC"));
     }
 
-    public void buildTransactionInformation(String amountToSend, String addressToSend, Transaction transaction) {
+    public void buildTransactionInformation(String amountToSend, String addressToSend, WallyTransaction transaction) {
         buildAmountToSend(amountToSend);
         buildAddressToSend(addressToSend);
         BigDecimal totFee = buildTotalFee(transaction.getTotalFeeInSatoshis());

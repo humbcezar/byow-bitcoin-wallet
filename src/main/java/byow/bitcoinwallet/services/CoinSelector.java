@@ -1,13 +1,13 @@
 package byow.bitcoinwallet.services;
 
-import byow.bitcoinwallet.entities.Transaction;
+import byow.bitcoinwallet.entities.WallyTransaction;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Unspent;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 public interface CoinSelector {
-    Transaction select(
+    WallyTransaction select(
         List<Unspent> utxos,
         BigDecimal target,
         BigDecimal feeRate,

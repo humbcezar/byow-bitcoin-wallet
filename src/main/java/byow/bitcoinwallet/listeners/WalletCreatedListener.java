@@ -1,6 +1,7 @@
 package byow.bitcoinwallet.listeners;
 
 import byow.bitcoinwallet.events.WalletCreatedEvent;
+import byow.bitcoinwallet.services.CurrentTransactions;
 import byow.bitcoinwallet.services.CurrentWalletManager;
 import byow.bitcoinwallet.services.WalletsMenuManager;
 import byow.bitcoinwallet.services.TaskConfigurer;
@@ -31,6 +32,9 @@ public class WalletCreatedListener implements ApplicationListener<WalletCreatedE
     @Autowired
     private TaskConfigurer taskConfigurer;
 
+    @Autowired
+    private CurrentTransactions currentTransactions;
+
     @Override
     public void onApplicationEvent(WalletCreatedEvent event) {
         walletsMenuManager.addWallet(event.getWallet());
@@ -39,7 +43,7 @@ public class WalletCreatedListener implements ApplicationListener<WalletCreatedE
 
     private Task<Void> buildTask(WalletCreatedEvent event) {
         Task<Void> task = taskConfigurer.configure(
-            new UpdateCurrentWalletTask(currentWalletManager, reentrantLock, event.getWallet()),
+            new UpdateCurrentWalletTask(currentWalletManager, reentrantLock, event.getWallet(), currentTransactions),
             "Loading wallet..."
         );
         task.addEventFilter(WORKER_STATE_SUCCEEDED, succeededEvent ->

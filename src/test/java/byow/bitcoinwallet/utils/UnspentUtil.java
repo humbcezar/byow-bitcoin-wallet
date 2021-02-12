@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 @Profile("test")
 public class UnspentUtil {
 
-    public Unspent unspent(String expectedAddress, BigDecimal amount, int confirmations) {
+    public Unspent unspent(String expectedAddress, BigDecimal amount, int confirmations, String txId) {
         return new Unspent() {
             @Override
             public String account() {
@@ -24,7 +24,7 @@ public class UnspentUtil {
 
             @Override
             public String txid() {
-                return "58791da7eb6b282c15bc4fc38d3b8ff903f7277a2d4bdf50ff6fbf10b1d8c0c6";
+                return txId;
             }
 
             @Override

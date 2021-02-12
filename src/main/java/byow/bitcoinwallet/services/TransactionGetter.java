@@ -1,18 +1,16 @@
 package byow.bitcoinwallet.services;
 
-import byow.bitcoinwallet.entities.WallyTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
+import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.RawTransaction;
 
 @Component
-@Lazy
-public class TransactionSender {
+public class TransactionGetter {
     @Autowired
     private BitcoindRpcClient bitcoindRpcClient;
 
-    public String send(WallyTransaction transaction) {
-        return bitcoindRpcClient.sendRawTransaction(transaction.toHex());
+    public RawTransaction get(String txId) {
+        return bitcoindRpcClient.getRawTransaction(txId);
     }
 }

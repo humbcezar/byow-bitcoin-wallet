@@ -4,12 +4,13 @@
 <?import javafx.scene.layout.*?>
 
 <?import byow.bitcoinwallet.controllers.ReceiveTabController?>
-<?import byow.bitcoinwallet.controllers.BalanceTableController?>
+<?import byow.bitcoinwallet.controllers.AddressesTableController?>
 <?import byow.bitcoinwallet.controllers.ProgressBarController?>
 <?import byow.bitcoinwallet.controllers.FooterController?>
 <?import byow.bitcoinwallet.controllers.TotalBalanceController?>
 <?import byow.bitcoinwallet.controllers.SendTabController?>
-<BorderPane fx:id="borderPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="650.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="byow.bitcoinwallet.controllers.MainController">
+<?import byow.bitcoinwallet.controllers.TransactionsTableController?>
+<BorderPane fx:id="borderPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="770" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="byow.bitcoinwallet.controllers.MainController">
    <top>
       <MenuBar BorderPane.alignment="CENTER">
         <menus>
@@ -31,12 +32,25 @@
     <center>
         <VBox prefHeight="300.0" prefWidth="100.0" BorderPane.alignment="CENTER">
             <children>
-                <TabPane prefHeight="225.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+                <TabPane prefHeight="160.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
                     <SendTabController/>
                     <ReceiveTabController />
                 </TabPane>
                 <TotalBalanceController/>
-                <BalanceTableController/>
+                <TabPane prefHeight="355.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+                    <tabs>
+                        <Tab text="Addresses" fx:id="addressesTab">
+                            <content>
+                                <AddressesTableController/>
+                            </content>
+                        </Tab>
+                        <Tab text="Transactions" fx:id="transactionsTab">
+                            <content>
+                                <TransactionsTableController/>
+                            </content>
+                        </Tab>
+                    </tabs>
+                </TabPane>
             </children>
         </VBox>
     </center>

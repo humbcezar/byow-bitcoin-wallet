@@ -1,11 +1,7 @@
 package byow.bitcoinwallet.controllers;
 
-import byow.bitcoinwallet.entities.Transaction;
-import byow.bitcoinwallet.services.SendTransactionService;
-import byow.bitcoinwallet.services.TaskConfigurer;
-import byow.bitcoinwallet.services.TotalBalanceCalculator;
-import byow.bitcoinwallet.services.TransactionCreator;
-import byow.bitcoinwallet.services.DustCalculator;
+import byow.bitcoinwallet.entities.WallyTransaction;
+import byow.bitcoinwallet.services.*;
 import byow.bitcoinwallet.tasks.SendTransactionTask;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -64,6 +60,8 @@ public class SendTabController extends Tab implements BaseController {
 
     private DustCalculator dustCalculator;
 
+    private TransactionSaver transactionSaver;
+
     @Autowired
     public SendTabController(
         @Value("classpath:/fxml/send_tab.fxml") Resource fxml,
@@ -104,7 +102,7 @@ public class SendTabController extends Tab implements BaseController {
             amountToSend.setText("");
             return;
         }
-        Transaction transaction = transactionCreator.create(
+        WallyTransaction transaction = transactionCreator.create(
             addressToSend.getText(),
             amount
         );
@@ -116,7 +114,7 @@ public class SendTabController extends Tab implements BaseController {
         amountToSend.setText("");
     }
 
-    private void showSendTransactionDialog(Transaction transaction) throws IOException {
+    private void showSendTransactionDialog(WallyTransaction transaction) throws IOException {
         Dialog<ButtonType> dialog = new Dialog<>();
         FXMLLoader fxmlLoader = new FXMLLoader();
         mainController.initializeFxml(dialog, fxmlLoader, sendTransactionDialog.getURL());
@@ -134,7 +132,7 @@ public class SendTabController extends Tab implements BaseController {
         }
     }
 
-    private boolean validateFunds(Transaction transaction) {
+    private boolean validateFunds(WallyTransaction transaction) {
         if (isNull(transaction)) {
             Alert alert = new Alert(ERROR);
             alert.setTitle("Error");
@@ -145,7 +143,7 @@ public class SendTabController extends Tab implements BaseController {
         return true;
     }
 
-    private boolean validateTotalFee(Transaction transaction) {
+    private boolean validateTotalFee(WallyTransaction transaction) {
         if(transaction.getTotalFeeInSatoshis() < transaction.getIntendedTotalFeeInSatoshis()) {
             Alert alert = new Alert(ERROR);
             alert.setTitle("Error");
@@ -156,7 +154,7 @@ public class SendTabController extends Tab implements BaseController {
         return true;
     }
 
-    private Task<Void> buildTask(Transaction transaction) {
+    private Task<Void> buildTask(WallyTransaction transaction) {
         Task<Void> task = taskConfigurer.configure(
             new SendTransactionTask(
                 reentrantLock,

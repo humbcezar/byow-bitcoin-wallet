@@ -13,22 +13,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
-import org.testfx.util.WaitForAsyncUtils;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static byow.bitcoinwallet.services.DerivationPath.*;
+import static java.util.stream.IntStream.range;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.testfx.matcher.control.TableViewMatchers.*;
+import static org.testfx.util.WaitForAsyncUtils.waitFor;
 
-public class BalanceTableTest extends TestBase {
+public class TablesTest extends TestBase {
 
     public static final int TIMEOUT = 40;
 
@@ -134,37 +135,40 @@ public class BalanceTableTest extends TestBase {
         ).stream().map(Address::getAddress).collect(Collectors.toList());
         String fromAddress = bitcoindRpcClient.getNewAddress();
 
+        List<String> txIds = new ArrayList<>();
+
+        List<Integer> expectedConfirmations = List.of(11, 11, 10, 9, 9, 9, 8, 7, 6, 5);
         //balance:4, confirmations:11,
-        bitcoindRpcClient.sendToAddress(addresses.get(0), BigDecimal.ONE);
-        bitcoindRpcClient.sendToAddress(addresses.get(0), new BigDecimal(3));
+        txIds.add(bitcoindRpcClient.sendToAddress(addresses.get(0), BigDecimal.ONE));
+        txIds.add(bitcoindRpcClient.sendToAddress(addresses.get(0), new BigDecimal(3)));
         bitcoindRpcClient.generateToAddress(1, fromAddress);
         //balance:10, confirmations:9,
-        bitcoindRpcClient.sendToAddress(addresses.get(1), BigDecimal.ONE);
+        txIds.add(bitcoindRpcClient.sendToAddress(addresses.get(1), BigDecimal.ONE));
         bitcoindRpcClient.generateToAddress(1, fromAddress);
-        bitcoindRpcClient.sendToAddress(addresses.get(1), new BigDecimal(2));
-        bitcoindRpcClient.sendToAddress(addresses.get(1), new BigDecimal(7));
+        txIds.add(bitcoindRpcClient.sendToAddress(addresses.get(1), new BigDecimal(2)));
+        txIds.add(bitcoindRpcClient.sendToAddress(addresses.get(1), new BigDecimal(7)));
         //balance:5, confirmations:5,
-        bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE);
+        txIds.add(bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE));
         bitcoindRpcClient.generateToAddress(1, fromAddress);
-        bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE);
+        txIds.add(bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE));
         bitcoindRpcClient.generateToAddress(1, fromAddress);
-        bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE);
+        txIds.add(bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE));
         bitcoindRpcClient.generateToAddress(1, fromAddress);
-        bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE);
+        txIds.add(bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE));
         bitcoindRpcClient.generateToAddress(1, fromAddress);
-        bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE);
+        txIds.add(bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE));
         bitcoindRpcClient.generateToAddress(5, fromAddress);
 
         robot.clickOn("#wallet");
         robot.moveTo("#load");
         robot.clickOn(walletName);
         robot.clickOn("Receive");
-        WaitForAsyncUtils.waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
-            TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+        waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
+            TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             return tableView.getItems().size() == numberOfReceivingAddresses;
         });
 
-        TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+        TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
 
         MatcherAssert.assertThat(tableView, containsRow(
                 addresses.get(0),
@@ -187,6 +191,43 @@ public class BalanceTableTest extends TestBase {
         MatcherAssert.assertThat(tableView, hasNumRows(numberOfReceivingAddresses));
         assertNextChangeAddress(numberOfReceivingAddresses);
         assertNextReceivingAddress(robot, 0);
+
+        robot.clickOn("#transactionsTab");
+        TableView<TransactionRow> transactionsTable = robot.lookup("#transactionsTable").queryAs(TableView.class);
+        waitFor(TIMEOUT, TimeUnit.SECONDS, () ->
+            transactionsTable.getItems().size() == txIds.size()
+        );
+        Map<String, TransactionRow> trRowMap = new HashMap<>();
+        transactionsTable.getItems().stream().forEach(transactionRow -> trRowMap.put(transactionRow.getTransactionId(), transactionRow));
+        assertEquals(txIds.size(), transactionsTable.getItems().size());
+        range(0, txIds.size()).forEach(i -> {
+            switch (i) {
+                case 1 -> assertThat(transactionsTable, containsRow(
+                    txIds.get(i),
+                    "3.0",
+                    expectedConfirmations.get(i),
+                    trRowMap.get(txIds.get(i)).getDate()
+                ));
+                case 3 -> assertThat(transactionsTable, containsRow(
+                    txIds.get(i),
+                    "2.0",
+                    expectedConfirmations.get(i),
+                    trRowMap.get(txIds.get(i)).getDate()
+                ));
+                case 4 -> assertThat(transactionsTable, containsRow(
+                    txIds.get(i),
+                    "7.0",
+                    expectedConfirmations.get(i),
+                    trRowMap.get(txIds.get(i)).getDate()
+                ));
+                default -> assertThat(transactionsTable, containsRow(
+                    txIds.get(i),
+                    "1.0",
+                    expectedConfirmations.get(i),
+                    trRowMap.get(txIds.get(i)).getDate()
+                ));
+            }
+        });
     }
 
     @Test
@@ -202,38 +243,40 @@ public class BalanceTableTest extends TestBase {
                 seed, FIRST_BIP84_ADDRESS_PATH
         ).stream().map(Address::getAddress).collect(Collectors.toList());
         String fromAddress = bitcoindRpcClient.getNewAddress();
+        List<String> txIds = new ArrayList<>();
+        List<Integer> expectedConfirmations = List.of(11, 11, 10, 9, 9, 9, 8, 7, 6, 5);
 
         //balance:4, confirmations:11,
-        bitcoindRpcClient.sendToAddress(addresses.get(0), BigDecimal.ONE);
-        bitcoindRpcClient.sendToAddress(addresses.get(0), new BigDecimal(3));
+        txIds.add(bitcoindRpcClient.sendToAddress(addresses.get(0), BigDecimal.ONE));
+        txIds.add(bitcoindRpcClient.sendToAddress(addresses.get(0), new BigDecimal(3)));
         bitcoindRpcClient.generateToAddress(1, fromAddress);
         //balance:10, confirmations:9,
-        bitcoindRpcClient.sendToAddress(addresses.get(1), BigDecimal.ONE);
+        txIds.add(bitcoindRpcClient.sendToAddress(addresses.get(1), BigDecimal.ONE));
         bitcoindRpcClient.generateToAddress(1, fromAddress);
-        bitcoindRpcClient.sendToAddress(addresses.get(1), new BigDecimal(2));
-        bitcoindRpcClient.sendToAddress(addresses.get(1), new BigDecimal(7));
+        txIds.add(bitcoindRpcClient.sendToAddress(addresses.get(1), new BigDecimal(2)));
+        txIds.add(bitcoindRpcClient.sendToAddress(addresses.get(1), new BigDecimal(7)));
         //balance:5, confirmations:5,
-        bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE);
+        txIds.add(bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE));
         bitcoindRpcClient.generateToAddress(1, fromAddress);
-        bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE);
+        txIds.add(bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE));
         bitcoindRpcClient.generateToAddress(1, fromAddress);
-        bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE);
+        txIds.add(bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE));
         bitcoindRpcClient.generateToAddress(1, fromAddress);
-        bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE);
+        txIds.add(bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE));
         bitcoindRpcClient.generateToAddress(1, fromAddress);
-        bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE);
+        txIds.add(bitcoindRpcClient.sendToAddress(addresses.get(2), BigDecimal.ONE));
         bitcoindRpcClient.generateToAddress(5, fromAddress);
 
         robot.clickOn("#wallet");
         robot.moveTo("#load");
         robot.clickOn(walletName);
         robot.clickOn("Receive");
-        WaitForAsyncUtils.waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
-            TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+        waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
+            TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             return tableView.getItems().size() == numberOfReceivingAddresses;
         });
 
-        TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+        TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
 
         MatcherAssert.assertThat(tableView, containsRow(
                 addresses.get(0),
@@ -256,6 +299,43 @@ public class BalanceTableTest extends TestBase {
         MatcherAssert.assertThat(tableView, hasNumRows(numberOfReceivingAddresses));
         assertNextReceivingAddress(robot, numberOfReceivingAddresses);
         assertNextChangeAddress(0);
+
+        robot.clickOn("#transactionsTab");
+        TableView<TransactionRow> transactionsTable = robot.lookup("#transactionsTable").queryAs(TableView.class);
+        waitFor(TIMEOUT, TimeUnit.SECONDS, () ->
+            transactionsTable.getItems().size() == txIds.size()
+        );
+        Map<String, TransactionRow> trRowMap = new HashMap<>();
+        transactionsTable.getItems().stream().forEach(transactionRow -> trRowMap.put(transactionRow.getTransactionId(), transactionRow));
+        assertEquals(txIds.size(), transactionsTable.getItems().size());
+        range(0, txIds.size()).forEach(i -> {
+            switch (i) {
+                case 1 -> assertThat(transactionsTable, containsRow(
+                    txIds.get(i),
+                    "3.0",
+                    expectedConfirmations.get(i),
+                    trRowMap.get(txIds.get(i)).getDate()
+                ));
+                case 3 -> assertThat(transactionsTable, containsRow(
+                    txIds.get(i),
+                    "2.0",
+                    expectedConfirmations.get(i),
+                    trRowMap.get(txIds.get(i)).getDate()
+                ));
+                case 4 -> assertThat(transactionsTable, containsRow(
+                    txIds.get(i),
+                    "7.0",
+                    expectedConfirmations.get(i),
+                    trRowMap.get(txIds.get(i)).getDate()
+                ));
+                default -> assertThat(transactionsTable, containsRow(
+                    txIds.get(i),
+                    "1.0",
+                    expectedConfirmations.get(i),
+                    trRowMap.get(txIds.get(i)).getDate()
+                ));
+            }
+        });
     }
 
     private void showNAddressesWithPositiveBalance(
@@ -264,24 +344,26 @@ public class BalanceTableTest extends TestBase {
         DerivationPath firstDerivationPath,
         AddressSequentialGenerator addressSequentialGenerator
     ) throws TimeoutException {
+        robot.clickOn("#addressesTab");
         List<String> addresses = addressSequentialGenerator.deriveAddresses(
                 numberOfReceivingAddresses,
                 seed,
                 firstDerivationPath
         ).stream().map(Address::getAddress).collect(Collectors.toList());
 
-        addresses.forEach(address -> bitcoindRpcClient.sendToAddress(address, BigDecimal.ONE));
+        List<String> txIds = new ArrayList<>();
+        addresses.forEach(address -> txIds.add(bitcoindRpcClient.sendToAddress(address, BigDecimal.ONE)));
 
         robot.clickOn("#wallet");
         robot.moveTo("#load");
         robot.clickOn(walletName);
         robot.clickOn("Receive");
-        WaitForAsyncUtils.waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
-            TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+        waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
+            TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             return tableView.getItems().size() == numberOfReceivingAddresses;
         });
 
-        TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+        TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
 
         IntStream.range(0, numberOfReceivingAddresses).boxed().forEach(i -> {
             MatcherAssert.assertThat(tableView, containsRow(
@@ -292,11 +374,28 @@ public class BalanceTableTest extends TestBase {
             );
         });
         MatcherAssert.assertThat(tableView, hasNumRows(numberOfReceivingAddresses));
+
+        robot.clickOn("#transactionsTab");
+        TableView<TransactionRow> transactionsTable = robot.lookup("#transactionsTable").queryAs(TableView.class);
+        waitFor(TIMEOUT, TimeUnit.SECONDS, () ->
+            transactionsTable.getItems().size() == txIds.size()
+        );
+        Map<String, TransactionRow> trRowMap = new HashMap<>();
+        transactionsTable.getItems().stream().forEach(transactionRow -> trRowMap.put(transactionRow.getTransactionId(), transactionRow));
+        assertEquals(txIds.size(), transactionsTable.getItems().size());
+        range(0, txIds.size()).forEach(i ->
+            assertThat(transactionsTable, containsRow(
+                txIds.get(i),
+                "1.0",
+                0,
+                trRowMap.get(txIds.get(i)).getDate()
+            ))
+        );
     }
 
     private void assertNextReceivingAddress(FxRobot robot, int numberOfReceivingAddresses) throws TimeoutException {
         String expectedReceivingAddress = addressGenerator.generate(seed, new DerivationPath("84'/0'/0'/0/" + numberOfReceivingAddresses));
-        WaitForAsyncUtils.waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
+        waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
             String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
             return address != null && address.equals(expectedReceivingAddress);
         });
@@ -306,7 +405,7 @@ public class BalanceTableTest extends TestBase {
 
     private void assertNextChangeAddress(int numberOfReceivingAddresses) throws TimeoutException {
         String expectedReceivingAddress = addressGenerator.generate(seed, new DerivationPath("84'/0'/0'/1/" + numberOfReceivingAddresses));
-        WaitForAsyncUtils.waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
+        waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
             String address =  nextChangeAddress.getValue().getAddress();
             return address != null && address.equals(expectedReceivingAddress);
         });
@@ -318,7 +417,7 @@ public class BalanceTableTest extends TestBase {
         String expectedReceivingAddress = nestedSegwitAddressGenerator.generate(
             seed, new DerivationPath("49'/0'/0'/0/" + numberOfReceivingAddresses)
         );
-        WaitForAsyncUtils.waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
+        waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
             String address =  nextNestedSegwitAddress.getValue().getAddress();
             return address != null && address.equals(expectedReceivingAddress);
         });

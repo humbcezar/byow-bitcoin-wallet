@@ -1,10 +1,9 @@
 package byow.bitcoinwallet.services;
 
+import byow.bitcoinwallet.entities.Wallet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import java.util.Date;
 
 @Component
 public class DefaultAddressUpdater implements AddressUpdater {
@@ -23,7 +22,7 @@ public class DefaultAddressUpdater implements AddressUpdater {
     }
 
     @Override
-    public void update(String seed, Date walletCreationDate) {
-        currentAddressesManager.update(seed, walletCreationDate, initialAddressToMonitor);
+    public void update(Wallet wallet) {
+        currentAddressesManager.update(wallet, initialAddressToMonitor);
     }
 }

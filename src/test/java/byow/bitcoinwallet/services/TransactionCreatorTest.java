@@ -2,9 +2,10 @@ package byow.bitcoinwallet.services;
 
 import byow.bitcoinwallet.entities.NextChangeAddress;
 import byow.bitcoinwallet.entities.ReceivingAddress;
-import byow.bitcoinwallet.entities.Transaction;
+import byow.bitcoinwallet.entities.WallyTransaction;
 import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.utils.UnspentUtil;
+import net.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -66,7 +67,7 @@ public class TransactionCreatorTest {
         String unspentAddress = addressGenerator.generate(seed2, FIRST_BIP84_ADDRESS_PATH);
         String changeAddress = addressGenerator.generate(seed2, FIRST_BIP84_ADDRESS_PATH.next(2));
 
-        Unspent utxo = unspentUtil.unspent(unspentAddress, BigDecimal.ONE, 1);
+        Unspent utxo = unspentUtil.unspent(unspentAddress, BigDecimal.ONE, 1, RandomString.make());
         List<Unspent> unspents = List.of(utxo);
         when(utxosGetter.getUtxos()).thenReturn(unspents);
         ReceivingAddress receivingAddress = new ReceivingAddress(utxo.amount(), utxo.confirmations(), utxo.address());
@@ -76,7 +77,7 @@ public class TransactionCreatorTest {
         ReceivingAddress changeReceivingAddress = new ReceivingAddress(ZERO, 0, changeAddress);
         when(nextChangeAddress.getValue()).thenReturn(changeReceivingAddress);
         when(feeEstimator.estimate()).thenReturn(new BigDecimal("0.0002"));
-        Transaction transaction = mock(Transaction.class);
+        WallyTransaction transaction = mock(WallyTransaction.class);
         when(transaction.getInputCount()).thenReturn(1);
         when(
             coinSelector.select(

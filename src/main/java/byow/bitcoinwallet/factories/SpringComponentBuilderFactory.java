@@ -17,7 +17,8 @@ public class SpringComponentBuilderFactory implements BuilderFactory {
 
     private final Set<Class<? extends BaseController>> controllers = Set.of(
         ReceiveTabController.class,
-        BalanceTableController.class,
+        AddressesTableController.class,
+        TransactionsTableController.class,
         ProgressBarController.class,
         FooterController.class,
         TotalBalanceController.class,

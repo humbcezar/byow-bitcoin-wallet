@@ -72,7 +72,7 @@ public class TotalBalanceTest extends TestBase {
         robot.moveTo("#load");
         robot.clickOn(walletName);
         WaitForAsyncUtils.waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
-            TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+            TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             String totalBalance = robot.lookup("#totalBalance").queryAs(Label.class).getText();
             return tableView.getItems().size() == numberOfReceivingAddresses && !totalBalance.isBlank();
         });

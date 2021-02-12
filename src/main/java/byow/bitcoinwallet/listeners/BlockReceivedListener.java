@@ -1,9 +1,7 @@
 package byow.bitcoinwallet.listeners;
 
 import byow.bitcoinwallet.events.BlockReceivedEvent;
-import byow.bitcoinwallet.services.CurrentReceivingAddressesUpdater;
-import byow.bitcoinwallet.services.CurrentWalletManager;
-import byow.bitcoinwallet.services.TaskConfigurer;
+import byow.bitcoinwallet.services.*;
 import byow.bitcoinwallet.tasks.UpdateReceivingAddressesTask;
 import javafx.concurrent.Task;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +26,12 @@ public class BlockReceivedListener implements ApplicationListener<BlockReceivedE
     @Autowired
     private TaskConfigurer taskConfigurer;
 
+    @Autowired
+    private UtxosGetter utxosGetter;
+
+    @Autowired
+    private CurrentTransactions currentTransactions;
+
     @Override
     public void onApplicationEvent(BlockReceivedEvent event) {
         if (currentWalletManager.getCurrentWallet() != null) {
@@ -37,7 +41,13 @@ public class BlockReceivedListener implements ApplicationListener<BlockReceivedE
 
     private Task<Void> buildTask() {
         return taskConfigurer.configure(
-            new UpdateReceivingAddressesTask(currentReceivingAddressesUpdater, reentrantLock),
+            new UpdateReceivingAddressesTask(
+                currentReceivingAddressesUpdater,
+                reentrantLock,
+                utxosGetter,
+                currentWalletManager.getCurrentWallet(),
+                currentTransactions
+            ),
             "Synchronizing new block..."
         );
     }

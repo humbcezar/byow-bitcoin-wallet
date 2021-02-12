@@ -43,7 +43,7 @@ public class LoadWalletTest extends TestBase {
                 "BYOW Wallet - testwallet".equals(stage.getTitle())
         );
         assertEquals("BYOW Wallet - testwallet", stage.getTitle());
-        final TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+        final TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
         MatcherAssert.assertThat(tableView, is(not(containsRowAtIndex(0))));
     }
 }

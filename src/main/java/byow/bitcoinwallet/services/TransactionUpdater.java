@@ -1,20 +1,28 @@
 package byow.bitcoinwallet.services;
 
+import byow.bitcoinwallet.entities.TransactionOutput;
+import byow.bitcoinwallet.repositories.TransactionInputRepository;
+import byow.bitcoinwallet.repositories.TransactionOutputRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
+import javax.transaction.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static byow.bitcoinwallet.utils.HexUtils.revertEndianess;
 import static com.blockstream.libwally.Wally.*;
 import static java.util.stream.IntStream.range;
 import static java.util.stream.Stream.concat;
 import static wf.bitcoin.krotjson.HexCoder.decode;
+import static wf.bitcoin.krotjson.HexCoder.encode;
+import static javafx.application.Platform.runLater;
 
 @Component
 @Lazy
@@ -33,6 +41,16 @@ public class TransactionUpdater {
 
     private CurrentReceivingAddressesUpdater currentReceivingAddressesUpdater;
 
+    private TransactionSaver transactionSaver;
+
+    private UtxosGetter utxosGetter;
+
+    private TransactionInputRepository transactionInputRepository;
+
+    private TransactionOutputRepository transactionOutputRepository;
+
+    private CurrentTransactions currentTransactions;
+
     @Autowired
     public TransactionUpdater(
         List<CurrentAddressesManager> currentAddressesManagers,
@@ -41,7 +59,12 @@ public class TransactionUpdater {
         CurrentReceivingAddresses currentReceivingAddresses,
         CurrentReceivingAddressesUpdater currentReceivingAddressesUpdater,
         @Qualifier("nestedAddressVersion") int nestedAddressVersion,
-        @Qualifier("networkVersion") int networkVersion
+        @Qualifier("networkVersion") int networkVersion,
+        TransactionSaver transactionSaver,
+        UtxosGetter utxosGetter,
+        TransactionInputRepository transactionInputRepository,
+        TransactionOutputRepository transactionOutputRepository,
+        CurrentTransactions currentTransactions
     ) {
         this.currentAddressesManagers = currentAddressesManagers;
         this.currentWalletManager = currentWalletManager;
@@ -50,11 +73,50 @@ public class TransactionUpdater {
         this.currentReceivingAddressesUpdater = currentReceivingAddressesUpdater;
         this.nestedAddressVersion = nestedAddressVersion;
         this.networkVersion = networkVersion;
+        this.transactionSaver = transactionSaver;
+        this.utxosGetter = utxosGetter;
+        this.transactionInputRepository = transactionInputRepository;
+        this.transactionOutputRepository = transactionOutputRepository;
+        this.currentTransactions = currentTransactions;
     }
 
     public void update(Object transaction) {
-        concat(parseOutputAddresses(transaction), parseInputAddresses(transaction))
-            .distinct()
+        List<String> inputs = parseInputAddresses(transaction);
+        List<String> outputs = parseOutputAddresses(transaction);
+        updateAddresses(concat(inputs.stream(), outputs.stream()));
+        updateTransactions(transaction, inputs, outputs);
+    }
+
+    private void updateTransactions(Object transaction, List<String> inputs, List<String> outputs) {
+        runLater(() -> {
+            saveTransaction(transaction, outputs);
+            currentTransactions.update(currentWalletManager.getCurrentWallet());
+        });
+    }
+
+    @Transactional
+    private void saveTransaction(Object transaction, List<String> outputs) {
+        Set<TransactionOutput> transactionOutputs = range(0, outputs.size())
+            .filter(index -> currentReceivingAddresses.contains(outputs.get(index)))
+            .mapToObj(index -> {
+                TransactionOutput transactionOutput = new TransactionOutput(
+                    outputs.get(index), tx_get_output_satoshi(transaction, index)
+                );
+                return transactionOutputRepository.save(transactionOutput);
+            }).collect(Collectors.toSet());
+
+        if (!transactionOutputs.isEmpty()) {
+            transactionSaver.save(
+                revertEndianess(encode(tx_get_txid(transaction))),
+                currentWalletManager.getCurrentWallet(),
+                Set.of(),
+                transactionOutputs
+            );
+        }
+    }
+
+    private void updateAddresses(Stream<String> addresses) {
+        addresses.distinct()
             .peek(address -> currentAddressesManagers.forEach(
                 currentAddressManager -> currentAddressManager.initializeAddresses(
                     1,
@@ -63,7 +125,10 @@ public class TransactionUpdater {
                 ))
             )
             .filter(address -> currentReceivingAddresses.contains(address))
-            .peek(address -> currentReceivingAddressesUpdater.updateReceivingAddresses(List.of(address)))
+            .peek(address -> currentReceivingAddressesUpdater.updateReceivingAddresses(
+                List.of(address),
+                utxosGetter.getUtxos(List.of(address)))
+            )
             .forEach(address -> currentAddressesManagers.stream()
                 .filter(currentAddressManager -> currentAddressManager.getNextAddress().equalAddress(address))
                 .forEach(currentAddressManager -> currentAddressManager.updateNextAddress(
@@ -75,7 +140,7 @@ public class TransactionUpdater {
             );
     }
 
-    private Stream<String> parseInputAddresses(Object transaction) {
+    private List<String> parseInputAddresses(Object transaction) {
         List<String> inputAddresses = new ArrayList<>();
         if(!tx_is_coinbase(transaction)) {
             int numInputs = tx_get_num_inputs(transaction);
@@ -88,7 +153,8 @@ public class TransactionUpdater {
                 return addr_segwit_from_bytes(witness, addressPrefix, 0);
             }).collect(Collectors.toList());
         }
-        return inputAddresses.stream();
+
+        return inputAddresses;
     }
 
     private String buildNestedSegwitAddress(byte[] publicKey) {
@@ -108,7 +174,7 @@ public class TransactionUpdater {
         return script.length > 0;
     }
 
-    private Stream<String> parseOutputAddresses(Object transaction) {
+    private List<String> parseOutputAddresses(Object transaction) {
         return range(0, tx_get_num_outputs(transaction)).mapToObj(i -> {
             try {
                 if (scriptpubkey_get_type(tx_get_output_script(transaction, i)) == WALLY_SCRIPT_TYPE_P2SH) {
@@ -118,6 +184,6 @@ public class TransactionUpdater {
             } catch (IllegalArgumentException ignored) {
                 return "";
             }
-        });
+        }).collect(Collectors.toList());
     }
 }

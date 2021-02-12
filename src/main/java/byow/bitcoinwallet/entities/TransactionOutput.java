@@ -1,26 +1,51 @@
 package byow.bitcoinwallet.entities;
 
-import static com.blockstream.libwally.Wally.*;
+import javax.persistence.*;
 
+import java.util.Objects;
+
+import static javax.persistence.FetchType.EAGER;
+
+@Entity
+@Table(name = "transaction_output")
 public class TransactionOutput {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private long id;
 
-    private byte[] scriptPubKey;
+    @Column
+    private String address;
 
-    private final Object output;
+    @Column
+    private Long satoshis;
 
-    private final long amount;
+    @ManyToOne(fetch = EAGER)
+    @JoinColumn(name = "transaction_id")
+    private Transaction transaction;
 
-    public TransactionOutput(long amount, byte[] scriptPubKey) {
-        this.scriptPubKey = scriptPubKey;
-        this.amount = amount;
-        output = tx_output_init(amount, scriptPubKey);
+    public TransactionOutput(String address, Long satoshis) {
+        this.address = address;
+        this.satoshis = satoshis;
     }
 
-    public Object getOutput() {
-        return output;
+    public TransactionOutput() {
     }
 
-    public long getAmount() {
-        return amount;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TransactionOutput that = (TransactionOutput) o;
+        return address.equals(that.address) && satoshis.equals(that.satoshis);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(address, satoshis);
+    }
+
+    public Long getSatoshis() {
+        return satoshis;
     }
 }

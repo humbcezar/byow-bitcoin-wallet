@@ -1,7 +1,7 @@
 package byow.bitcoinwallet.services;
 
 import byow.bitcoinwallet.entities.NextChangeAddress;
-import byow.bitcoinwallet.entities.Transaction;
+import byow.bitcoinwallet.entities.WallyTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -38,7 +38,7 @@ public class TransactionCreator {
         this.nextChangeAddress = nextChangeAddress;
     }
 
-    public Transaction create(String addressToSend, BigDecimal amountToSend) {
+    public WallyTransaction create(String addressToSend, BigDecimal amountToSend) {
         List<Unspent> utxos = utxosGetter.getUtxos();
         BigDecimal feeRate = feeEstimator.estimate();
         return coinSelector.select(

@@ -19,9 +19,9 @@ import java.math.BigDecimal;
 
 @Component
 @Lazy
-public class BalanceTableController extends TableView<ReceivingAddress> implements BaseController {
+public class AddressesTableController extends TableView<ReceivingAddress> implements BaseController {
     @FXML
-    public TableView<ReceivingAddress> balanceTable;
+    public TableView<ReceivingAddress> addressesTable;
 
     @FXML
     public TableColumn<ReceivingAddress, String> columnAddress;
@@ -39,8 +39,8 @@ public class BalanceTableController extends TableView<ReceivingAddress> implemen
     private CurrentReceivingAddresses currentReceivingAddresses;
 
     @Autowired
-    public BalanceTableController(
-        @Value("classpath:/fxml/balance_table.fxml") Resource fxml,
+    public AddressesTableController(
+        @Value("classpath:/fxml/addresses_table.fxml") Resource fxml,
         ApplicationContext context,
         CurrentReceivingAddresses currentReceivingAddresses
     ) throws IOException {
@@ -51,7 +51,7 @@ public class BalanceTableController extends TableView<ReceivingAddress> implemen
     }
 
     public void initialize() {
-        balanceTable.setItems(
+        addressesTable.setItems(
             new FilteredList<>(
                 currentReceivingAddresses.getReceivingAddresses(),
                 receivingAddress -> receivingAddress.getBigDecimalBalance().compareTo(BigDecimal.ZERO) > 0

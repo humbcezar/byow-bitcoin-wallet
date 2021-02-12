@@ -2,12 +2,16 @@ package byow.bitcoinwallet.services;
 
 import byow.bitcoinwallet.entities.NextReceivingAddress;
 import byow.bitcoinwallet.entities.ReceivingAddress;
+import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.enums.Languages;
 import byow.bitcoinwallet.guitests.TestBase;
+import byow.bitcoinwallet.repositories.TransactionRepository;
+import byow.bitcoinwallet.repositories.WalletRepository;
 import byow.bitcoinwallet.utils.UnspentUtil;
 import com.blockstream.libwally.Wally;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import net.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -50,15 +54,22 @@ public class DefaultAddressUpdaterTest extends TestBase {
     @Autowired
     private UnspentUtil unspentUtil;
 
+    @Autowired
+    private TransactionRepository transactionRepository;
+
     private SeedGenerator seedGenerator = new SeedGenerator(Wally.bip39_get_wordlist(Languages.EN), new EntropyCreator());
 
     private DefaultAddressUpdater defaultAddressUpdater;
+
+    @Autowired
+    private WalletRepository walletRepository;
 
     @BeforeEach
     void setUp() {
         currentReceivingAddresses.clear();
         currentAddressesManager.clear();
         defaultAddressUpdater = new DefaultAddressUpdater(currentAddressesManager);
+        transactionRepository.deleteAll();
     }
 
     @Test
@@ -70,9 +81,12 @@ public class DefaultAddressUpdaterTest extends TestBase {
                 .thenReturn(new ArrayList<>());
 
         Date date = new Date();
+        Wallet currentWallet = new Wallet(RandomString.make(), seed);
+        currentWallet.setCreatedAt(date);
+        walletRepository.save(currentWallet);
 
         defaultAddressUpdater.setInitialAddressToMonitor(20);
-        defaultAddressUpdater.update(seed, date);
+        defaultAddressUpdater.update(currentWallet);
 
         verify(multiAddressesImporter).importMultiAddresses(date, expectedAddresses);
         assertTrue(
@@ -88,14 +102,18 @@ public class DefaultAddressUpdaterTest extends TestBase {
         String seed = seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), "");
 
         String[] expectedAddresses = expectedAddresses(seed, 20, FIRST_BIP84_ADDRESS_PATH);
-        List<Unspent> unspents = List.of(unspentUtil.unspent(expectedAddresses[0], TEN, 0));
+        Unspent utxo = unspentUtil.unspent(expectedAddresses[0], TEN, 0, RandomString.make());
+        List<Unspent> unspents = List.of(utxo);
         when(bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, expectedAddresses))
                 .thenReturn(unspents);
 
         Date date = new Date();
+        Wallet currentWallet = new Wallet(RandomString.make(), seed);
+        currentWallet.setCreatedAt(date);
+        walletRepository.save(currentWallet);
 
         defaultAddressUpdater.setInitialAddressToMonitor(20);
-        defaultAddressUpdater.update(seed, date);
+        defaultAddressUpdater.update(currentWallet);
 
         verify(multiAddressesImporter).importMultiAddresses(date, expectedAddresses);
         assertTrue(
@@ -116,6 +134,7 @@ public class DefaultAddressUpdaterTest extends TestBase {
                 usedReceivingAddresses.get(i).getAddress().equals(unspents.get(i).address())
             );
         });
+        assertEquals(utxo.txid(), transactionRepository.findByTxId(utxo.txid()).get().getTxId());
     }
 
     @Test
@@ -124,19 +143,22 @@ public class DefaultAddressUpdaterTest extends TestBase {
 
         String[] expectedAddresses = expectedAddresses(seed, 20, FIRST_BIP84_ADDRESS_PATH);
         List<Unspent> unspents = List.of(
-            unspentUtil.unspent(expectedAddresses[0], TEN, 1),
-            unspentUtil.unspent(expectedAddresses[1], TEN, 1),
-            unspentUtil.unspent(expectedAddresses[2], TEN, 1),
-            unspentUtil.unspent(expectedAddresses[3], TEN, 1),
-            unspentUtil.unspent(expectedAddresses[4], TEN, 1)
+            unspentUtil.unspent(expectedAddresses[0], TEN, 1, RandomString.make()),
+            unspentUtil.unspent(expectedAddresses[1], TEN, 1, RandomString.make()),
+            unspentUtil.unspent(expectedAddresses[2], TEN, 1, RandomString.make()),
+            unspentUtil.unspent(expectedAddresses[3], TEN, 1, RandomString.make()),
+            unspentUtil.unspent(expectedAddresses[4], TEN, 1, RandomString.make())
         );
         when(bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, expectedAddresses))
                 .thenReturn(unspents);
 
         Date date = new Date();
+        Wallet currentWallet = new Wallet(RandomString.make(), seed);
+        currentWallet.setCreatedAt(date);
+        walletRepository.save(currentWallet);
 
         defaultAddressUpdater.setInitialAddressToMonitor(20);
-        defaultAddressUpdater.update(seed, date);
+        defaultAddressUpdater.update(currentWallet);
 
         verify(multiAddressesImporter).importMultiAddresses(date, expectedAddresses);
         assertTrue(
@@ -166,21 +188,24 @@ public class DefaultAddressUpdaterTest extends TestBase {
 
         String[] expectedAddresses = expectedAddresses(seed, 20, FIRST_BIP84_ADDRESS_PATH);
         List<Unspent> unspents = List.of(
-                unspentUtil.unspent(expectedAddresses[0], TEN, 1),
-                unspentUtil.unspent(expectedAddresses[1], TEN, 1),
-                unspentUtil.unspent(expectedAddresses[2], TEN, 1),
-                unspentUtil.unspent(expectedAddresses[3], TEN, 1),
-                unspentUtil.unspent(expectedAddresses[4], TEN, 1),
-                unspentUtil.unspent(expectedAddresses[4], new BigDecimal(1), 0),
-                unspentUtil.unspent(expectedAddresses[4], new BigDecimal(2), 1)
+                unspentUtil.unspent(expectedAddresses[0], TEN, 1, RandomString.make()),
+                unspentUtil.unspent(expectedAddresses[1], TEN, 1, RandomString.make()),
+                unspentUtil.unspent(expectedAddresses[2], TEN, 1, RandomString.make()),
+                unspentUtil.unspent(expectedAddresses[3], TEN, 1, RandomString.make()),
+                unspentUtil.unspent(expectedAddresses[4], TEN, 1, RandomString.make()),
+                unspentUtil.unspent(expectedAddresses[4], new BigDecimal(1), 0, RandomString.make()),
+                unspentUtil.unspent(expectedAddresses[4], new BigDecimal(2), 1, RandomString.make())
         );
         when(bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, expectedAddresses))
                 .thenReturn(unspents);
 
         Date date = new Date();
+        Wallet currentWallet = new Wallet(RandomString.make(), seed);
+        currentWallet.setCreatedAt(date);
+        walletRepository.save(currentWallet);
 
         defaultAddressUpdater.setInitialAddressToMonitor(20);
-        defaultAddressUpdater.update(seed, date);
+        defaultAddressUpdater.update(currentWallet);
 
         verify(multiAddressesImporter).importMultiAddresses(date, expectedAddresses);
         //TODO: may fail due to runLater when setting nextReceivingAddress
@@ -216,15 +241,18 @@ public class DefaultAddressUpdaterTest extends TestBase {
         String[] expectedAddresses = expectedAddresses(seed, 20, FIRST_BIP84_ADDRESS_PATH);
         String[] expectedAddresses2 = expectedAddresses(seed, 20, new DerivationPath("84'/0'/0'/0/20"));
         List<Unspent> unspents = IntStream.range(0, 20)
-                .mapToObj(i -> unspentUtil.unspent(expectedAddresses[i], TEN, 1))
+                .mapToObj(i -> unspentUtil.unspent(expectedAddresses[i], TEN, 1, RandomString.make()))
                 .collect(Collectors.toList());
         when(bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, expectedAddresses)).thenReturn(unspents);
         when(bitcoindRpcClient.listUnspent(0, Integer.MAX_VALUE, expectedAddresses2)).thenReturn(new ArrayList<>());
 
         Date date = new Date();
+        Wallet currentWallet = new Wallet(RandomString.make(), seed);
+        currentWallet.setCreatedAt(date);
+        walletRepository.save(currentWallet);
 
         defaultAddressUpdater.setInitialAddressToMonitor(20);
-        defaultAddressUpdater.update(seed, date);
+        defaultAddressUpdater.update(currentWallet);
 
         ArgumentCaptor<String[]> expectedAddressesCaptured = ArgumentCaptor.forClass(String[].class);
         ArgumentCaptor<Date> expectedDateCaptured = ArgumentCaptor.forClass(Date.class);

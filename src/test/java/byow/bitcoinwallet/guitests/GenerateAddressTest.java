@@ -1,6 +1,5 @@
 package byow.bitcoinwallet.guitests;
 
-import byow.bitcoinwallet.controllers.MainController;
 import byow.bitcoinwallet.services.SeedGenerator;
 import byow.bitcoinwallet.services.WalletCreator;
 import javafx.scene.control.TableView;
@@ -22,9 +21,6 @@ public class GenerateAddressTest extends TestBase {
     private WalletCreator walletCreator;
 
     @Autowired
-    private MainController mainController;
-
-    @Autowired
     private SeedGenerator seedGenerator;
 
     @Override
@@ -39,7 +35,7 @@ public class GenerateAddressTest extends TestBase {
         robot.clickOn("Receive");
         String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
         assertNotNull(address);
-        final TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+        final TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
         MatcherAssert.assertThat(tableView, is(not(containsRowAtIndex(0))));
     }
 }

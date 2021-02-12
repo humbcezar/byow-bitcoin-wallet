@@ -1,6 +1,6 @@
 package byow.bitcoinwallet.tasks;
 
-import byow.bitcoinwallet.entities.Transaction;
+import byow.bitcoinwallet.entities.WallyTransaction;
 import byow.bitcoinwallet.services.SendTransactionService;
 import javafx.concurrent.Task;
 
@@ -11,12 +11,12 @@ public class SendTransactionTask extends Task<Void> {
 
     private SendTransactionService sendTransactionService;
 
-    private Transaction transaction;
+    private WallyTransaction transaction;
 
     public SendTransactionTask(
         ReentrantLock reentrantLock,
         SendTransactionService sendTransactionService,
-        Transaction transaction
+        WallyTransaction transaction
     ) {
         this.reentrantLock = reentrantLock;
         this.sendTransactionService = sendTransactionService;

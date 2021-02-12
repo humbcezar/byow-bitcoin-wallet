@@ -5,12 +5,12 @@ import java.io.ByteArrayOutputStream;
 import static com.blockstream.libwally.Wally.*;
 import static wf.bitcoin.krotjson.HexCoder.decode;
 
-public class Witness {
+public class WallyWitness {
     private final Object witness;
 
     private byte[] publicKey;
 
-    public Witness(int itemsSize) {
+    public WallyWitness(int itemsSize) {
         witness = tx_witness_stack_init(itemsSize);
     }
 

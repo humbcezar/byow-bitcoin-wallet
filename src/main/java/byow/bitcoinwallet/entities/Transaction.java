@@ -1,123 +1,91 @@
 package byow.bitcoinwallet.entities;
 
-import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import java.util.List;
+import org.springframework.data.annotation.CreatedDate;
+import javax.persistence.*;
+import java.util.*;
 
-import static com.blockstream.libwally.Wally.*;
-import static java.util.Collections.addAll;
+import static javax.persistence.FetchType.EAGER;
 
+@Entity
+@Table(name = "transaction")
 public class Transaction {
-    private final Object tx;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private long id;
 
-    private List<TransactionOutput> outputs = new ArrayList<>();
+    @Column(name = "tx_id")
+    private String txId;
 
-    private List<TransactionInput> inputs = new ArrayList<>();
+    @Column(name = "created_at")
+    @CreatedDate
+    private Date createdAt;
 
-    private long feeRateInSatoshisPerByte;
+    @ManyToMany(fetch = EAGER)
+    private Set<Wallet> wallets = new HashSet<>();
 
-    private long totalFeeInSatoshis;
+    @OneToMany(fetch = EAGER)
+    @JoinColumn(name = "transaction_id")
+    private Set<TransactionInput> transactionInputs;
 
-    private long intendedTotalFeeInSatoshis;
+    @OneToMany(fetch = EAGER)
+    @JoinColumn(name = "transaction_id")
+    private Set<TransactionOutput> transactionOutputs;
 
-    public Transaction(int numberOfInputs, int numberOfOutputs) {
-        tx = tx_init(2, 0, numberOfInputs, numberOfOutputs);
+    public Transaction() {
     }
 
-    public void addOutput(TransactionOutput ...txOutputs) {
-        addAll(outputs, txOutputs);
-        List.of(txOutputs).forEach(output -> tx_add_output(tx, output.getOutput()));
+    public Transaction(String txId, Date createdAt) {
+        this.txId = txId;
+        this.createdAt = createdAt;
     }
 
-    public void addInput(TransactionInput transactionInput) {
-        inputs.add(transactionInput);
-        tx_add_input(tx, transactionInput.getInput());
+    public long getId() {
+        return id;
     }
 
-    public void sign(int inputIndex) {
-        TransactionInput input = inputs.get(inputIndex);
-        byte[] sigHash = tx_get_btc_signature_hash(
-            tx,
-            inputIndex,
-            input.getWitness().scriptCode(),
-            input.getAmountInSatoshis(),
-            WALLY_SIGHASH_ALL,
-            WALLY_TX_FLAG_USE_WITNESS,
-            null
-        );
-        byte[] signature = ec_sig_to_der(
-            ec_sig_normalize(
-                ec_sig_from_bytes(
-                    input.getPrivateKey(), sigHash, EC_FLAG_ECDSA
-                )
-            )
-        );
-        byte[] signatureWithHashType = appendSigHashType(signature);
-        Witness signedWitness = new Witness(2);
-        signedWitness.addSignature(signatureWithHashType);
-        signedWitness.addPublicKey(input.getWitness().getPublicKey());
-
-        tx_set_input_witness(tx, inputIndex, signedWitness.getWitness());
-        input.setWitness(signedWitness);
+    public String getTxId() {
+        return txId;
     }
 
-    private byte[] appendSigHashType(byte[] signature) {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        byteArrayOutputStream.writeBytes(signature);
-        byteArrayOutputStream.write(1);
-        return byteArrayOutputStream.toByteArray();
+    public Date getCreatedAt() {
+        return createdAt;
     }
 
-    public String toHex() {
-        return tx_to_hex(tx, WALLY_TX_FLAG_USE_WITNESS);
+    public void appendWallet(Wallet wallet) {
+        wallets.add(wallet);
     }
 
-    public int getInputCount() {
-        return inputs.size();
+    public Set<Wallet> getWallets() {
+        return wallets;
     }
 
-    public int getOutputCount() {
-        return tx_get_num_outputs(tx);
+    public Set<TransactionInput> getTransactionInputs() {
+        return transactionInputs;
     }
 
-    public long vSize() {
-        return tx_get_vsize(tx);
+    public Set<TransactionOutput> getTransactionOutputs() {
+        return transactionOutputs;
     }
 
-    public void removeOutput(int i) {
-        tx_remove_output(tx, i);
-        outputs.remove(i);
+    public void setTransactionInputs(Set<TransactionInput> transactionInputs) {
+        this.transactionInputs = transactionInputs;
     }
 
-    public TransactionInput getInput(int index) {
-        return inputs.get(index);
+    public void setTransactionOutputs(Set<TransactionOutput> transactionOutputs) {
+        this.transactionOutputs = transactionOutputs;
     }
 
-    public TransactionOutput getOutput(int index) {
-        return outputs.get(index);
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Transaction that = (Transaction) o;
+        return getTxId().equals(that.getTxId());
     }
 
-    public void setFeeRateInSatoshisPerByte(long feeRateInSatoshisPerByte) {
-        this.feeRateInSatoshisPerByte = feeRateInSatoshisPerByte;
-    }
-
-    public void setTotalFeeInSatoshis(long totalFeeInSatoshis) {
-        this.totalFeeInSatoshis = totalFeeInSatoshis;
-    }
-
-    public long getFeeRateInSatoshisPerByte() {
-        return feeRateInSatoshisPerByte;
-    }
-
-    public long getTotalFeeInSatoshis() {
-        return totalFeeInSatoshis;
-    }
-
-    public void setIntendedTotalFeeInSatoshis(long intendedTotalFeeInSatoshis) {
-        this.intendedTotalFeeInSatoshis = intendedTotalFeeInSatoshis;
-    }
-
-    public long getIntendedTotalFeeInSatoshis() {
-        return intendedTotalFeeInSatoshis;
+    @Override
+    public int hashCode() {
+        return Objects.hash(getTxId());
     }
 }

@@ -30,6 +30,9 @@ public class WalletsMenuManager {
     @Autowired
     private TaskConfigurer taskConfigurer;
 
+    @Autowired
+    private CurrentTransactions currentTransactions;
+
     private final ObservableSet<MenuItem> menuItems = new ObservableSetWrapper<>(new LinkedHashSet<>());
 
     public void load() {
@@ -44,7 +47,7 @@ public class WalletsMenuManager {
 
     private Task<Void> buildTask(Wallet wallet) {
         return taskConfigurer.configure(
-            new UpdateCurrentWalletTask(currentWalletManager, reentrantLock, wallet),
+            new UpdateCurrentWalletTask(currentWalletManager, reentrantLock, wallet, currentTransactions),
             "Loading wallet..."
         );
     }

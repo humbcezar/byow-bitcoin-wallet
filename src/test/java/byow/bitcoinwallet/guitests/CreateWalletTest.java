@@ -62,7 +62,7 @@ public class CreateWalletTest extends TestBase {
         String nestedAddress = robot.lookup("#nestedReceivingAddress").queryAs(TextField.class).getText();
         assertNotNull(nestedAddress);
         assertNotEquals("", nestedAddress);
-        final TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+        final TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
         MatcherAssert.assertThat(tableView, is(not(containsRowAtIndex(0))));
     }
 
@@ -90,7 +90,7 @@ public class CreateWalletTest extends TestBase {
         assertEquals("BYOW Wallet - Test wallet3", stage.getTitle());
         String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
         assertNotNull(address);
-        final TableView tableView = robot.lookup("#balanceTable").queryAs(TableView.class);
+        final TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
         MatcherAssert.assertThat(tableView, is(not(containsRowAtIndex(0))));
     }
 

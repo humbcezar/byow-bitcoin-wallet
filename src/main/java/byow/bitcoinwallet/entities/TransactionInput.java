@@ -1,82 +1,51 @@
 package byow.bitcoinwallet.entities;
 
-import static com.blockstream.libwally.Wally.tx_input_init;
-import static javax.xml.bind.DatatypeConverter.parseHexBinary;
+import javax.persistence.*;
 
+import java.util.Objects;
+
+import static javax.persistence.FetchType.LAZY;
+
+@Entity
+@Table(name = "transaction_input")
 public class TransactionInput {
-    private final Object input;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private long id;
 
-    private final byte[] privateKey;
+    @Column
+    private String address;
 
-    private byte[] scriptSig;
+    @Column
+    private Long satoshis;
 
-    private Witness witness;
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "transaction_id")
+    private Transaction transaction;
 
-    private final long amountInSatoshis;
-
-    private final String txId;
-
-    public TransactionInput(
-        String txid,
-        int vout,
-        long amountInSatoshis,
-        byte[] privateKey,
-        long nSequence,
-        byte[] scriptSig,
-        Witness witness
-    ) {
-        this.txId = txid;
-        this.scriptSig = scriptSig;
-        this.witness = witness;
-        input = tx_input_init(
-            parseHexBinary(toLittleEndian(txid)),
-            vout,
-            nSequence,
-            scriptSig,
-            witness.getWitness()
-        );
-        this.amountInSatoshis = amountInSatoshis;
-        this.privateKey = privateKey;
+    public TransactionInput() {
     }
 
-    private String toLittleEndian(String txid) {
-        StringBuilder  result = new StringBuilder();
-        for (int i = 0; i <= txid.length() - 2; i = i + 2) {
-            result.append(new StringBuilder(txid.substring(i, i + 2)).reverse());
-        }
-        return result.reverse().toString();
+    public TransactionInput(String address, Long satoshis) {
+        this.address = address;
+        this.satoshis = satoshis;
     }
 
-    public Witness getWitness() {
-        return witness;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TransactionInput that = (TransactionInput) o;
+        return id == that.id && address.equals(that.address) && satoshis.equals(that.satoshis);
     }
 
-    public long getAmountInSatoshis() {
-        return amountInSatoshis;
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, address, satoshis);
     }
 
-    public byte[] getPrivateKey() {
-        return privateKey;
+    public Long getSatoshis() {
+        return satoshis;
     }
-
-    public void setWitness(Witness signedWitness) {
-        this.witness = signedWitness;
-    }
-
-    public Object getInput() {
-        return input;
-    }
-
-    public String getTxId() {
-        return txId;
-    }
-
-    public byte[] getScriptSig() {
-        return scriptSig;
-    }
-
-    public void setScriptSig(byte[] scriptSig) {
-        this.scriptSig = scriptSig;
-    }
-
 }

@@ -1,7 +1,7 @@
 package byow.bitcoinwallet.services;
 
 import byow.bitcoinwallet.entities.ReceivingAddress;
-import byow.bitcoinwallet.entities.Transaction;
+import byow.bitcoinwallet.entities.WallyTransaction;
 import byow.bitcoinwallet.utils.UnspentUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +12,6 @@ import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Unspent;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 
 import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
 import static java.math.BigDecimal.ONE;
@@ -55,8 +54,8 @@ public class SingleRandomDrawCoinSelectorTest {
 
         String outputAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1));
 
-        Unspent utxo = unspentUtil.unspent(inputAddress, inputBalance, 922);
-        Transaction transaction = singleRandomDrawTransactionCreator.select(
+        Unspent utxo = unspentUtil.unspent(inputAddress, inputBalance, 922, "58791da7eb6b282c15bc4fc38d3b8ff903f7277a2d4bdf50ff6fbf10b1d8c0c6");
+        WallyTransaction transaction = singleRandomDrawTransactionCreator.select(
             List.of(utxo),
             ONE,
             new BigDecimal("0.002"),
@@ -99,9 +98,9 @@ public class SingleRandomDrawCoinSelectorTest {
 
         String outputAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1));
 
-        Unspent utxo1 = unspentUtil.unspent(inputAddress1, inputBalance, 922);
-        Unspent utxo2 = unspentUtil.unspent(inputAddress2, inputBalance, 922);
-        Transaction transaction = singleRandomDrawTransactionCreator.select(
+        Unspent utxo1 = unspentUtil.unspent(inputAddress1, inputBalance, 922, "58791da7eb6b282c15bc4fc38d3b8ff903f7277a2d4bdf50ff6fbf10b1d8c0c6");
+        Unspent utxo2 = unspentUtil.unspent(inputAddress2, inputBalance, 922, "58791da7eb6b282c15bc4fc38d3b8ff903f7277a2d4bdf50ff6fbf10b1d8c0c6");
+        WallyTransaction transaction = singleRandomDrawTransactionCreator.select(
             List.of(utxo1, utxo2),
             new BigDecimal(150),
             new BigDecimal("0.002"),
@@ -132,8 +131,8 @@ public class SingleRandomDrawCoinSelectorTest {
 
         String outputAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1));
 
-        Unspent utxo = unspentUtil.unspent(inputAddress, inputBalance, 922);
-        Transaction transaction = singleRandomDrawTransactionCreator.select(
+        Unspent utxo = unspentUtil.unspent(inputAddress, inputBalance, 922, "58791da7eb6b282c15bc4fc38d3b8ff903f7277a2d4bdf50ff6fbf10b1d8c0c6");
+        WallyTransaction transaction = singleRandomDrawTransactionCreator.select(
                 List.of(utxo),
                 valueOf(110),
                 new BigDecimal("0.002"),
@@ -160,8 +159,8 @@ public class SingleRandomDrawCoinSelectorTest {
 
         String outputAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1));
 
-        Unspent utxo = unspentUtil.unspent(inputAddress, inputBalance, 922);
-        Transaction transaction = singleRandomDrawTransactionCreator.select(
+        Unspent utxo = unspentUtil.unspent(inputAddress, inputBalance, 922, "58791da7eb6b282c15bc4fc38d3b8ff903f7277a2d4bdf50ff6fbf10b1d8c0c6");
+        WallyTransaction transaction = singleRandomDrawTransactionCreator.select(
             List.of(utxo),
             valueOf(110),
             new BigDecimal("0.002"),
@@ -191,8 +190,8 @@ public class SingleRandomDrawCoinSelectorTest {
 
         String outputAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1));
 
-        Unspent utxo = unspentUtil.unspent(inputAddress, inputBalance, 922);
-        Transaction transaction = singleRandomDrawTransactionCreator.select(
+        Unspent utxo = unspentUtil.unspent(inputAddress, inputBalance, 922, "58791da7eb6b282c15bc4fc38d3b8ff903f7277a2d4bdf50ff6fbf10b1d8c0c6");
+        WallyTransaction transaction = singleRandomDrawTransactionCreator.select(
             List.of(utxo),
             valueOf(1),
             new BigDecimal("0.002"),
@@ -223,8 +222,8 @@ public class SingleRandomDrawCoinSelectorTest {
 
         String outputAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1));
 
-        Unspent utxo = unspentUtil.unspent(inputAddress, inputBalance, 922);
-        Transaction transaction = singleRandomDrawTransactionCreator.select(
+        Unspent utxo = unspentUtil.unspent(inputAddress, inputBalance, 922, "58791da7eb6b282c15bc4fc38d3b8ff903f7277a2d4bdf50ff6fbf10b1d8c0c6");
+        WallyTransaction transaction = singleRandomDrawTransactionCreator.select(
                 List.of(utxo),
                 valueOf(0.99999800),
                 new BigDecimal("0.002"),
@@ -255,8 +254,8 @@ public class SingleRandomDrawCoinSelectorTest {
 
         String outputAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1));
 
-        Unspent utxo = unspentUtil.unspent(inputAddress, inputBalance, 0);
-        Transaction transaction = singleRandomDrawTransactionCreator.select(
+        Unspent utxo = unspentUtil.unspent(inputAddress, inputBalance, 0, "58791da7eb6b282c15bc4fc38d3b8ff903f7277a2d4bdf50ff6fbf10b1d8c0c6");
+        WallyTransaction transaction = singleRandomDrawTransactionCreator.select(
             List.of(utxo),
             ONE,
             new BigDecimal("0.002"),
