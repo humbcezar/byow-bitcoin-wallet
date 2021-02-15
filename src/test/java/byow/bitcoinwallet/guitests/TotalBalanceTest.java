@@ -1,10 +1,10 @@
 package byow.bitcoinwallet.guitests;
 
-import byow.bitcoinwallet.entities.Address;
+import byow.bitcoinwallet.entities.AddressPath;
 import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.repositories.WalletRepository;
-import byow.bitcoinwallet.services.AddressSequentialGenerator;
-import byow.bitcoinwallet.services.SeedGenerator;
+import byow.bitcoinwallet.services.address.AddressSequentialGenerator;
+import byow.bitcoinwallet.services.address.SeedGenerator;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import javafx.stage.Stage;
@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
+import static byow.bitcoinwallet.services.address.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TotalBalanceTest extends TestBase {
@@ -66,7 +66,7 @@ public class TotalBalanceTest extends TestBase {
         List<String> addresses = addressSequentialGenerator.deriveAddresses(
                 numberOfReceivingAddresses,
                 seed, FIRST_BIP84_ADDRESS_PATH
-        ).stream().map(Address::getAddress).collect(Collectors.toList());
+        ).stream().map(AddressPath::getAddress).collect(Collectors.toList());
         addresses.forEach(address -> bitcoindRpcClient.sendToAddress(address, BigDecimal.ONE));
         robot.clickOn("#wallet");
         robot.moveTo("#load");

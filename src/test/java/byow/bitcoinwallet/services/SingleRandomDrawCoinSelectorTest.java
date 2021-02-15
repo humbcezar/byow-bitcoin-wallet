@@ -1,7 +1,11 @@
 package byow.bitcoinwallet.services;
 
 import byow.bitcoinwallet.entities.ReceivingAddress;
-import byow.bitcoinwallet.entities.WallyTransaction;
+import byow.bitcoinwallet.entities.wally.WallyTransaction;
+import byow.bitcoinwallet.services.gui.CurrentReceivingAddresses;
+import byow.bitcoinwallet.services.address.DefaultAddressGenerator;
+import byow.bitcoinwallet.services.address.SeedGenerator;
+import byow.bitcoinwallet.services.transaction.SingleRandomDrawCoinSelector;
 import byow.bitcoinwallet.utils.UnspentUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +17,7 @@ import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Unspent;
 import java.math.BigDecimal;
 import java.util.List;
 
-import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
+import static byow.bitcoinwallet.services.address.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
 import static java.math.BigDecimal.ONE;
 import static java.math.BigDecimal.valueOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;

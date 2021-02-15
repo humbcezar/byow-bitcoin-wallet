@@ -2,8 +2,16 @@ package byow.bitcoinwallet.services;
 
 import byow.bitcoinwallet.entities.NextChangeAddress;
 import byow.bitcoinwallet.entities.ReceivingAddress;
-import byow.bitcoinwallet.entities.WallyTransaction;
+import byow.bitcoinwallet.entities.wally.WallyTransaction;
 import byow.bitcoinwallet.entities.Wallet;
+import byow.bitcoinwallet.services.address.AddressGenerator;
+import byow.bitcoinwallet.services.gui.CurrentReceivingAddresses;
+import byow.bitcoinwallet.services.address.DefaultKeyGenerator;
+import byow.bitcoinwallet.services.address.SeedGenerator;
+import byow.bitcoinwallet.services.gui.CurrentWallet;
+import byow.bitcoinwallet.services.transaction.CoinSelector;
+import byow.bitcoinwallet.services.transaction.FeeEstimator;
+import byow.bitcoinwallet.services.transaction.TransactionCreator;
 import byow.bitcoinwallet.utils.UnspentUtil;
 import net.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Test;
@@ -16,7 +24,7 @@ import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Unspent;
 import java.math.BigDecimal;
 import java.util.List;
 
-import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
+import static byow.bitcoinwallet.services.address.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
 import static java.math.BigDecimal.ZERO;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.verify;
@@ -50,13 +58,13 @@ public class TransactionCreatorTest {
     private UtxosGetter utxosGetter;
 
     @MockBean
-    private CurrentWalletManager currentWalletManager;
-
-    @MockBean
     private NextChangeAddress nextChangeAddress;
 
     @MockBean
     private CurrentReceivingAddresses currentReceivingAddresses;
+
+    @MockBean
+    private CurrentWallet currentWallet;
 
     @Test
     public void createOneTransaction() {
@@ -73,7 +81,7 @@ public class TransactionCreatorTest {
         ReceivingAddress receivingAddress = new ReceivingAddress(utxo.amount(), utxo.confirmations(), utxo.address());
         when(currentReceivingAddresses.getReceivingAddress(unspentAddress)).thenReturn(receivingAddress);
         Wallet wallet = new Wallet("test", seed2);
-        when(currentWalletManager.getCurrentWallet()).thenReturn(wallet);
+        when(currentWallet.getCurrentWallet()).thenReturn(wallet);
         ReceivingAddress changeReceivingAddress = new ReceivingAddress(ZERO, 0, changeAddress);
         when(nextChangeAddress.getValue()).thenReturn(changeReceivingAddress);
         when(feeEstimator.estimate()).thenReturn(new BigDecimal("0.0002"));

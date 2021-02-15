@@ -1,6 +1,6 @@
 package byow.bitcoinwallet.guitests;
 
-import byow.bitcoinwallet.services.SeedGenerator;
+import byow.bitcoinwallet.services.address.SeedGenerator;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;

@@ -1,6 +1,6 @@
 package byow.bitcoinwallet.entities;
 
-import byow.bitcoinwallet.services.DerivationPath;
+import byow.bitcoinwallet.services.address.DerivationPath;
 import javafx.beans.property.*;
 import javafx.util.converter.BigDecimalStringConverter;
 

@@ -1,6 +1,6 @@
 package byow.bitcoinwallet.controllers;
 
-import byow.bitcoinwallet.services.SeedGenerator;
+import byow.bitcoinwallet.services.address.SeedGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

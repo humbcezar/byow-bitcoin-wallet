@@ -1,7 +1,8 @@
 package byow.bitcoinwallet.controllers;
 
-import byow.bitcoinwallet.services.CurrentWalletManager;
-import byow.bitcoinwallet.services.WalletsMenuManager;
+import byow.bitcoinwallet.services.gui.CurrentWallet;
+import byow.bitcoinwallet.services.wallet.CurrentWalletManager;
+import byow.bitcoinwallet.services.wallet.WalletsMenuManager;
 import byow.bitcoinwallet.tasks.NodeMonitorTask;
 import javafx.application.Platform;
 import javafx.collections.SetChangeListener;
@@ -47,7 +48,7 @@ public class MainController {
     private WalletsMenuManager walletsMenuManager;
 
     @Autowired
-    private CurrentWalletManager currentWalletManager;
+    private CurrentWallet currentWallet;
 
     @Autowired
     private NodeMonitorTask nodeMonitorTask;
@@ -64,13 +65,13 @@ public class MainController {
                 }
             )
         );
-        currentWalletManager.walletNameProperty().addListener((observable, oldValue, newValue) -> Platform.runLater(() -> {
+        currentWallet.walletNameProperty().addListener((observable, oldValue, newValue) -> Platform.runLater(() -> {
                 Stage stage = (Stage) borderPane.getScene().getWindow();
                 stage.setTitle("BYOW Wallet - ".concat(newValue));
             })
         );
         walletsMenuManager.load();
-        Thread thread = new Thread(nodeMonitorTask.getTask());
+        Thread thread = new Thread(nodeMonitorTask.buildTask());
         thread.setDaemon(true);
         thread.start();
         nodeMonitorTask.subscribe();

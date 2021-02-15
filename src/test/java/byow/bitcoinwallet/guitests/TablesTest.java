@@ -2,7 +2,7 @@ package byow.bitcoinwallet.guitests;
 
 import byow.bitcoinwallet.entities.*;
 import byow.bitcoinwallet.repositories.WalletRepository;
-import byow.bitcoinwallet.services.*;
+import byow.bitcoinwallet.services.address.*;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
@@ -22,7 +22,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static byow.bitcoinwallet.services.DerivationPath.*;
+import static byow.bitcoinwallet.services.address.DerivationPath.*;
 import static java.util.stream.IntStream.range;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -62,17 +62,12 @@ public class TablesTest extends TestBase {
     private AddressSequentialGenerator nestedSegwitAddressSequentialGenerator;
 
     @Autowired
-    private DefaultAddressUpdater defaultAddressUpdater;
-
-    @Autowired
-    private NestedSegwitAddressUpdater nestedSegwitAddressUpdater;
-
-    @Autowired
-    private DefaultChangeAddressUpdater defaultChangeAddressUpdater;
+    private MultiAddressUpdater multiAddressUpdater;
 
     private String seed;
 
     private String walletName;
+
 
     @Override
     @Start
@@ -123,16 +118,14 @@ public class TablesTest extends TestBase {
 
     @Test
     public void showThreeAddressesWithPositiveValueWithVaryingTransactionsWithChangeAddresses(FxRobot robot) throws TimeoutException {
-        defaultChangeAddressUpdater.setInitialAddressToMonitor(20);
-        defaultAddressUpdater.setInitialAddressToMonitor(20);
-        nestedSegwitAddressUpdater.setInitialAddressToMonitor(20);
+        multiAddressUpdater.setInitialAddressToMonitor(20);
 
         int numberOfReceivingAddresses = 3;
 
         List<String> addresses = defaultAddressSequentialGenerator.deriveAddresses(
                 numberOfReceivingAddresses,
                 seed, FIRST_BIP84_CHANGE_PATH
-        ).stream().map(Address::getAddress).collect(Collectors.toList());
+        ).stream().map(AddressPath::getAddress).collect(Collectors.toList());
         String fromAddress = bitcoindRpcClient.getNewAddress();
 
         List<String> txIds = new ArrayList<>();
@@ -232,16 +225,14 @@ public class TablesTest extends TestBase {
 
     @Test
     public void showThreeAddressesWithPositiveValueWithVaryingTransactions(FxRobot robot) throws TimeoutException {
-        defaultChangeAddressUpdater.setInitialAddressToMonitor(20);
-        defaultAddressUpdater.setInitialAddressToMonitor(20);
-        nestedSegwitAddressUpdater.setInitialAddressToMonitor(20);
+        multiAddressUpdater.setInitialAddressToMonitor(20);
 
         int numberOfReceivingAddresses = 3;
 
         List<String> addresses = defaultAddressSequentialGenerator.deriveAddresses(
                 numberOfReceivingAddresses,
                 seed, FIRST_BIP84_ADDRESS_PATH
-        ).stream().map(Address::getAddress).collect(Collectors.toList());
+        ).stream().map(AddressPath::getAddress).collect(Collectors.toList());
         String fromAddress = bitcoindRpcClient.getNewAddress();
         List<String> txIds = new ArrayList<>();
         List<Integer> expectedConfirmations = List.of(11, 11, 10, 9, 9, 9, 8, 7, 6, 5);
@@ -349,7 +340,7 @@ public class TablesTest extends TestBase {
                 numberOfReceivingAddresses,
                 seed,
                 firstDerivationPath
-        ).stream().map(Address::getAddress).collect(Collectors.toList());
+        ).stream().map(AddressPath::getAddress).collect(Collectors.toList());
 
         List<String> txIds = new ArrayList<>();
         addresses.forEach(address -> txIds.add(bitcoindRpcClient.sendToAddress(address, BigDecimal.ONE)));

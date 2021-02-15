@@ -1,6 +1,6 @@
 package byow.bitcoinwallet.controllers;
 
-import byow.bitcoinwallet.services.WalletCreator;
+import byow.bitcoinwallet.services.wallet.WalletCreator;
 import javafx.beans.binding.BooleanBinding;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextArea;

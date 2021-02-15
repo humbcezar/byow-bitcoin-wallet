@@ -1,6 +1,7 @@
 package byow.bitcoinwallet.services;
 
-import byow.bitcoinwallet.entities.Address;
+import byow.bitcoinwallet.entities.AddressPath;
+import byow.bitcoinwallet.services.address.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -10,7 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static byow.bitcoinwallet.services.DerivationPath.*;
+import static byow.bitcoinwallet.services.address.DerivationPath.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
@@ -38,7 +39,7 @@ public class AddressSequentialGeneratorTest {
                 5,
                 seed,
                 FIRST_BIP84_ADDRESS_PATH
-        ).stream().map(Address::getAddress).collect(Collectors.toList());
+        ).stream().map(AddressPath::getAddress).collect(Collectors.toList());
         assertArrayEquals(expectedAddresses(seed, 5, FIRST_BIP84_ADDRESS_PATH, defaultAddressGenerator), addresses.toArray());
     }
 
@@ -49,7 +50,7 @@ public class AddressSequentialGeneratorTest {
                 5,
                 seed,
                 FIRST_BIP49_ADDRESS_PATH
-        ).stream().map(Address::getAddress).collect(Collectors.toList());
+        ).stream().map(AddressPath::getAddress).collect(Collectors.toList());
         assertArrayEquals(expectedAddresses(seed, 5, FIRST_BIP49_ADDRESS_PATH, nestedSegwitAddressGenerator), addresses.toArray());
     }
 

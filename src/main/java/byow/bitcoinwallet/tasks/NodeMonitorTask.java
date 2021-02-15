@@ -4,33 +4,42 @@ import byow.bitcoinwallet.events.BlockReceivedEvent;
 import byow.bitcoinwallet.events.TransactionReceivedEvent;
 import javafx.concurrent.Task;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
-import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.Socket;
-import wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient;
-import java.util.Set;
 
-import static com.blockstream.libwally.Wally.*;
-import static wf.bitcoin.krotjson.HexCoder.encode;
+import static com.blockstream.libwally.Wally.WALLY_TX_FLAG_USE_WITNESS;
+import static com.blockstream.libwally.Wally.tx_from_bytes;
+import static java.lang.Thread.currentThread;
+import static java.util.Set.of;
+import static org.zeromq.ZMQ.DONTWAIT;
 
 @Component
 @Lazy
 public class NodeMonitorTask {
 
-    @Autowired
-    private BitcoinJSONRPCClient bitcoindRpcClient;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
-    @Autowired
-    private ApplicationEventPublisher applicationEventPublisher;
+    private final Socket subscriber;
 
-    @Autowired
-    private Socket subscriber;
+    private final String zmqUrl;
 
     private NodeTask currentTask;
 
-    public NodeTask getTask() {
+    @Autowired
+    public NodeMonitorTask(
+        ApplicationEventPublisher applicationEventPublisher,
+        Socket subscriber,
+        @Value("${zmq.url}") String zmqUrl
+    ) {
+        this.applicationEventPublisher = applicationEventPublisher;
+        this.subscriber = subscriber;
+        this.zmqUrl = zmqUrl;
+    }
+
+    public NodeTask buildTask() {
         currentTask = new NodeTask();
         currentTask.setOnFailed(event -> {
             try {
@@ -40,46 +49,6 @@ public class NodeMonitorTask {
             }
         });
         return currentTask;
-    }
-
-    public void cancel() {
-        if (currentTask != null && !currentTask.isCancelled()) {
-            currentTask.cancel();
-        }
-    }
-
-    class NodeTask extends Task<Void> {
-        @Override
-        protected Void call() {
-            subscriber.connect("tcp://127.0.0.1:29000");
-
-            while (!Thread.currentThread().isInterrupted()) {
-                if (isCancelled()) {
-                    break;
-                }
-                byte[] contents = null;
-                String topic;
-                synchronized (subscriber) {
-                    topic = subscriber.recvStr(ZMQ.DONTWAIT);
-                    if (topic == null || !Set.of("rawtx", "hashblock").contains(topic)) {
-                        continue;
-                    }
-                    contents = subscriber.recv(ZMQ.DONTWAIT);
-                }
-
-                switch (topic) {
-                    case "rawtx" -> {
-                        applicationEventPublisher.publishEvent(
-                            new TransactionReceivedEvent(this, tx_from_hex(encode(contents), WALLY_TX_FLAG_USE_WITNESS))
-                        );
-                    }
-                    case "hashblock" -> {
-                        applicationEventPublisher.publishEvent(new BlockReceivedEvent(this));
-                    }
-                }
-            }
-            return null;
-        }
     }
 
     public void subscribe() {
@@ -94,5 +63,41 @@ public class NodeMonitorTask {
             subscriber.close();
         }
         cancel();
+    }
+
+    private void cancel() {
+        if (currentTask != null && !currentTask.isCancelled()) {
+            currentTask.cancel();
+        }
+    }
+
+    class NodeTask extends Task<Void> {
+        @Override
+        protected Void call() {
+            subscriber.connect(zmqUrl);
+
+            while (!currentThread().isInterrupted()) {
+                if (isCancelled()) {
+                    break;
+                }
+                byte[] contents;
+                String topic;
+                synchronized (subscriber) {
+                    topic = subscriber.recvStr(DONTWAIT);
+                    if (topic == null || !of("rawtx", "hashblock").contains(topic)) {
+                        continue;
+                    }
+                    contents = subscriber.recv(DONTWAIT);
+                }
+
+                switch (topic) {
+                    case "rawtx" -> applicationEventPublisher.publishEvent(
+                        new TransactionReceivedEvent(this, tx_from_bytes(contents, WALLY_TX_FLAG_USE_WITNESS))
+                    );
+                    case "hashblock" -> applicationEventPublisher.publishEvent(new BlockReceivedEvent(this));
+                }
+            }
+            return null;
+        }
     }
 }

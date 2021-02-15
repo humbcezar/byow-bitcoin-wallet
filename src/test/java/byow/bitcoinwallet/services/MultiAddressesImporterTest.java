@@ -1,5 +1,8 @@
 package byow.bitcoinwallet.services;
 
+import byow.bitcoinwallet.services.address.AddressGenerator;
+import byow.bitcoinwallet.services.address.MultiAddressesImporter;
+import byow.bitcoinwallet.services.address.SeedGenerator;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +15,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
+import static byow.bitcoinwallet.services.address.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
 
 @SpringBootTest
 public class MultiAddressesImporterTest {

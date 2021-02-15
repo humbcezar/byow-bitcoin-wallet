@@ -1,10 +1,11 @@
 package byow.bitcoinwallet.listeners;
 
 import byow.bitcoinwallet.events.WalletCreatedEvent;
-import byow.bitcoinwallet.services.CurrentTransactions;
-import byow.bitcoinwallet.services.CurrentWalletManager;
-import byow.bitcoinwallet.services.WalletsMenuManager;
-import byow.bitcoinwallet.services.TaskConfigurer;
+import byow.bitcoinwallet.services.gui.CurrentTransactions;
+import byow.bitcoinwallet.services.gui.CurrentWallet;
+import byow.bitcoinwallet.services.wallet.CurrentWalletManager;
+import byow.bitcoinwallet.services.wallet.WalletsMenuManager;
+import byow.bitcoinwallet.tasks.TaskConfigurer;
 import byow.bitcoinwallet.tasks.UpdateCurrentWalletTask;
 import javafx.concurrent.Task;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,20 +21,34 @@ import static javafx.concurrent.WorkerStateEvent.WORKER_STATE_SUCCEEDED;
 @Component
 public class WalletCreatedListener implements ApplicationListener<WalletCreatedEvent> {
 
-    @Autowired
-    WalletsMenuManager walletsMenuManager;
+    private final WalletsMenuManager walletsMenuManager;
+
+    private final CurrentWalletManager currentWalletManager;
+
+    private final ReentrantLock reentrantLock;
+
+    private final TaskConfigurer taskConfigurer;
+
+    private final CurrentTransactions currentTransactions;
+
+    private final CurrentWallet currentWallet;
 
     @Autowired
-    private CurrentWalletManager currentWalletManager;
-
-    @Autowired
-    private ReentrantLock reentrantLock;
-
-    @Autowired
-    private TaskConfigurer taskConfigurer;
-
-    @Autowired
-    private CurrentTransactions currentTransactions;
+    public WalletCreatedListener(
+        WalletsMenuManager walletsMenuManager,
+        CurrentWalletManager currentWalletManager,
+        ReentrantLock reentrantLock,
+        TaskConfigurer taskConfigurer,
+        CurrentTransactions currentTransactions,
+        CurrentWallet currentWallet
+    ) {
+        this.walletsMenuManager = walletsMenuManager;
+        this.currentWalletManager = currentWalletManager;
+        this.reentrantLock = reentrantLock;
+        this.taskConfigurer = taskConfigurer;
+        this.currentTransactions = currentTransactions;
+        this.currentWallet = currentWallet;
+    }
 
     @Override
     public void onApplicationEvent(WalletCreatedEvent event) {
@@ -47,7 +62,7 @@ public class WalletCreatedListener implements ApplicationListener<WalletCreatedE
             "Loading wallet..."
         );
         task.addEventFilter(WORKER_STATE_SUCCEEDED, succeededEvent ->
-            currentWalletManager.setWalletName(event.getWallet().getName())
+            currentWallet.setWalletName(event.getWallet().getName())
         );
         return task;
     }

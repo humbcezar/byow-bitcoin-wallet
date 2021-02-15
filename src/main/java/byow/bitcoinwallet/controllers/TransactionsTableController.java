@@ -1,7 +1,7 @@
 package byow.bitcoinwallet.controllers;
 
 import byow.bitcoinwallet.entities.TransactionRow;
-import byow.bitcoinwallet.services.CurrentTransactions;
+import byow.bitcoinwallet.services.gui.CurrentTransactions;
 import javafx.fxml.FXML;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;

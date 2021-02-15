@@ -1,6 +1,6 @@
 package byow.bitcoinwallet.controllers;
 
-import byow.bitcoinwallet.services.TotalBalanceCalculator;
+import byow.bitcoinwallet.services.wallet.TotalBalanceCalculator;
 import javafx.scene.control.Label;
 import javafx.util.converter.BigDecimalStringConverter;
 import org.springframework.beans.factory.annotation.Autowired;

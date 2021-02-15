@@ -1,7 +1,7 @@
 package byow.bitcoinwallet.tasks;
 
-import byow.bitcoinwallet.entities.WallyTransaction;
-import byow.bitcoinwallet.services.SendTransactionService;
+import byow.bitcoinwallet.entities.wally.WallyTransaction;
+import byow.bitcoinwallet.services.transaction.SendTransactionService;
 import javafx.concurrent.Task;
 
 import java.util.concurrent.locks.ReentrantLock;

@@ -1,22 +1,55 @@
 package byow.bitcoinwallet.entities;
 
-import byow.bitcoinwallet.services.DerivationPath;
+import javax.persistence.*;
+import java.util.List;
+import java.util.Objects;
 
+@Entity
+@Table(name = "address")
 public class Address {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private long id;
+
+    @Column(name = "address", unique = true)
     private String address;
 
-    private DerivationPath derivationPath;
+    @OneToMany(mappedBy = "address")
+    private List<TransactionInput> transactionInputs;
 
-    public Address(String address, DerivationPath derivationPath) {
+    @OneToMany(mappedBy = "address")
+    private List<TransactionOutput> transactionOutputs;
+
+    public Address() {
+    }
+
+    public Address(String address) {
         this.address = address;
-        this.derivationPath = derivationPath;
     }
 
     public String getAddress() {
         return address;
     }
 
-    public DerivationPath getDerivationPath() {
-        return derivationPath;
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Address address1 = (Address) o;
+        return getAddress().equals(address1.getAddress());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getAddress());
     }
 }

@@ -1,6 +1,6 @@
 package byow.bitcoinwallet.controllers;
 
-import byow.bitcoinwallet.entities.WallyTransaction;
+import byow.bitcoinwallet.entities.wally.WallyTransaction;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import org.springframework.stereotype.Component;

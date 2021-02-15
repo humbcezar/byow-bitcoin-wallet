@@ -4,6 +4,7 @@ import javax.persistence.*;
 
 import java.util.Objects;
 
+import static javax.persistence.FetchType.EAGER;
 import static javax.persistence.FetchType.LAZY;
 
 @Entity
@@ -14,8 +15,9 @@ public class TransactionInput {
     @Column(name = "id")
     private long id;
 
-    @Column
-    private String address;
+    @ManyToOne(fetch = EAGER)
+    @JoinColumn(name = "address_id")
+    private Address address;
 
     @Column
     private Long satoshis;
@@ -27,9 +29,17 @@ public class TransactionInput {
     public TransactionInput() {
     }
 
-    public TransactionInput(String address, Long satoshis) {
+    public TransactionInput(Address address, Long satoshis) {
         this.address = address;
         this.satoshis = satoshis;
+    }
+
+    public Long getSatoshis() {
+        return satoshis;
+    }
+
+    public Address getAddress() {
+        return address;
     }
 
     @Override
@@ -37,15 +47,11 @@ public class TransactionInput {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TransactionInput that = (TransactionInput) o;
-        return id == that.id && address.equals(that.address) && satoshis.equals(that.satoshis);
+        return getAddress().equals(that.getAddress()) && getSatoshis().equals(that.getSatoshis());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, address, satoshis);
-    }
-
-    public Long getSatoshis() {
-        return satoshis;
+        return Objects.hash(getAddress(), getSatoshis());
     }
 }

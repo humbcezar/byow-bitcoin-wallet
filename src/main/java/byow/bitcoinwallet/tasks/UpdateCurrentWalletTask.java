@@ -1,13 +1,11 @@
 package byow.bitcoinwallet.tasks;
 
 import byow.bitcoinwallet.entities.Wallet;
-import byow.bitcoinwallet.services.CurrentTransactions;
-import byow.bitcoinwallet.services.CurrentWalletManager;
+import byow.bitcoinwallet.services.gui.CurrentTransactions;
+import byow.bitcoinwallet.services.wallet.CurrentWalletManager;
 import javafx.concurrent.Task;
 
 import java.util.concurrent.locks.ReentrantLock;
-
-import static javafx.application.Platform.runLater;
 
 public class UpdateCurrentWalletTask extends Task<Void> {
     private CurrentWalletManager currentWalletManager;
@@ -34,7 +32,7 @@ public class UpdateCurrentWalletTask extends Task<Void> {
     protected Void call() {
         synchronized (reentrantLock) {
             currentWalletManager.updateCurrentWallet(wallet);
-            runLater(() -> currentTransactions.update(wallet));
+            currentTransactions.update(wallet);
         }
         return null;
     }

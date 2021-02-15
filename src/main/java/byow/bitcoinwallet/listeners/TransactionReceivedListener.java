@@ -1,9 +1,9 @@
 package byow.bitcoinwallet.listeners;
 
 import byow.bitcoinwallet.events.TransactionReceivedEvent;
-import byow.bitcoinwallet.services.CurrentWalletManager;
-import byow.bitcoinwallet.services.TransactionUpdater;
-import byow.bitcoinwallet.services.TaskConfigurer;
+import byow.bitcoinwallet.services.gui.CurrentWallet;
+import byow.bitcoinwallet.services.transaction.TransactionUpdater;
+import byow.bitcoinwallet.tasks.TaskConfigurer;
 import byow.bitcoinwallet.tasks.UpdateTransactionTask;
 import javafx.concurrent.Task;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,21 +16,30 @@ import java.util.concurrent.locks.ReentrantLock;
 @Component
 @Lazy
 public class TransactionReceivedListener implements ApplicationListener<TransactionReceivedEvent> {
-    @Autowired
-    private TransactionUpdater transactionUpdater;
+    private final TransactionUpdater transactionUpdater;
+
+    private final ReentrantLock reentrantLock;
+
+    private final TaskConfigurer taskConfigurer;
+
+    private final CurrentWallet currentWallet;
 
     @Autowired
-    private ReentrantLock reentrantLock;
-
-    @Autowired
-    private TaskConfigurer taskConfigurer;
-
-    @Autowired
-    private CurrentWalletManager currentWalletManager;
+    public TransactionReceivedListener(
+        TransactionUpdater transactionUpdater,
+        ReentrantLock reentrantLock,
+        TaskConfigurer taskConfigurer,
+        CurrentWallet currentWallet
+    ) {
+        this.transactionUpdater = transactionUpdater;
+        this.reentrantLock = reentrantLock;
+        this.taskConfigurer = taskConfigurer;
+        this.currentWallet = currentWallet;
+    }
 
     @Override
     public void onApplicationEvent(TransactionReceivedEvent event) {
-        if (currentWalletManager.getCurrentWallet() != null) {
+        if (currentWallet.getCurrentWallet() != null) {
             new Thread(buildTask(event)).start();
         }
     }

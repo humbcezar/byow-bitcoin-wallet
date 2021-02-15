@@ -1,9 +1,9 @@
 package byow.bitcoinwallet;
 
 import byow.bitcoinwallet.enums.Languages;
-import byow.bitcoinwallet.services.AddressSequentialGenerator;
-import byow.bitcoinwallet.services.DefaultAddressGenerator;
-import byow.bitcoinwallet.services.NestedSegwitAddressGenerator;
+import byow.bitcoinwallet.services.address.AddressSequentialGenerator;
+import byow.bitcoinwallet.services.address.DefaultAddressGenerator;
+import byow.bitcoinwallet.services.address.NestedSegwitAddressGenerator;
 import com.blockstream.libwally.Wally;
 import javafx.application.Application;
 import javafx.util.converter.BigDecimalStringConverter;

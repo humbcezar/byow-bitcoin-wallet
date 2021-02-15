@@ -14,8 +14,9 @@ public class TransactionOutput {
     @Column(name = "id")
     private long id;
 
-    @Column
-    private String address;
+    @ManyToOne(fetch = EAGER)
+    @JoinColumn(name = "address_id")
+    private Address address;
 
     @Column
     private Long satoshis;
@@ -24,7 +25,7 @@ public class TransactionOutput {
     @JoinColumn(name = "transaction_id")
     private Transaction transaction;
 
-    public TransactionOutput(String address, Long satoshis) {
+    public TransactionOutput(Address address, Long satoshis) {
         this.address = address;
         this.satoshis = satoshis;
     }
@@ -32,20 +33,24 @@ public class TransactionOutput {
     public TransactionOutput() {
     }
 
+    public Long getSatoshis() {
+        return satoshis;
+    }
+
+    public Address getAddress() {
+        return address;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TransactionOutput that = (TransactionOutput) o;
-        return address.equals(that.address) && satoshis.equals(that.satoshis);
+        return getAddress().equals(that.getAddress()) && getSatoshis().equals(that.getSatoshis());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(address, satoshis);
-    }
-
-    public Long getSatoshis() {
-        return satoshis;
+        return Objects.hash(getAddress(), getSatoshis());
     }
 }

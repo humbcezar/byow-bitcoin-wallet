@@ -2,10 +2,10 @@ package byow.bitcoinwallet.guitests;
 
 import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.entities.TransactionRow;
-import byow.bitcoinwallet.services.AddressGenerator;
-import byow.bitcoinwallet.services.NestedSegwitAddressGenerator;
-import byow.bitcoinwallet.services.SeedGenerator;
-import byow.bitcoinwallet.services.TotalBalanceCalculator;
+import byow.bitcoinwallet.services.address.AddressGenerator;
+import byow.bitcoinwallet.services.address.NestedSegwitAddressGenerator;
+import byow.bitcoinwallet.services.address.SeedGenerator;
+import byow.bitcoinwallet.services.wallet.TotalBalanceCalculator;
 import byow.bitcoinwallet.utils.WalletUtil;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableView;
@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import static byow.bitcoinwallet.services.DerivationPath.*;
+import static byow.bitcoinwallet.services.address.DerivationPath.*;
 import static java.lang.Integer.MAX_VALUE;
 import static java.math.BigDecimal.*;
 import static java.math.RoundingMode.FLOOR;

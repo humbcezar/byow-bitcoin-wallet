@@ -1,13 +1,11 @@
 package byow.bitcoinwallet.tasks;
 
 import byow.bitcoinwallet.entities.Wallet;
-import byow.bitcoinwallet.services.CurrentReceivingAddressesUpdater;
-import byow.bitcoinwallet.services.CurrentTransactions;
+import byow.bitcoinwallet.services.address.CurrentReceivingAddressesUpdater;
+import byow.bitcoinwallet.services.gui.CurrentTransactions;
 import byow.bitcoinwallet.services.UtxosGetter;
 import javafx.concurrent.Task;
 import java.util.concurrent.locks.ReentrantLock;
-
-import static javafx.application.Platform.runLater;
 
 public class UpdateReceivingAddressesTask extends Task<Void> {
     private CurrentReceivingAddressesUpdater currentReceivingAddressesUpdater;
@@ -38,7 +36,7 @@ public class UpdateReceivingAddressesTask extends Task<Void> {
     protected Void call() {
         synchronized (reentrantLock) {
             currentReceivingAddressesUpdater.updateReceivingAddresses(utxosGetter.getUtxos());
-            runLater(() -> currentTransactions.update(wallet));
+            currentTransactions.update(wallet);
         }
         return null;
     }

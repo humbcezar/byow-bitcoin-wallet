@@ -2,6 +2,10 @@ package byow.bitcoinwallet.services;
 
 import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.repositories.WalletRepository;
+import byow.bitcoinwallet.services.address.DefaultAddressGenerator;
+import byow.bitcoinwallet.services.address.DefaultKeyGenerator;
+import byow.bitcoinwallet.services.address.DerivationPath;
+import byow.bitcoinwallet.services.wallet.WalletCreator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -14,7 +18,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.util.stream.Stream;
 
-import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
+import static byow.bitcoinwallet.services.address.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.MockitoAnnotations.initMocks;
 

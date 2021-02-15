@@ -1,8 +1,8 @@
 package byow.bitcoinwallet.guitests;
 
 import byow.bitcoinwallet.entities.ReceivingAddress;
-import byow.bitcoinwallet.services.AddressGenerator;
-import byow.bitcoinwallet.services.SeedGenerator;
+import byow.bitcoinwallet.services.address.AddressGenerator;
+import byow.bitcoinwallet.services.address.SeedGenerator;
 import byow.bitcoinwallet.utils.WalletUtil;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -19,7 +19,7 @@ import java.math.BigDecimal;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static byow.bitcoinwallet.services.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
+import static byow.bitcoinwallet.services.address.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ReceivingHashBlockTest extends TestBase {

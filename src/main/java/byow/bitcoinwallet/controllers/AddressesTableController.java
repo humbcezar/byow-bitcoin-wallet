@@ -1,7 +1,7 @@
 package byow.bitcoinwallet.controllers;
 
 import byow.bitcoinwallet.entities.ReceivingAddress;
-import byow.bitcoinwallet.services.CurrentReceivingAddresses;
+import byow.bitcoinwallet.services.gui.CurrentReceivingAddresses;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.TableColumn;

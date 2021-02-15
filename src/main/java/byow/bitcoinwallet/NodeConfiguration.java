@@ -6,8 +6,6 @@ import org.springframework.context.annotation.Configuration;
 import wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
 
-import java.net.URL;
-
 import static com.blockstream.libwally.Wally.*;
 import static wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient.*;
 

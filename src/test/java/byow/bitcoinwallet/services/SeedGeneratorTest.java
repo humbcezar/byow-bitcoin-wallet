@@ -1,6 +1,7 @@
 package byow.bitcoinwallet.services;
 
 import byow.bitcoinwallet.enums.Languages;
+import byow.bitcoinwallet.services.address.SeedGenerator;
 import com.blockstream.libwally.Wally;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

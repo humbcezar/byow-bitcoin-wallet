@@ -1,8 +1,13 @@
 package byow.bitcoinwallet.controllers;
 
-import byow.bitcoinwallet.entities.WallyTransaction;
-import byow.bitcoinwallet.services.*;
+import byow.bitcoinwallet.entities.wally.WallyTransaction;
+import byow.bitcoinwallet.services.transaction.DustCalculator;
+import byow.bitcoinwallet.services.transaction.SendTransactionService;
+import byow.bitcoinwallet.services.transaction.TransactionCreator;
+import byow.bitcoinwallet.services.transaction.TransactionSaver;
+import byow.bitcoinwallet.services.wallet.TotalBalanceCalculator;
 import byow.bitcoinwallet.tasks.SendTransactionTask;
+import byow.bitcoinwallet.tasks.TaskConfigurer;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;

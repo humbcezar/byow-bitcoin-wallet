@@ -1,7 +1,7 @@
 package byow.bitcoinwallet.guitests;
 
-import byow.bitcoinwallet.services.SeedGenerator;
-import byow.bitcoinwallet.services.WalletCreator;
+import byow.bitcoinwallet.services.address.SeedGenerator;
+import byow.bitcoinwallet.services.wallet.WalletCreator;
 import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 import org.hamcrest.MatcherAssert;

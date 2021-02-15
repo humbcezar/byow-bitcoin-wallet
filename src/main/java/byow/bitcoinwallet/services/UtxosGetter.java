@@ -1,5 +1,6 @@
 package byow.bitcoinwallet.services;
 
+import byow.bitcoinwallet.services.gui.CurrentReceivingAddresses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
