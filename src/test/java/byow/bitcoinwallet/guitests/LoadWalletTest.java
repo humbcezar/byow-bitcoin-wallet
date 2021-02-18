@@ -3,47 +3,108 @@ package byow.bitcoinwallet.guitests;
 import byow.bitcoinwallet.services.address.SeedGenerator;
 import byow.bitcoinwallet.services.wallet.WalletCreator;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
+import org.testfx.service.query.NodeQuery;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.internal.bytebuddy.utility.RandomString.make;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.testfx.matcher.control.TableViewMatchers.containsRowAtIndex;
 import static org.testfx.util.WaitForAsyncUtils.waitFor;
 
 public class LoadWalletTest extends TestBase {
 
+    private static final long TIMEOUT = 40;
     @Autowired
     private WalletCreator walletCreator;
 
     @Autowired
     private SeedGenerator seedGenerator;
 
+    private String password;
+
+    private String testWallet;
+
+    private String testWalletWithPassword;
+
     @Override
     @Start
     public void start(Stage stage) throws Exception {
         super.start(stage);
-        walletCreator.create("testwallet", seedGenerator.generateMnemonicSeed(), "");
+        testWallet = make();
+        testWalletWithPassword = make();
+        walletCreator.create(testWallet, seedGenerator.generateMnemonicSeed(), "");
+        password = make();
+        walletCreator.create(testWalletWithPassword, seedGenerator.generateMnemonicSeed(), password);
     }
 
     @Test
     public void loadWallet(FxRobot robot) throws TimeoutException {
         robot.clickOn("#wallet");
         robot.moveTo("#load");
-        robot.clickOn("testwallet");
+        robot.clickOn(testWallet);
+        robot.clickOn("OK");
         waitFor(40, SECONDS, () ->
-                "BYOW Wallet - testwallet".equals(stage.getTitle())
+                "BYOW Wallet - ".concat(testWallet).equals(stage.getTitle())
         );
-        assertEquals("BYOW Wallet - testwallet", stage.getTitle());
+        assertEquals("BYOW Wallet - ".concat(testWallet), stage.getTitle());
         final TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
         MatcherAssert.assertThat(tableView, is(not(containsRowAtIndex(0))));
+
+        robot.clickOn("Receive");
+        waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
+            String nextAddress = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+            return !nextAddress.isEmpty();
+        });
+        String nextAddress = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+        assertFalse(nextAddress.isEmpty());
+    }
+
+    @Test
+    public void loadWalletWithPassword(FxRobot robot) throws TimeoutException {
+        robot.clickOn("#wallet");
+        robot.moveTo("#load");
+        robot.clickOn(testWalletWithPassword);
+        robot.clickOn("#loadWalletPassword");
+        robot.write(password);
+        robot.clickOn("OK");
+        waitFor(40, SECONDS, () ->
+            "BYOW Wallet - ".concat(testWalletWithPassword).equals(stage.getTitle())
+        );
+        assertEquals("BYOW Wallet - ".concat(testWalletWithPassword), stage.getTitle());
+        final TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
+        MatcherAssert.assertThat(tableView, is(not(containsRowAtIndex(0))));
+
+        robot.clickOn("Receive");
+        waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
+            String nextAddress = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+            return !nextAddress.isEmpty();
+        });
+        String nextAddress = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+        assertFalse(nextAddress.isEmpty());
+    }
+
+    @Test
+    public void loadWalletWithWrongPasswordFail(FxRobot robot) throws TimeoutException {
+        robot.clickOn("#wallet");
+        robot.moveTo("#load");
+        robot.clickOn(testWalletWithPassword);
+        robot.clickOn("#loadWalletPassword");
+        robot.write("gibberish");
+        robot.clickOn("OK");
+        NodeQuery text = robot.lookup("Wrong password.");
+        robot.clickOn("OK");
+        assertNotNull(text.queryLabeled().getText());
     }
 }

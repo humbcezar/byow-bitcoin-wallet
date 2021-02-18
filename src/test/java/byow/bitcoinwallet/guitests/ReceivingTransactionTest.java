@@ -10,7 +10,6 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import javafx.util.converter.BigDecimalStringConverter;
-import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -26,6 +25,7 @@ import java.util.stream.Collectors;
 
 import static byow.bitcoinwallet.services.address.DerivationPath.*;
 import static java.util.stream.IntStream.range;
+import static org.assertj.core.internal.bytebuddy.utility.RandomString.make;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.testfx.matcher.control.TableViewMatchers.containsRow;
@@ -70,26 +70,27 @@ public class ReceivingTransactionTest extends TestBase {
 
     @Test
     public void receiveOneTransaction(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
-        receiveNTransactions(robot, mnemonicSeed, 1, FIRST_BIP84_ADDRESS_PATH, defaultAddressGenerator, "#receivingAddress", addressSequentialGenerator);
+        String mnemonicSeed = walletUtil.createWallet(robot, make(), "");
+        receiveNTransactions(robot, mnemonicSeed, 1, FIRST_BIP84_ADDRESS_PATH, defaultAddressGenerator, "#receivingAddress", addressSequentialGenerator, "");
     }
 
     @Test
     public void receiveSixTransactions(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
-        receiveNTransactions(robot, mnemonicSeed, 6, FIRST_BIP84_ADDRESS_PATH, defaultAddressGenerator, "#receivingAddress", addressSequentialGenerator);
+        String password = make();
+        String mnemonicSeed = walletUtil.createWallet(robot, make(), password);
+        receiveNTransactions(robot, mnemonicSeed, 6, FIRST_BIP84_ADDRESS_PATH, defaultAddressGenerator, "#receivingAddress", addressSequentialGenerator, password);
     }
 
     @Test
     public void receiveSixSequentialTransactionsToTheSameAddress(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
+        String mnemonicSeed = walletUtil.createWallet(robot, make(), "");
         int numberOfTransactions = 6;
         receiveNSequentialTransactions(robot, mnemonicSeed, numberOfTransactions);
     }
 
     @Test
     public void receiveFiveSequentialTransactionsToTheSameAddressWithDifferentValuesAndConfirmations(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
+        String mnemonicSeed = walletUtil.createWallet(robot, make(), "");
 
         waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
             TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
@@ -119,7 +120,7 @@ public class ReceivingTransactionTest extends TestBase {
 
     @Test
     public void receiveTransactionNextAddressUsed(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
+        String mnemonicSeed = walletUtil.createWallet(robot, make(), "");
 
         waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
             TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
@@ -146,7 +147,7 @@ public class ReceivingTransactionTest extends TestBase {
 
     @Test
     public void receiveSixTransactionToNestedSegwitAddress(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
+        String mnemonicSeed = walletUtil.createWallet(robot, make(), "");
         receiveNTransactions(
                 robot,
                 mnemonicSeed,
@@ -154,13 +155,13 @@ public class ReceivingTransactionTest extends TestBase {
                 FIRST_BIP49_ADDRESS_PATH,
                 nestedSegwitAddressGenerator,
                 "#nestedReceivingAddress",
-                nestedSegwitAddressSequentialGenerator
-        );
+                nestedSegwitAddressSequentialGenerator,
+            "");
     }
 
     @Test
     public void receiveSixTransactionToChangeAddress(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make());
+        String mnemonicSeed = walletUtil.createWallet(robot, make(), "");
         receiveNTransactions(
             robot,
             mnemonicSeed,
@@ -280,16 +281,17 @@ public class ReceivingTransactionTest extends TestBase {
     }
 
     private void receiveNTransactions(
-            FxRobot robot,
-            String mnemonicSeed,
-            int numberOfTransactions,
-            DerivationPath firstDerivationPath,
-            AddressGenerator addressGenerator,
-            String receivingAddressQuery,
-            AddressSequentialGenerator addressSequentialGenerator
+        FxRobot robot,
+        String mnemonicSeed,
+        int numberOfTransactions,
+        DerivationPath firstDerivationPath,
+        AddressGenerator addressGenerator,
+        String receivingAddressQuery,
+        AddressSequentialGenerator addressSequentialGenerator,
+        String password
     ) throws TimeoutException {
         robot.clickOn("#addressesTab");
-        String firstAddress = addressGenerator.generate(seedGenerator.generateSeed(mnemonicSeed, ""), firstDerivationPath);
+        String firstAddress = addressGenerator.generate(seedGenerator.generateSeed(mnemonicSeed, password), firstDerivationPath);
         waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
             robot.lookup("#addressesTable").queryAs(TableView.class);
             String address = robot.lookup(receivingAddressQuery).queryAs(TextField.class).getText();
@@ -316,7 +318,7 @@ public class ReceivingTransactionTest extends TestBase {
                 )
             );
 
-            String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+            String seed = seedGenerator.generateSeed(mnemonicSeed, password);
             String expectedNextAddress = addressSequentialGenerator
                     .deriveAddresses(1, seed, firstDerivationPath.next(i + 1))
                     .get(0).getAddress();

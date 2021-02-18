@@ -71,6 +71,7 @@ public class TotalBalanceTest extends TestBase {
         robot.clickOn("#wallet");
         robot.moveTo("#load");
         robot.clickOn(walletName);
+        robot.clickOn("OK");
         WaitForAsyncUtils.waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
             TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             String totalBalance = robot.lookup("#totalBalance").queryAs(Label.class).getText();

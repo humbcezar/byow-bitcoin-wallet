@@ -4,7 +4,6 @@ import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.services.gui.CurrentReceivingAddresses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Unspent;
 
 import java.util.List;
@@ -17,11 +16,12 @@ import static javafx.application.Platform.runLater;
 
 @Component
 public class CurrentReceivingAddressesUpdater {
-    @Autowired
-    private CurrentReceivingAddresses currentReceivingAddresses;
+    private final CurrentReceivingAddresses currentReceivingAddresses;
 
     @Autowired
-    private BitcoindRpcClient bitcoindRpcClient;
+    public CurrentReceivingAddressesUpdater(CurrentReceivingAddresses currentReceivingAddresses) {
+        this.currentReceivingAddresses = currentReceivingAddresses;
+    }
 
     public int updateReceivingAddresses(List<String> addressList, List<Unspent> utxos) {
         Map<String, List<ReceivingAddress>> collectedAddressMap = utxos.stream()

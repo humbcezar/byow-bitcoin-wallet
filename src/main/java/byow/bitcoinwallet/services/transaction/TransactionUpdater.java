@@ -84,7 +84,7 @@ public class TransactionUpdater {
     }
 
     @Transactional
-    private void saveTransaction(Object transaction, List<String> outputs, Wallet wallet) { //TODO: tentar unir com outros lugares q salvam
+    private void saveTransaction(Object transaction, List<String> outputs, Wallet wallet) {
         Set<TransactionOutput> transactionOutputs = range(0, outputs.size())
             .filter(index -> currentReceivingAddresses.contains(outputs.get(index)))
             .mapToObj(index -> {

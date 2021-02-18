@@ -1,8 +1,10 @@
 package byow.bitcoinwallet.entities;
 
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import javax.persistence.*;
+import java.security.SecureRandom;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -31,9 +33,20 @@ public class Wallet {
     @ManyToMany(mappedBy = "wallets", fetch = EAGER)
     private List<Transaction> transactions;
 
+    @Column(name = "password")
+    private String password;
+
     public Wallet(String name, String seed) {
         this.name = name;
         this.seed = seed;
+        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder(10, new SecureRandom());
+        this.password = bCryptPasswordEncoder.encode("");
+    }
+
+    public Wallet(String name, String seed, String password) {
+        this.name = name;
+        this.seed = seed;
+        this.password = password;
     }
 
     public Wallet() {}
@@ -70,6 +83,10 @@ public class Wallet {
         this.createdAt = createdAt;
     }
 
+    public String getPassword() {
+        return password;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -86,4 +103,5 @@ public class Wallet {
     public List<Transaction> getTransactions() {
         return transactions;
     }
+
 }

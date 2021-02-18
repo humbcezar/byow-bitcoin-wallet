@@ -3,6 +3,7 @@ package byow.bitcoinwallet.services.wallet;
 import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.events.WalletCreatedEvent;
 import byow.bitcoinwallet.repositories.WalletRepository;
+import byow.bitcoinwallet.services.AuthenticationService;
 import byow.bitcoinwallet.services.address.EntropyCreator;
 import byow.bitcoinwallet.services.address.SeedGenerator;
 import com.blockstream.libwally.Wally;
@@ -15,25 +16,33 @@ import java.util.Date;
 
 @Service
 public class WalletCreator {
-    private WalletRepository walletRepository;
-    private Object wordList;
-    private EntropyCreator entropyCreator;
+    private final WalletRepository walletRepository;
+
+    private final Object wordList;
+
+    private final EntropyCreator entropyCreator;
+
     private ApplicationEventPublisher applicationEventPublisher;
-    private SeedGenerator seedGenerator;
+
+    private final SeedGenerator seedGenerator;
+
+    private final AuthenticationService authenticationService;
 
     @Autowired
     public WalletCreator(
-            WalletRepository walletRepository,
-            @Qualifier("wordList") Object wordList,
-            EntropyCreator entropyCreator,
-            ApplicationEventPublisher applicationEventPublisher,
-            SeedGenerator seedGenerator
+        WalletRepository walletRepository,
+        @Qualifier("wordList") Object wordList,
+        EntropyCreator entropyCreator,
+        ApplicationEventPublisher applicationEventPublisher,
+        SeedGenerator seedGenerator,
+        AuthenticationService authenticationService
     ) {
         this.walletRepository = walletRepository;
         this.wordList = wordList;
         this.entropyCreator = entropyCreator;
         this.applicationEventPublisher = applicationEventPublisher;
         this.seedGenerator = seedGenerator;
+        this.authenticationService = authenticationService;
     }
 
     public Wallet create(String walletName, String mnemonicSeed, String password) {
@@ -41,7 +50,7 @@ public class WalletCreator {
     }
 
     public Wallet create(String walletName, String mnemonicSeed, String password, Date walletCreationDate) {
-        Wallet wallet = new Wallet(walletName, seedGenerator.generateSeed(mnemonicSeed, password));
+        Wallet wallet = new Wallet(walletName, seedGenerator.generateSeed(mnemonicSeed, password), authenticationService.hashPassword(password));
         wallet.setCreatedAt(walletCreationDate);
         walletRepository.save(wallet);
         this.applicationEventPublisher.publishEvent(new WalletCreatedEvent(this, wallet));

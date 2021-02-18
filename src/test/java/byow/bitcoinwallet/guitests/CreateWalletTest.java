@@ -42,7 +42,7 @@ public class CreateWalletTest extends TestBase {
 
     @Test
     public void createWallet (FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot, "test wallet");
+        String mnemonicSeed = walletUtil.createWallet(robot, "test wallet", "");
         Object wordList = Wally.bip39_get_wordlist(Languages.EN);
         Wallet wallet = walletRepository.findByName("test wallet");
         try {

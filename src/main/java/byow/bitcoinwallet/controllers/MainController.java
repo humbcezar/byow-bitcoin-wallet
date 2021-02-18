@@ -1,8 +1,8 @@
 package byow.bitcoinwallet.controllers;
 
 import byow.bitcoinwallet.services.gui.CurrentWallet;
-import byow.bitcoinwallet.services.wallet.CurrentWalletManager;
-import byow.bitcoinwallet.services.wallet.WalletsMenuManager;
+import byow.bitcoinwallet.services.gui.DialogService;
+import byow.bitcoinwallet.services.gui.WalletsMenuManager;
 import byow.bitcoinwallet.tasks.NodeMonitorTask;
 import javafx.application.Platform;
 import javafx.collections.SetChangeListener;
@@ -13,14 +13,12 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,23 +33,34 @@ public class MainController {
     @FXML
     private Menu load;
 
-    @Value("fxml/create_wallet_dialog.fxml")
-    private Resource createWalletDialog;
+    private final Resource createWalletDialog;
 
-    @Value("fxml/import_wallet_dialog.fxml")
-    private Resource importWalletDialog;
+    private final Resource importWalletDialog;
 
-    @Autowired
-    private ApplicationContext context;
+    private final WalletsMenuManager walletsMenuManager;
 
-    @Autowired
-    private WalletsMenuManager walletsMenuManager;
+    private final CurrentWallet currentWallet;
 
-    @Autowired
-    private CurrentWallet currentWallet;
+    private final NodeMonitorTask nodeMonitorTask;
+
+    private final DialogService dialogService;
 
     @Autowired
-    private NodeMonitorTask nodeMonitorTask;
+    public MainController(
+        @Value("fxml/create_wallet_dialog.fxml") Resource createWalletDialog,
+        @Value("fxml/import_wallet_dialog.fxml") Resource importWalletDialog,
+        WalletsMenuManager walletsMenuManager,
+        CurrentWallet currentWallet,
+        NodeMonitorTask nodeMonitorTask,
+        DialogService dialogService
+    ) {
+        this.createWalletDialog = createWalletDialog;
+        this.importWalletDialog = importWalletDialog;
+        this.walletsMenuManager = walletsMenuManager;
+        this.currentWallet = currentWallet;
+        this.nodeMonitorTask = nodeMonitorTask;
+        this.dialogService = dialogService;
+    }
 
     @FXML
     public void initialize() {
@@ -85,21 +94,18 @@ public class MainController {
     public void openCreateWalletDialog() throws IOException {
         Dialog<ButtonType> dialog = new Dialog<>();
         FXMLLoader fxmlLoader = new FXMLLoader();
-        initializeFxml(dialog, fxmlLoader, createWalletDialog.getURL());
-        configureDialog(dialog, fxmlLoader, "Create New Wallet");
+        dialogService.initialize(dialog, fxmlLoader, createWalletDialog.getURL(), "Create New Wallet");
+        configureDialog(dialog, fxmlLoader);
     }
 
     public void openImportWalletDialog() throws IOException {
         Dialog<ButtonType> dialog = new Dialog<>();
         FXMLLoader fxmlLoader = new FXMLLoader();
-        initializeFxml(dialog, fxmlLoader, importWalletDialog.getURL());
-        configureDialog(dialog, fxmlLoader, "Import Wallet");
+        dialogService.initialize(dialog, fxmlLoader, importWalletDialog.getURL(), "Import Wallet");
+        configureDialog(dialog, fxmlLoader);
     }
 
-    private void configureDialog(Dialog<ButtonType> dialog, FXMLLoader fxmlLoader, String dialogTitle) {
-        dialog.setTitle(dialogTitle);
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+    private void configureDialog(Dialog<ButtonType> dialog, FXMLLoader fxmlLoader) {
         GenerateWalletDialogController controller = fxmlLoader.getController();
         dialog.getDialogPane()
             .lookupButton(ButtonType.OK)
@@ -124,17 +130,6 @@ public class MainController {
                 alert.setContentText("Could not create wallet: A wallet with the same name already exists.");
                 alert.show();
             }
-        }
-    }
-
-    public void initializeFxml(Dialog<ButtonType> dialog, FXMLLoader fxmlLoader, URL resourceUrl) {
-        dialog.initOwner(borderPane.getScene().getWindow());
-        fxmlLoader.setControllerFactory(context::getBean);
-        try {
-            fxmlLoader.setLocation(resourceUrl);
-            dialog.getDialogPane().setContent(fxmlLoader.load());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 

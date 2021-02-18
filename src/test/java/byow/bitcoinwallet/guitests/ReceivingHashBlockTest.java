@@ -44,7 +44,7 @@ public class ReceivingHashBlockTest extends TestBase {
 
     @Test
     public void receiveOneHashBlock(FxRobot robot) throws TimeoutException, InterruptedException {
-        walletUtil.createWallet(robot, RandomString.make());
+        walletUtil.createWallet(robot, RandomString.make(), "");
         WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
             TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();

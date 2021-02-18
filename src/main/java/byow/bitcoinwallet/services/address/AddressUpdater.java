@@ -34,8 +34,6 @@ public class AddressUpdater {
         this.utxosGetter = utxosGetter;
     }
 
-    //TODO: tentar unir com update de currentAddressesManager
-    //TODO: sub utxoGetter por address getter de wallet
     public void update(Stream<String> addresses, Wallet wallet) {
         addresses.distinct()
             .peek(address -> currentAddressesManagers.forEach(

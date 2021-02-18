@@ -1,11 +1,10 @@
 package byow.bitcoinwallet.controllers;
 
 import byow.bitcoinwallet.entities.wally.WallyTransaction;
+import byow.bitcoinwallet.services.gui.DialogService;
 import byow.bitcoinwallet.services.transaction.DustCalculator;
 import byow.bitcoinwallet.services.transaction.SendTransactionService;
 import byow.bitcoinwallet.services.transaction.TransactionCreator;
-import byow.bitcoinwallet.services.transaction.TransactionSaver;
-import byow.bitcoinwallet.services.wallet.TotalBalanceCalculator;
 import byow.bitcoinwallet.tasks.SendTransactionTask;
 import byow.bitcoinwallet.tasks.TaskConfigurer;
 import javafx.concurrent.Task;
@@ -31,7 +30,6 @@ import static java.util.Objects.isNull;
 import static javafx.concurrent.WorkerStateEvent.WORKER_STATE_FAILED;
 import static javafx.concurrent.WorkerStateEvent.WORKER_STATE_SUCCEEDED;
 import static javafx.scene.control.Alert.AlertType.ERROR;
-import static javafx.scene.control.ButtonType.CANCEL;
 import static javafx.scene.control.ButtonType.OK;
 
 @Lazy
@@ -43,54 +41,48 @@ public class SendTabController extends Tab implements BaseController {
     @FXML
     private TextField amountToSend;
 
-    private Resource fxml;
+    private final Resource fxml;
 
-    private ApplicationContext context;
+    private final ApplicationContext context;
 
-    private MainController mainController;
+    private final Resource sendTransactionDialog;
 
-    private Resource sendTransactionDialog;
+    private final SendTransactionService sendTransactionService;
 
-    private SendTransactionService sendTransactionService;
+    private final TaskConfigurer taskConfigurer;
 
-    private TaskConfigurer taskConfigurer;
+    private final ReentrantLock reentrantLock;
 
-    private ReentrantLock reentrantLock;
+    private final SendTransactionDialogController sendTransactionDialogController;
 
-    private TotalBalanceCalculator totalBalanceCalculator;
+    private final TransactionCreator transactionCreator;
 
-    private SendTransactionDialogController sendTransactionDialogController;
+    private final DustCalculator dustCalculator;
 
-    private TransactionCreator transactionCreator;
-
-    private DustCalculator dustCalculator;
-
-    private TransactionSaver transactionSaver;
+    private final DialogService dialogService;
 
     @Autowired
     public SendTabController(
         @Value("classpath:/fxml/send_tab.fxml") Resource fxml,
         @Value("fxml/send_transaction_dialog.fxml") Resource sendTransactionDialog,
         ApplicationContext context,
-        MainController mainController,
         SendTransactionService sendTransactionService,
         TaskConfigurer taskConfigurer, ReentrantLock reentrantLock,
-        TotalBalanceCalculator totalBalanceCalculator,
         SendTransactionDialogController sendTransactionDialogController,
         TransactionCreator transactionCreator,
-        DustCalculator dustCalculator
+        DustCalculator dustCalculator,
+        DialogService dialogService
     ) throws IOException {
         this.fxml = fxml;
         this.sendTransactionDialog = sendTransactionDialog;
         this.context = context;
-        this.mainController = mainController;
         this.sendTransactionService = sendTransactionService;
         this.taskConfigurer = taskConfigurer;
         this.reentrantLock = reentrantLock;
-        this.totalBalanceCalculator = totalBalanceCalculator;
         this.sendTransactionDialogController = sendTransactionDialogController;
         this.transactionCreator = transactionCreator;
         this.dustCalculator = dustCalculator;
+        this.dialogService = dialogService;
         setText("Send");
         construct(this.fxml, this.context);
     }
@@ -122,10 +114,7 @@ public class SendTabController extends Tab implements BaseController {
     private void showSendTransactionDialog(WallyTransaction transaction) throws IOException {
         Dialog<ButtonType> dialog = new Dialog<>();
         FXMLLoader fxmlLoader = new FXMLLoader();
-        mainController.initializeFxml(dialog, fxmlLoader, sendTransactionDialog.getURL());
-        dialog.setTitle("Send transaction");
-        dialog.getDialogPane().getButtonTypes().add(OK);
-        dialog.getDialogPane().getButtonTypes().add(CANCEL);
+        dialogService.initialize(dialog, fxmlLoader, sendTransactionDialog.getURL(), "Send transaction");
         sendTransactionDialogController.buildTransactionInformation(
             amountToSend.getText(),
             addressToSend.getText(),

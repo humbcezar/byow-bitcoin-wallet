@@ -155,6 +155,7 @@ public class TablesTest extends TestBase {
         robot.clickOn("#wallet");
         robot.moveTo("#load");
         robot.clickOn(walletName);
+        robot.clickOn("OK");
         robot.clickOn("Receive");
         waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
             TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
@@ -261,6 +262,7 @@ public class TablesTest extends TestBase {
         robot.clickOn("#wallet");
         robot.moveTo("#load");
         robot.clickOn(walletName);
+        robot.clickOn("OK");
         robot.clickOn("Receive");
         waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
             TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
@@ -348,6 +350,7 @@ public class TablesTest extends TestBase {
         robot.clickOn("#wallet");
         robot.moveTo("#load");
         robot.clickOn(walletName);
+        robot.clickOn("OK");
         robot.clickOn("Receive");
         waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
             TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);

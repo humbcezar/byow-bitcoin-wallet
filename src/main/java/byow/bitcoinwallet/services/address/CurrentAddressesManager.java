@@ -127,7 +127,7 @@ abstract public class CurrentAddressesManager {
                                 ),
                                 btcToSatoshi(unspent.amount())
                             ))
-                            .map(transactionOutput -> transactionOutputRepository.save(transactionOutput))
+                            .map(transactionOutputRepository::save)
                             .collect(toSet()));
                 }
             });

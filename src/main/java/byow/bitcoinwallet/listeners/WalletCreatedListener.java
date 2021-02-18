@@ -4,7 +4,7 @@ import byow.bitcoinwallet.events.WalletCreatedEvent;
 import byow.bitcoinwallet.services.gui.CurrentTransactions;
 import byow.bitcoinwallet.services.gui.CurrentWallet;
 import byow.bitcoinwallet.services.wallet.CurrentWalletManager;
-import byow.bitcoinwallet.services.wallet.WalletsMenuManager;
+import byow.bitcoinwallet.services.gui.WalletsMenuManager;
 import byow.bitcoinwallet.tasks.TaskConfigurer;
 import byow.bitcoinwallet.tasks.UpdateCurrentWalletTask;
 import javafx.concurrent.Task;
