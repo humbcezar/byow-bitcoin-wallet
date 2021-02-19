@@ -26,6 +26,10 @@ import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static javafx.scene.control.Alert.AlertType.ERROR;
+import static javafx.scene.control.ButtonType.CANCEL;
+import static javafx.scene.control.ButtonType.OK;
+
 @Lazy
 @Component
 public class WalletsMenuManager {
@@ -88,18 +92,20 @@ public class WalletsMenuManager {
             new Thread(buildTask(wallet)).start();
             return;
         }
-        showAlert();
+        if (result.isPresent() && result.get() != CANCEL) {
+            showAlert();
+        }
     }
 
     private void showAlert() {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
+        Alert alert = new Alert(ERROR);
         alert.setTitle("Error");
         alert.setContentText("Wrong password.");
         alert.show();
     }
 
     private boolean dialogIsValid(Wallet wallet, Optional<ButtonType> result, LoadWalletDialogController controller) {
-        return result.isPresent() && result.get() == ButtonType.OK && controller.passwordIsValid(controller.loadWalletPassword.getText(), wallet.getPassword());
+        return result.isPresent() && result.get() == OK && controller.passwordIsValid(controller.loadWalletPassword.getText(), wallet.getPassword());
     }
 
     private Task<Void> buildTask(Wallet wallet) {
