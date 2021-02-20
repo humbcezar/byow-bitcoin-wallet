@@ -1,6 +1,7 @@
 package byow.bitcoinwallet.controllers;
 
 import byow.bitcoinwallet.entities.wally.WallyTransaction;
+import byow.bitcoinwallet.services.gui.CurrentWallet;
 import byow.bitcoinwallet.services.gui.DialogService;
 import byow.bitcoinwallet.services.transaction.DustCalculator;
 import byow.bitcoinwallet.services.transaction.SendTransactionService;
@@ -30,6 +31,7 @@ import static java.util.Objects.isNull;
 import static javafx.concurrent.WorkerStateEvent.WORKER_STATE_FAILED;
 import static javafx.concurrent.WorkerStateEvent.WORKER_STATE_SUCCEEDED;
 import static javafx.scene.control.Alert.AlertType.ERROR;
+import static javafx.scene.control.ButtonType.CANCEL;
 import static javafx.scene.control.ButtonType.OK;
 
 @Lazy
@@ -61,6 +63,8 @@ public class SendTabController extends Tab implements BaseController {
 
     private final DialogService dialogService;
 
+    private final CurrentWallet currentWallet;
+
     @Autowired
     public SendTabController(
         @Value("classpath:/fxml/send_tab.fxml") Resource fxml,
@@ -71,7 +75,8 @@ public class SendTabController extends Tab implements BaseController {
         SendTransactionDialogController sendTransactionDialogController,
         TransactionCreator transactionCreator,
         DustCalculator dustCalculator,
-        DialogService dialogService
+        DialogService dialogService,
+        CurrentWallet currentWallet
     ) throws IOException {
         this.fxml = fxml;
         this.sendTransactionDialog = sendTransactionDialog;
@@ -83,6 +88,7 @@ public class SendTabController extends Tab implements BaseController {
         this.transactionCreator = transactionCreator;
         this.dustCalculator = dustCalculator;
         this.dialogService = dialogService;
+        this.currentWallet = currentWallet;
         setText("Send");
         construct(this.fxml, this.context);
     }
@@ -121,9 +127,26 @@ public class SendTabController extends Tab implements BaseController {
             transaction
         );
         Optional<ButtonType> result = dialog.showAndWait();
-        if (result.isPresent() && result.get() == OK) {
+        if (dialogIsValid(result)) {
             new Thread(buildTask(transaction)).start();
+            return;
         }
+        if (result.isPresent() && result.get() != CANCEL) {
+            amountToSend.setText("");
+            addressToSend.setText("");
+            showAlert();
+        }
+    }
+
+    private void showAlert() {
+        Alert alert = new Alert(ERROR);
+        alert.setTitle("Error");
+        alert.setContentText("Wrong password.");
+        alert.show();
+    }
+
+    private boolean dialogIsValid(Optional<ButtonType> result) {
+        return result.isPresent() && result.get() == OK && sendTransactionDialogController.passwordIsValid(currentWallet.getCurrentWallet().getPassword());
     }
 
     private boolean validateFunds(WallyTransaction transaction) {

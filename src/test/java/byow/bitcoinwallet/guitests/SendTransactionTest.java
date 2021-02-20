@@ -32,6 +32,7 @@ import static java.math.RoundingMode.HALF_UP;
 import static java.util.Objects.isNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.IntStream.range;
+import static net.bytebuddy.utility.RandomString.make;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -66,8 +67,9 @@ public class SendTransactionTest extends TestBase {
 
     @Test
     public void sendOneTransactionToNodeAddress(FxRobot robot) throws TimeoutException {
-        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
-        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String password = make();
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), password);
+        String seed = seedGenerator.generateSeed(mnemonicSeed, password);
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
         waitFor(60, SECONDS, () -> {
@@ -75,7 +77,34 @@ public class SendTransactionTest extends TestBase {
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
         });
 
-        sendNTransactions(robot, "0.5", 1, "0.50000000", 1, seed, 0, "bech32", 1);
+        sendNTransactions(robot, "0.5", 1, "0.50000000", 1, seed, 0, "bech32", 1, password);
+    }
+
+    @Test
+    public void sendOneTransactionWithWrongPasswordFail(FxRobot robot) throws TimeoutException {
+        String password = make();
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), password);
+        String seed = seedGenerator.generateSeed(mnemonicSeed, password);
+        String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
+        fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
+        waitFor(60, SECONDS, () -> {
+            TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
+            return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
+        });
+
+        String nodeAddress = bitcoindRpcClient.getNewAddress();
+        robot.clickOn("#sendTab");
+        robot.clickOn("#amountToSend");
+        robot.write("0.5");
+        robot.clickOn("#addressToSend");
+        robot.write(nodeAddress);
+        robot.clickOn("#send");
+        robot.clickOn("#sendTransactionPassword");
+        robot.write("wrong");
+        robot.clickOn("OK");
+        NodeQuery text = robot.lookup("Wrong password.");
+        robot.clickOn("OK");
+        assertNotNull(text.queryLabeled().getText());
     }
 
     @Test
@@ -89,7 +118,7 @@ public class SendTransactionTest extends TestBase {
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
         });
 
-        sendNTransactions(robot, "0.5", 1, "0.50000000", 1, seed, 0, "bech32", 1);
+        sendNTransactions(robot, "0.5", 1, "0.50000000", 1, seed, 0, "bech32", 1, "");
     }
 
     @Test
@@ -106,7 +135,7 @@ public class SendTransactionTest extends TestBase {
                     && tableView.getItems().get(1).getConfirmations() == 2;
         });
 
-        sendNTransactions(robot, "1.5", 1, "1.50000000", 1, seed, 0, "bech32", 2);
+        sendNTransactions(robot, "1.5", 1, "1.50000000", 1, seed, 0, "bech32", 2, "");
     }
 
     @Test
@@ -120,7 +149,7 @@ public class SendTransactionTest extends TestBase {
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
         });
 
-        sendNTransactions(robot, "0.8", 1, "0.80000000", 5, seed, 0, "bech32", 1);
+        sendNTransactions(robot, "0.8", 1, "0.80000000", 5, seed, 0, "bech32", 1, "");
     }
 
     @Test
@@ -208,7 +237,7 @@ public class SendTransactionTest extends TestBase {
         TableView<ReceivingAddress> recipientTableView = robot.lookup("#addressesTable").queryAs(TableView.class);
         assertEquals(new BigDecimal("0.5"), recipientTableView.getItems().get(0).getBigDecimalBalance().setScale(1, HALF_UP));
 
-        sendNTransactions(robot, "0.25", 2, "0.25000000", 1, recipientSeed, 0, "bech32", 1);
+        sendNTransactions(robot, "0.25", 2, "0.25000000", 1, recipientSeed, 0, "bech32", 1, "");
         //TODO: esquematizar novamente esquema de associar tx com wallet, pois qdo wallet recebida eh a msm, da pau nesse teste (input como output, por ex)
         //TODO: arrumar waitfor comparativo (0.5 < 0)
         //TODO: ver se qdo voltar para wallet anterior, tx nao vai estar cagada
@@ -355,7 +384,7 @@ public class SendTransactionTest extends TestBase {
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
         });
 
-        sendNTransactions(robot, "0.5", 1, "0.50000000", 1, seed, 0, "p2sh-segwit", 1);
+        sendNTransactions(robot, "0.5", 1, "0.50000000", 1, seed, 0, "p2sh-segwit", 1, "");
     }
 
     @Test
@@ -369,7 +398,7 @@ public class SendTransactionTest extends TestBase {
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
         });
 
-        sendNTransactions(robot, "0.5", 1, "0.50000000", 1, seed, 0, "legacy", 1);
+        sendNTransactions(robot, "0.5", 1, "0.50000000", 1, seed, 0, "legacy", 1, "");
     }
 
     private void fundAddress(FxRobot robot, String firstAddress, BigDecimal amount, int confirmations, String fxmlAddress) throws TimeoutException {
@@ -421,7 +450,8 @@ public class SendTransactionTest extends TestBase {
         String seed,
         int firstChangeIndex,
         String toAddressType,
-        int numPreviousTransactions
+        int numPreviousTransactions,
+        String password
     ) throws TimeoutException {
         List<String> transactionAmountsSent = range(0, numTransactions).mapToObj(i -> {
             TableView<ReceivingAddress> table = robot.lookup("#addressesTable").queryAs(TableView.class);
@@ -434,6 +464,8 @@ public class SendTransactionTest extends TestBase {
             robot.clickOn("#addressToSend");
             robot.write(nodeAddress);
             robot.clickOn("#send");
+            robot.clickOn("#sendTransactionPassword");
+            robot.write(password);
             robot.clickOn("OK");
             try {
                 waitFor(60, SECONDS, () -> {

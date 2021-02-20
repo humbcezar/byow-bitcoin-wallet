@@ -105,7 +105,7 @@ public class WalletsMenuManager {
     }
 
     private boolean dialogIsValid(Wallet wallet, Optional<ButtonType> result, LoadWalletDialogController controller) {
-        return result.isPresent() && result.get() == OK && controller.passwordIsValid(controller.loadWalletPassword.getText(), wallet.getPassword());
+        return result.isPresent() && result.get() == OK && controller.passwordIsValid(wallet.getPassword());
     }
 
     private Task<Void> buildTask(Wallet wallet) {

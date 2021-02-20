@@ -1,8 +1,11 @@
 package byow.bitcoinwallet.controllers;
 
 import byow.bitcoinwallet.entities.wally.WallyTransaction;
+import byow.bitcoinwallet.services.AuthenticationService;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -25,7 +28,17 @@ public class SendTransactionDialogController {
     public Label feeRate;
 
     @FXML
+    public PasswordField sendTransactionPassword;
+
+    @FXML
     private Label addressToSend;
+
+    private final AuthenticationService authenticationService;
+
+    @Autowired
+    public SendTransactionDialogController(AuthenticationService authenticationService) {
+        this.authenticationService = authenticationService;
+    }
 
     private void buildAmountToSend(String amount) {
         amountToSend.setText(amount.concat(" BTC"));
@@ -60,5 +73,9 @@ public class SendTransactionDialogController {
         BigDecimal totFee = buildTotalFee(transaction.getTotalFeeInSatoshis());
         buildFeeRate(transaction.getFeeRateInSatoshisPerByte());
         buildTotal(totFee, amountToSend);
+    }
+
+    public boolean passwordIsValid(String hashedPassword) {
+        return authenticationService.checkPassword(sendTransactionPassword.getText(), hashedPassword);
     }
 }
