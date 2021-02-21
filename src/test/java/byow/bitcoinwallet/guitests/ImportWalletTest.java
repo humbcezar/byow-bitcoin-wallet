@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static net.bytebuddy.utility.RandomString.make;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.testfx.util.WaitForAsyncUtils.waitFor;
 
@@ -44,6 +45,33 @@ public class ImportWalletTest extends TestBase {
             "BYOW Wallet - Imported Wallet".equals(stage.getTitle())
         );
         assertEquals("BYOW Wallet - Imported Wallet", stage.getTitle());
+        WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
+            String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+            return !address.isEmpty();
+        });
+        String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+        assertFalse(address.isEmpty());
+    }
+
+    @Test
+    public void importBySeedWithPassword(FxRobot robot) throws TimeoutException {
+        String password = make();
+        String mnemonicSeed = seedGenerator.generateMnemonicSeed();
+        robot.clickOn("#wallet");
+        robot.clickOn("#import");
+        robot.clickOn("#walletName");
+        robot.write("Imported Wallet2");
+        robot.clickOn("#walletPassword");
+        robot.write(password);
+        robot.clickOn("#mnemonicSeed");
+        robot.write(mnemonicSeed);
+        robot.clickOn("OK");
+        robot.clickOn("Receive");
+
+        waitFor(40, SECONDS, () ->
+            "BYOW Wallet - Imported Wallet2".equals(stage.getTitle())
+        );
+        assertEquals("BYOW Wallet - Imported Wallet2", stage.getTitle());
         WaitForAsyncUtils.waitFor(40, TimeUnit.SECONDS, () -> {
             String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
             return !address.isEmpty();
