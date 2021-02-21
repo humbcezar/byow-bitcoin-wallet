@@ -404,7 +404,6 @@ public class SendTransactionTest extends TestBase {
     private void fundAddress(FxRobot robot, String firstAddress, BigDecimal amount, int confirmations, String fxmlAddress) throws TimeoutException {
         robot.clickOn("#addressesTab");
         waitFor(40, SECONDS, () -> {
-            robot.lookup("#addressesTable").queryAs(TableView.class);
             String address = robot.lookup(fxmlAddress).queryAs(TextField.class).getText();
             return address != null && !address.isBlank() && address.equals(firstAddress);
         });
