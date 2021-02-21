@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<DialogPane headerText="Give your wallet a name and click create. Then, annotate the generated mnemonic seed in a safe place, and click OK." minHeight="-Infinity" minWidth="-Infinity" prefHeight="300.0" prefWidth="450.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="byow.bitcoinwallet.controllers.CreateWalletDialogController">
+<DialogPane headerText="Give your wallet a name and click create. Then, annotate the generated mnemonic seed in a safe place, and click OK." minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="450.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="byow.bitcoinwallet.controllers.CreateWalletDialogController">
    <content>
       <GridPane>
         <columnConstraints>
@@ -22,7 +22,7 @@
             <Label text="Wallet Name" GridPane.columnIndex="0" GridPane.rowIndex="0" />
             <TextField fx:id="walletName" GridPane.columnIndex="1" GridPane.rowIndex="0" />
             <Label text="Wallet Password (optional)" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-            <TextField fx:id="walletPassword" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <PasswordField fx:id="walletPassword" GridPane.columnIndex="1" GridPane.rowIndex="1" />
             <Button fx:id="create" mnemonicParsing="false" onAction="#generateMnemonicSeed" text="Create" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="2">
                <GridPane.margin>
                   <Insets top="10.0" />

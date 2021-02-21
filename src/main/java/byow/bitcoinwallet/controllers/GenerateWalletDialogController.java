@@ -3,6 +3,7 @@ package byow.bitcoinwallet.controllers;
 import byow.bitcoinwallet.services.wallet.WalletCreator;
 import javafx.beans.binding.BooleanBinding;
 import javafx.fxml.FXML;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +16,7 @@ public abstract class GenerateWalletDialogController {
     public TextArea mnemonicSeed;
 
     @FXML
-    public TextField walletPassword;
+    public PasswordField walletPassword;
 
     @Autowired
     protected WalletCreator walletCreator;

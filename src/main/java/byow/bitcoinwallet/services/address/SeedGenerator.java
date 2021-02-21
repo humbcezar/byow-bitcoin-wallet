@@ -1,6 +1,5 @@
 package byow.bitcoinwallet.services.address;
 
-import byow.bitcoinwallet.services.address.EntropyCreator;
 import com.blockstream.libwally.Wally;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
