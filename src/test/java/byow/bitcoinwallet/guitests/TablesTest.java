@@ -40,6 +40,9 @@ public class TablesTest extends TestBase {
     private NextNestedSegwitAddress nextNestedSegwitAddress;
 
     @Autowired
+    private NextNestedSegwitChangeAddress nextNestedSegwitChangeAddress;
+
+    @Autowired
     private BitcoindRpcClient bitcoindRpcClient;
 
     @Autowired
@@ -112,6 +115,15 @@ public class TablesTest extends TestBase {
     public void showSixAddressWithPositiveBalanceWithNestedSegwitAddresses(FxRobot robot) throws TimeoutException {
         showNAddressesWithPositiveBalance(robot, 6, FIRST_BIP49_ADDRESS_PATH, nestedSegwitAddressSequentialGenerator);
         assertNextNestedSegwitAddress(robot, 6);
+        assertNextReceivingAddress(robot, 0);
+        assertNextChangeAddress(0);
+    }
+
+    @Test
+    public void showSixAddressWithPositiveBalanceWithNestedSegwitChangeAddresses(FxRobot robot) throws TimeoutException {
+        showNAddressesWithPositiveBalance(robot, 6, FIRST_BIP49_CHANGE_PATH, nestedSegwitAddressSequentialGenerator);
+        assertNextNestedSegwitChangeAddress(6);
+        assertNextNestedSegwitAddress(robot, 0);
         assertNextReceivingAddress(robot, 0);
         assertNextChangeAddress(0);
     }
@@ -419,6 +431,18 @@ public class TablesTest extends TestBase {
         assertEquals(expectedReceivingAddress, address);
         String guiAddress = robot.lookup("#nestedReceivingAddress").queryAs(TextField.class).getText();
         assertEquals(expectedReceivingAddress, guiAddress);
+    }
+
+    private void assertNextNestedSegwitChangeAddress(int numberOfReceivingAddresses) throws TimeoutException {
+        String expectedReceivingAddress = nestedSegwitAddressGenerator.generate(
+            seed, new DerivationPath("49'/0'/0'/1/" + numberOfReceivingAddresses)
+        );
+        waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
+            String address =  nextNestedSegwitChangeAddress.getValue().getAddress();
+            return address != null && address.equals(expectedReceivingAddress);
+        });
+        String address =  nextNestedSegwitChangeAddress.getValue().getAddress();
+        assertEquals(expectedReceivingAddress, address);
     }
 
     //TODO: testar com floating btc recebidos

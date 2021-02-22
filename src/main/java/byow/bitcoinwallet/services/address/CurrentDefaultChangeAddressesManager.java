@@ -1,6 +1,5 @@
 package byow.bitcoinwallet.services.address;
 
-import byow.bitcoinwallet.entities.NextAddress;
 import byow.bitcoinwallet.entities.NextChangeAddress;
 import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.repositories.AddressRepository;
@@ -19,10 +18,6 @@ import static java.math.BigDecimal.ZERO;
 @Component
 @Lazy
 public class CurrentDefaultChangeAddressesManager extends CurrentAddressesManager {
-    private NextChangeAddress nextChangeAddress;
-
-    protected DerivationPath currentDerivationPath = FIRST_BIP84_CHANGE_PATH;
-
     @Autowired
     public CurrentDefaultChangeAddressesManager(
         CurrentReceivingAddresses currentReceivingAddresses,
@@ -47,34 +42,14 @@ public class CurrentDefaultChangeAddressesManager extends CurrentAddressesManage
             walletRepository,
             addressRepository
         );
-        this.nextChangeAddress = nextChangeAddress;
+        this.nextAddress = nextChangeAddress;
+        this.currentDerivationPath = FIRST_BIP84_CHANGE_PATH;
     }
 
     public void clear() {
         currentDerivationPath = FIRST_BIP84_CHANGE_PATH;
-        nextChangeAddress.setReceivingAddress(
+        nextAddress.setReceivingAddress(
             new ReceivingAddress(ZERO, 0, "")
         );
-    }
-
-    @Override
-    protected void setNextAddress(ReceivingAddress address) {
-        nextChangeAddress.setReceivingAddress(address);
-    }
-
-    @Override
-    public NextAddress getNextAddress() {
-        return nextChangeAddress;
-    }
-
-    @Override
-    protected DerivationPath getCurrentDerivationPath() {
-        return currentDerivationPath;
-    }
-
-    @Override
-    protected DerivationPath setNextCurrentDerivationPath(int next) {
-        currentDerivationPath = currentDerivationPath.next(next);
-        return currentDerivationPath;
     }
 }

@@ -39,6 +39,10 @@ abstract public class CurrentAddressesManager {
 
     private final AddressRepository addressRepository;
 
+    protected DerivationPath currentDerivationPath;
+
+    protected NextAddress nextAddress;
+
     @Autowired
     public CurrentAddressesManager(
         CurrentReceivingAddresses currentReceivingAddresses,
@@ -62,13 +66,22 @@ abstract public class CurrentAddressesManager {
         this.addressRepository = addressRepository;
     }
 
-    protected abstract void setNextAddress(ReceivingAddress address);
+    protected void setNextAddress(ReceivingAddress address) {
+        nextAddress.setReceivingAddress(address);
+    }
 
-    public abstract NextAddress getNextAddress();
+    public NextAddress getNextAddress() {
+        return nextAddress;
+    }
 
-    protected abstract DerivationPath getCurrentDerivationPath();
+    protected DerivationPath getCurrentDerivationPath() {
+        return currentDerivationPath;
+    }
 
-    protected abstract DerivationPath setNextCurrentDerivationPath(int next);
+    protected DerivationPath setNextCurrentDerivationPath(int next) {
+        currentDerivationPath = currentDerivationPath.next(next);
+        return currentDerivationPath;
+    }
 
     public abstract void clear();
 
@@ -149,11 +162,11 @@ abstract public class CurrentAddressesManager {
             ).get(0).getAddress();
         }
         initializeAddresses(1, seed, walletCreationDate);
-        ReceivingAddress nextAddress = new ReceivingAddress(ZERO, 0, address);
+        ReceivingAddress nextReceivingAddress = new ReceivingAddress(ZERO, 0, address);
         if (addressRepository.existsByAddress(address)) {
             updateNextAddress(address, 1, seed, walletCreationDate);
             return;
         }
-        runLater(() -> setNextAddress(nextAddress));
+        runLater(() -> setNextAddress(nextReceivingAddress));
     }
 }

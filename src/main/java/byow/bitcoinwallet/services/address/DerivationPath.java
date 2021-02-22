@@ -12,6 +12,8 @@ public class DerivationPath {
 
     public static final DerivationPath FIRST_BIP49_ADDRESS_PATH = new DerivationPath("49'/0'/0'/0/0");
 
+    public static final DerivationPath FIRST_BIP49_CHANGE_PATH = new DerivationPath("49'/0'/0'/1/0");
+
     private String path;
 
     public DerivationPath() {
