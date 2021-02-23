@@ -1,9 +1,12 @@
 package byow.bitcoinwallet.controllers;
 
 import byow.bitcoinwallet.entities.ReceivingAddress;
+import byow.bitcoinwallet.entities.TransactionRow;
 import byow.bitcoinwallet.services.gui.CurrentReceivingAddresses;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -16,6 +19,8 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+
+import static byow.bitcoinwallet.utils.CopyUtil.copy;
 
 @Component
 @Lazy
@@ -61,5 +66,19 @@ public class AddressesTableController extends TableView<ReceivingAddress> implem
         columnAddress.setCellValueFactory(new PropertyValueFactory<>("address"));
         columnBalance.setCellValueFactory(new PropertyValueFactory<>("balance"));
         columnConfirmations.setCellValueFactory(new PropertyValueFactory<>("confirmations"));
+
+        buildContextMenu();
+    }
+
+
+    private void buildContextMenu() {
+        ContextMenu contextMenu = new ContextMenu();
+        MenuItem copyMenu = new MenuItem("Copy");
+        copyMenu.setOnAction(event -> {
+            ReceivingAddress item = addressesTable.getSelectionModel().getSelectedItem();
+            copy(item.getAddress());
+        });
+        contextMenu.getItems().add(copyMenu);
+        addressesTable.setContextMenu(contextMenu);
     }
 }

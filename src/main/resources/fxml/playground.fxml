@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 
 <BorderPane fx:id="borderPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="byow.bitcoinwallet.controllers.MainController">
@@ -88,8 +89,18 @@
                                                 <Insets left="10.0" right="10.0" top="10.0" />
                                             </GridPane.margin>
                                         </TextField>
+                                        <Button alignment="BASELINE_CENTER" prefHeight="22.0" prefWidth="33.0" textAlignment="CENTER" GridPane.columnIndex="2" GridPane.rowIndex="0" GridPane.valignment="BOTTOM">
+                                            <graphic>
+                                                <ImageView fitHeight="15.0" fitWidth="15.0" GridPane.columnIndex="2" GridPane.rowIndex="0" GridPane.valignment="CENTER">
+                                                    <image>
+                                                        <Image fx:id="copyDefault" url="@../copy.png" />
+                                                    </image>
+                                                </ImageView>
+                                            </graphic>
+                                        </Button>
                                     </children>
                            <columnConstraints>
+                              <ColumnConstraints />
                               <ColumnConstraints />
                               <ColumnConstraints />
                            </columnConstraints>

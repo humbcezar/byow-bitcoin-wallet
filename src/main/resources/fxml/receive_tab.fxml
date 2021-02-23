@@ -3,7 +3,10 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.Tab?>
-<fx:root type="javafx.scene.control.Tab" xmlns:fx="http://javafx.com/fxml" >
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.control.Button?>
+<fx:root type="javafx.scene.control.Tab" xmlns:fx="http://javafx.com/fxml">
     <content>
         <GridPane>
             <children>
@@ -17,6 +20,15 @@
                         <Insets top="10.0" left="10.0" right="10.0"/>
                     </GridPane.margin>
                 </TextField>
+                <Button fx:id="copyDefault" prefHeight="22.0" prefWidth="33.0" GridPane.columnIndex="2" GridPane.rowIndex="0" GridPane.valignment="BOTTOM">
+                    <graphic>
+                        <ImageView fitHeight="15.0" fitWidth="15.0" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                            <image>
+                                <Image url="@../copy.png" />
+                            </image>
+                        </ImageView>
+                    </graphic>
+                </Button>
                 <Label text="P2SH(P2WPKH) receiving address" GridPane.columnIndex="0" GridPane.rowIndex="1" >
                     <GridPane.margin>
                         <Insets top="10.0" left="10.0" right="10.0"/>
@@ -27,6 +39,15 @@
                         <Insets top="10.0" left="10.0" right="10.0"/>
                     </GridPane.margin>
                 </TextField>
+                <Button fx:id="copyNested" prefHeight="22.0" prefWidth="33.0" GridPane.columnIndex="2" GridPane.rowIndex="1" GridPane.valignment="BOTTOM">
+                    <graphic>
+                        <ImageView fitHeight="15.0" fitWidth="15.0" GridPane.columnIndex="2" GridPane.rowIndex="0" >
+                            <image>
+                                <Image url="@../copy.png" />
+                            </image>
+                        </ImageView>
+                    </graphic>
+                </Button>
             </children>
         </GridPane>
     </content>
