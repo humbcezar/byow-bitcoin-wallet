@@ -1,7 +1,6 @@
 package byow.bitcoinwallet.controllers;
 
 import byow.bitcoinwallet.entities.ReceivingAddress;
-import byow.bitcoinwallet.entities.TransactionRow;
 import byow.bitcoinwallet.services.gui.CurrentReceivingAddresses;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
@@ -69,7 +68,6 @@ public class AddressesTableController extends TableView<ReceivingAddress> implem
 
         buildContextMenu();
     }
-
 
     private void buildContextMenu() {
         ContextMenu contextMenu = new ContextMenu();
