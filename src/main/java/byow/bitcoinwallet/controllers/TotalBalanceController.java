@@ -18,15 +18,15 @@ import static java.lang.String.format;
 @Lazy
 @Component
 public class TotalBalanceController extends Label implements BaseController {
-    private Resource fxml;
+    private final Resource fxml;
 
-    private ApplicationContext context;
+    private final ApplicationContext context;
 
-    private static String BALANCE_TEXT = "Total Balance: %s BTC (confirmed: %s, unconfirmed: %s)";
+    private static final String BALANCE_TEXT = "Total Balance: %s BTC (confirmed: %s, unconfirmed: %s)";
 
-    private BigDecimalStringConverter bigDecimalStringConverter = new BigDecimalStringConverter();
+    private final BigDecimalStringConverter bigDecimalStringConverter = new BigDecimalStringConverter();
 
-    private TotalBalanceCalculator totalBalanceCalculator;
+    private final TotalBalanceCalculator totalBalanceCalculator;
 
     @Autowired
     public TotalBalanceController(
@@ -38,6 +38,10 @@ public class TotalBalanceController extends Label implements BaseController {
         this.context = context;
         this.totalBalanceCalculator = totalBalanceCalculator;
         construct(this.fxml, this.context);
+    }
+
+    public void clear() {
+        setText("");
     }
 
     public void update() {

@@ -1,6 +1,7 @@
 package byow.bitcoinwallet.services.gui;
 
 import byow.bitcoinwallet.controllers.LoadWalletDialogController;
+import byow.bitcoinwallet.controllers.TotalBalanceController;
 import byow.bitcoinwallet.entities.LoadWalletMenuItem;
 import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.repositories.WalletRepository;
@@ -26,6 +27,7 @@ import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static javafx.concurrent.WorkerStateEvent.WORKER_STATE_SCHEDULED;
 import static javafx.scene.control.Alert.AlertType.ERROR;
 import static javafx.scene.control.ButtonType.CANCEL;
 import static javafx.scene.control.ButtonType.OK;
@@ -49,6 +51,8 @@ public class WalletsMenuManager {
 
     private final Resource loadWalletDialog;
 
+    private final TotalBalanceController totalBalanceController;
+
     @Autowired
     public WalletsMenuManager(
         WalletRepository walletRepository,
@@ -57,7 +61,8 @@ public class WalletsMenuManager {
         TaskConfigurer taskConfigurer,
         CurrentTransactions currentTransactions,
         DialogService dialogService,
-        @Value("fxml/load_wallet_dialog.fxml") Resource loadWalletDialog
+        @Value("fxml/load_wallet_dialog.fxml") Resource loadWalletDialog,
+        TotalBalanceController totalBalanceController
     ) {
         this.walletRepository = walletRepository;
         this.currentWalletManager = currentWalletManager;
@@ -66,6 +71,7 @@ public class WalletsMenuManager {
         this.currentTransactions = currentTransactions;
         this.dialogService = dialogService;
         this.loadWalletDialog = loadWalletDialog;
+        this.totalBalanceController = totalBalanceController;
     }
 
     public void load() {
@@ -109,10 +115,12 @@ public class WalletsMenuManager {
     }
 
     private Task<Void> buildTask(Wallet wallet) {
-        return taskConfigurer.configure(
+        Task<Void> task = taskConfigurer.configure(
             new UpdateCurrentWalletTask(currentWalletManager, reentrantLock, wallet, currentTransactions),
             "Loading wallet..."
         );
+        task.addEventHandler(WORKER_STATE_SCHEDULED, event -> totalBalanceController.clear());
+        return task;
     }
 
     public ObservableSet<MenuItem> getMenuItems() {

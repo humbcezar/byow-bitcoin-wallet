@@ -37,11 +37,11 @@ public class TransactionsTableController extends TableView<TransactionRow> imple
     @FXML
     public TableColumn<TransactionRow, String> columnTransactionDate;
 
-    private Resource fxml;
+    private final Resource fxml;
 
-    private ApplicationContext context;
+    private final ApplicationContext context;
 
-    private CurrentTransactions currentTransactions;
+    private final CurrentTransactions currentTransactions;
 
     @Autowired
     public TransactionsTableController(

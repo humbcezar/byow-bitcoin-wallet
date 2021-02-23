@@ -25,7 +25,6 @@ public class TaskConfigurer {
             event -> {
                 progressBarController.progressBar.progressProperty().bind(task.progressProperty());
                 footerController.setText(text);
-                totalBalanceController.update();
             }
         );
         task.setOnSucceeded(event -> {

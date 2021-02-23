@@ -36,11 +36,11 @@ public class AddressesTableController extends TableView<ReceivingAddress> implem
     @FXML
     public TableColumn<ReceivingAddress, Integer> columnConfirmations;
 
-    private Resource fxml;
+    private final Resource fxml;
 
-    private ApplicationContext context;
+    private final ApplicationContext context;
 
-    private CurrentReceivingAddresses currentReceivingAddresses;
+    private final CurrentReceivingAddresses currentReceivingAddresses;
 
     @Autowired
     public AddressesTableController(
