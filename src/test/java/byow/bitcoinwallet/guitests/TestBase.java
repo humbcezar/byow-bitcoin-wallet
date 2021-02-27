@@ -1,6 +1,7 @@
 package byow.bitcoinwallet.guitests;
 
 import byow.bitcoinwallet.factories.SpringComponentBuilderFactory;
+import byow.bitcoinwallet.services.LoadNodeWallet;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -33,9 +34,13 @@ abstract public class TestBase {
     @Autowired
     private BitcoindRpcClient bitcoindRpcClient;
 
+    @Autowired
+    private LoadNodeWallet loadNodeWallet;
+
     protected Stage stage;
 
     public void start (Stage stage) throws Exception {
+        loadNodeWallet.createOrLoadNodeWallet();
         createBalanceIfNecessary();
         this.stage = stage;
         FXMLLoader fxmlLoader = new FXMLLoader(fxml.getURL());

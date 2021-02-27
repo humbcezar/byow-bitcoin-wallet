@@ -11,7 +11,6 @@ import static wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient.*;
 
 @Configuration
 public class NodeConfiguration {
-
     private String bitcoinEnvironment;
 
     @Value("${bitcoin.network.environment}")

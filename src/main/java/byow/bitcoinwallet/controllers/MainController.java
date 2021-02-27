@@ -1,5 +1,6 @@
 package byow.bitcoinwallet.controllers;
 
+import byow.bitcoinwallet.services.LoadNodeWallet;
 import byow.bitcoinwallet.services.gui.CurrentWallet;
 import byow.bitcoinwallet.services.gui.DialogService;
 import byow.bitcoinwallet.services.gui.WalletsMenuManager;
@@ -45,6 +46,8 @@ public class MainController {
 
     private final DialogService dialogService;
 
+    private final LoadNodeWallet loadNodeWallet;
+
     @Autowired
     public MainController(
         @Value("fxml/create_wallet_dialog.fxml") Resource createWalletDialog,
@@ -52,7 +55,8 @@ public class MainController {
         WalletsMenuManager walletsMenuManager,
         CurrentWallet currentWallet,
         NodeMonitorTask nodeMonitorTask,
-        DialogService dialogService
+        DialogService dialogService,
+        LoadNodeWallet loadNodeWallet
     ) {
         this.createWalletDialog = createWalletDialog;
         this.importWalletDialog = importWalletDialog;
@@ -60,10 +64,12 @@ public class MainController {
         this.currentWallet = currentWallet;
         this.nodeMonitorTask = nodeMonitorTask;
         this.dialogService = dialogService;
+        this.loadNodeWallet = loadNodeWallet;
     }
 
     @FXML
     public void initialize() {
+        loadNodeWallet.createOrLoadNodeWallet();
         walletsMenuManager.getMenuItems().addListener(
             (SetChangeListener<MenuItem>) change -> Platform.runLater(
                 () -> {

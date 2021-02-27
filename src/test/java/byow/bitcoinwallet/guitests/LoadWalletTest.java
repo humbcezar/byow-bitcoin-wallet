@@ -56,7 +56,7 @@ public class LoadWalletTest extends TestBase {
         robot.clickOn(testWallet);
         robot.clickOn("OK");
         waitFor(40, SECONDS, () ->
-                "BYOW Wallet - ".concat(testWallet).equals(stage.getTitle())
+            "BYOW Wallet - ".concat(testWallet).equals(stage.getTitle())
         );
         assertEquals("BYOW Wallet - ".concat(testWallet), stage.getTitle());
         final TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);

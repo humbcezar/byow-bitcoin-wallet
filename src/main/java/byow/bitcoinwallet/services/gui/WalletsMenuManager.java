@@ -53,6 +53,8 @@ public class WalletsMenuManager {
 
     private final TotalBalanceController totalBalanceController;
 
+    private final CurrentWallet currentWallet;
+
     @Autowired
     public WalletsMenuManager(
         WalletRepository walletRepository,
@@ -62,7 +64,8 @@ public class WalletsMenuManager {
         CurrentTransactions currentTransactions,
         DialogService dialogService,
         @Value("fxml/load_wallet_dialog.fxml") Resource loadWalletDialog,
-        TotalBalanceController totalBalanceController
+        TotalBalanceController totalBalanceController,
+        CurrentWallet currentWallet
     ) {
         this.walletRepository = walletRepository;
         this.currentWalletManager = currentWalletManager;
@@ -72,6 +75,7 @@ public class WalletsMenuManager {
         this.dialogService = dialogService;
         this.loadWalletDialog = loadWalletDialog;
         this.totalBalanceController = totalBalanceController;
+        this.currentWallet = currentWallet;
     }
 
     public void load() {
@@ -119,7 +123,10 @@ public class WalletsMenuManager {
             new UpdateCurrentWalletTask(currentWalletManager, reentrantLock, wallet, currentTransactions),
             "Loading wallet..."
         );
-        task.addEventHandler(WORKER_STATE_SCHEDULED, event -> totalBalanceController.clear());
+        task.addEventHandler(WORKER_STATE_SCHEDULED, event -> {
+            totalBalanceController.clear();
+            currentWallet.setWalletName(wallet.getName());
+        });
         return task;
     }
 
