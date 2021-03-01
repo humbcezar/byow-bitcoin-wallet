@@ -6,7 +6,6 @@ import byow.bitcoinwallet.services.address.DefaultAddressGenerator;
 import byow.bitcoinwallet.services.address.NestedSegwitAddressGenerator;
 import com.blockstream.libwally.Wally;
 import javafx.application.Application;
-import javafx.util.converter.BigDecimalStringConverter;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -26,11 +25,6 @@ public class ByowApplication {
     @Bean
     public Object wordList() {
         return Wally.bip39_get_wordlist(Languages.EN);
-    }
-
-    @Bean
-    public BigDecimalStringConverter bigDecimalStringConverter() {
-        return new BigDecimalStringConverter();
     }
 
     @Bean

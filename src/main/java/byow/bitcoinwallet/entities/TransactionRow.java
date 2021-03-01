@@ -16,15 +16,15 @@ import static java.math.BigDecimal.ZERO;
 @Lazy
 public class TransactionRow {
 
-    private StringProperty transactionId = new SimpleStringProperty();
+    private final StringProperty transactionId = new SimpleStringProperty();
 
-    private StringProperty balance = new SimpleStringProperty();
+    private final StringProperty balance = new SimpleStringProperty();
 
     private BigDecimal bigDecimalBalance = ZERO;
 
-    private IntegerProperty confirmations = new SimpleIntegerProperty();
+    private final IntegerProperty confirmations = new SimpleIntegerProperty();
 
-    private StringProperty date = new SimpleStringProperty();
+    private final StringProperty date = new SimpleStringProperty();
 
     public TransactionRow(
         String transactionId,

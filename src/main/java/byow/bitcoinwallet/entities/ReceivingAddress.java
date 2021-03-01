@@ -2,7 +2,6 @@ package byow.bitcoinwallet.entities;
 
 import byow.bitcoinwallet.services.address.DerivationPath;
 import javafx.beans.property.*;
-import javafx.util.converter.BigDecimalStringConverter;
 
 import java.math.BigDecimal;
 import java.util.Objects;
@@ -11,19 +10,17 @@ public class ReceivingAddress {
 
     private BigDecimal bigDecimalBalance;
 
-    private BigDecimalStringConverter bigDecimalStringConverter = new BigDecimalStringConverter();
+    private final StringProperty balance = new SimpleStringProperty();
 
-    private StringProperty balance = new SimpleStringProperty();
+    private final IntegerProperty confirmations = new SimpleIntegerProperty();
 
-    private IntegerProperty confirmations = new SimpleIntegerProperty();
-
-    private StringProperty address = new SimpleStringProperty();
+    private final StringProperty address = new SimpleStringProperty();
 
     private DerivationPath derivationPath;
 
     public ReceivingAddress(BigDecimal balance, int confirmations, String address) {
         this.bigDecimalBalance = balance;
-        this.balance.setValue(bigDecimalStringConverter.toString(balance));
+        this.balance.setValue(balance.toString());
         this.confirmations.set(confirmations);
         this.address.setValue(address);
     }

@@ -210,25 +210,25 @@ public class TablesTest extends TestBase {
             switch (i) {
                 case 1 -> assertThat(transactionsTable, containsRow(
                     txIds.get(i),
-                    "3.0",
+                    "3.00000000",
                     expectedConfirmations.get(i),
                     trRowMap.get(txIds.get(i)).getDate()
                 ));
                 case 3 -> assertThat(transactionsTable, containsRow(
                     txIds.get(i),
-                    "2.0",
+                    "2.00000000",
                     expectedConfirmations.get(i),
                     trRowMap.get(txIds.get(i)).getDate()
                 ));
                 case 4 -> assertThat(transactionsTable, containsRow(
                     txIds.get(i),
-                    "7.0",
+                    "7.00000000",
                     expectedConfirmations.get(i),
                     trRowMap.get(txIds.get(i)).getDate()
                 ));
                 default -> assertThat(transactionsTable, containsRow(
                     txIds.get(i),
-                    "1.0",
+                    "1.00000000",
                     expectedConfirmations.get(i),
                     trRowMap.get(txIds.get(i)).getDate()
                 ));
@@ -317,25 +317,25 @@ public class TablesTest extends TestBase {
             switch (i) {
                 case 1 -> assertThat(transactionsTable, containsRow(
                     txIds.get(i),
-                    "3.0",
+                    "3.00000000",
                     expectedConfirmations.get(i),
                     trRowMap.get(txIds.get(i)).getDate()
                 ));
                 case 3 -> assertThat(transactionsTable, containsRow(
                     txIds.get(i),
-                    "2.0",
+                    "2.00000000",
                     expectedConfirmations.get(i),
                     trRowMap.get(txIds.get(i)).getDate()
                 ));
                 case 4 -> assertThat(transactionsTable, containsRow(
                     txIds.get(i),
-                    "7.0",
+                    "7.00000000",
                     expectedConfirmations.get(i),
                     trRowMap.get(txIds.get(i)).getDate()
                 ));
                 default -> assertThat(transactionsTable, containsRow(
                     txIds.get(i),
-                    "1.0",
+                    "1.00000000",
                     expectedConfirmations.get(i),
                     trRowMap.get(txIds.get(i)).getDate()
                 ));
@@ -392,7 +392,7 @@ public class TablesTest extends TestBase {
         range(0, txIds.size()).forEach(i ->
             assertThat(transactionsTable, containsRow(
                 txIds.get(i),
-                "1.0",
+                "1.00000000",
                 0,
                 trRowMap.get(txIds.get(i)).getDate()
             ))

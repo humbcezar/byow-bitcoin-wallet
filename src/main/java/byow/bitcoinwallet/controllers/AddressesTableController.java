@@ -36,10 +36,6 @@ public class AddressesTableController extends TableView<ReceivingAddress> implem
     @FXML
     public TableColumn<ReceivingAddress, Integer> columnConfirmations;
 
-    private final Resource fxml;
-
-    private final ApplicationContext context;
-
     private final CurrentReceivingAddresses currentReceivingAddresses;
 
     @Autowired
@@ -48,10 +44,8 @@ public class AddressesTableController extends TableView<ReceivingAddress> implem
         ApplicationContext context,
         CurrentReceivingAddresses currentReceivingAddresses
     ) throws IOException {
-        this.fxml = fxml;
-        this.context = context;
         this.currentReceivingAddresses = currentReceivingAddresses;
-        construct(this.fxml, this.context);
+        construct(fxml, context);
     }
 
     public void initialize() {

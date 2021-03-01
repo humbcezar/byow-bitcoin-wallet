@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 
 import static java.math.BigDecimal.valueOf;
 import static java.math.RoundingMode.FLOOR;
+import static java.math.RoundingMode.UNNECESSARY;
 
 @Component
 public class SendTransactionDialogController {
@@ -41,7 +42,8 @@ public class SendTransactionDialogController {
     }
 
     private void buildAmountToSend(String amount) {
-        amountToSend.setText(amount.concat(" BTC"));
+        BigDecimal value = new BigDecimal(amount).setScale(8, UNNECESSARY);
+        amountToSend.setText(value.toString().concat(" BTC"));
     }
 
     private void buildAddressToSend(String address) {

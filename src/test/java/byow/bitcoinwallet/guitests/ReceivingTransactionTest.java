@@ -9,7 +9,6 @@ import byow.bitcoinwallet.utils.WalletUtil;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-import javafx.util.converter.BigDecimalStringConverter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -24,12 +23,12 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static byow.bitcoinwallet.services.address.DerivationPath.*;
+import static java.math.RoundingMode.UNNECESSARY;
 import static java.util.stream.IntStream.range;
 import static org.assertj.core.internal.bytebuddy.utility.RandomString.make;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.testfx.matcher.control.TableViewMatchers.containsRow;
-import static org.testfx.matcher.control.TableViewMatchers.hasNumRows;
+import static org.testfx.matcher.control.TableViewMatchers.*;
 import static org.testfx.util.WaitForAsyncUtils.waitFor;
 
 public class ReceivingTransactionTest extends TestBase {
@@ -59,8 +58,6 @@ public class ReceivingTransactionTest extends TestBase {
 
     @Autowired
     private WalletUtil walletUtil;
-
-    private BigDecimalStringConverter bigDecimalStringConverter = new BigDecimalStringConverter();
 
     @Override
     @Start
@@ -100,17 +97,17 @@ public class ReceivingTransactionTest extends TestBase {
         String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
 
         List<ReceivingAddress> addresses = List.of(
-                new ReceivingAddress(new BigDecimal("2"), 5, address),
-                new ReceivingAddress(new BigDecimal("2.5"), 4, address),
-                new ReceivingAddress(new BigDecimal("3"), 3, address),
-                new ReceivingAddress(new BigDecimal("4"), 2, address),
-                new ReceivingAddress(new BigDecimal("7"), 2, address)
+                new ReceivingAddress(new BigDecimal("2.00000000"), 5, address),
+                new ReceivingAddress(new BigDecimal("2.50000000"), 4, address),
+                new ReceivingAddress(new BigDecimal("3.00000000"), 3, address),
+                new ReceivingAddress(new BigDecimal("4.00000000"), 2, address),
+                new ReceivingAddress(new BigDecimal("7.00000000"), 2, address)
         );
         String expectedBalance = addresses.stream()
                 .map(ReceivingAddress::getBigDecimalBalance)
                 .reduce(BigDecimal::add)
-                .map(balance -> bigDecimalStringConverter.toString(balance))
-                .get() + "0000000";
+                .get()
+                .toString();
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String expectedNextAddress = addressSequentialGenerator
                 .deriveAddresses(1, seed, FIRST_BIP84_ADDRESS_PATH.next(1))
@@ -138,8 +135,8 @@ public class ReceivingTransactionTest extends TestBase {
         String secondAddress = expectedAddresses.get(0);
         String expectedNextAddress = expectedAddresses.get(1);
         List<ReceivingAddress> addresses = List.of(
-                new ReceivingAddress(new BigDecimal("2"), 0, secondAddress),
-                new ReceivingAddress(new BigDecimal("2.5"), 0, address)
+                new ReceivingAddress(new BigDecimal("2.00000000"), 0, secondAddress),
+                new ReceivingAddress(new BigDecimal("2.50000000"), 0, address)
         );
         String expectedBalance = "2.50000000";
         receiveVaryingTransactions(robot, address, addresses, expectedNextAddress, expectedBalance);
@@ -273,7 +270,7 @@ public class ReceivingTransactionTest extends TestBase {
         range(0, txIds.size()).forEach(i ->
             assertThat(transactionsTable, containsRow(
                 txIds.get(i),
-                "1.0",
+                "1.00000000",
                 0,
                 trRowMap.get(txIds.get(i)).getDate()
             ))
@@ -343,7 +340,7 @@ public class ReceivingTransactionTest extends TestBase {
         range(0, txIds.size()).forEach(i ->
             assertThat(transactionsTable, containsRow(
                 txIds.get(i),
-                "1.0",
+                "1.00000000",
                 0,
                 trRowMap.get(txIds.get(i)).getDate()
             ))
@@ -411,7 +408,7 @@ public class ReceivingTransactionTest extends TestBase {
         range(0, txIds.size()).forEach(i ->
             assertThat(transactionsTable, containsRow(
                 txIds.get(i),
-                Double.toString(addresses.get(i).getBigDecimalBalance().doubleValue()),
+                addresses.get(i).getBigDecimalBalance().setScale(8, UNNECESSARY).toString(),
                 expectedConfirmationsForTransactions.pop(),
                 trRowMap.get(txIds.get(i)).getDate()
             ))

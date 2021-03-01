@@ -37,10 +37,6 @@ public class TransactionsTableController extends TableView<TransactionRow> imple
     @FXML
     public TableColumn<TransactionRow, String> columnTransactionDate;
 
-    private final Resource fxml;
-
-    private final ApplicationContext context;
-
     private final CurrentTransactions currentTransactions;
 
     @Autowired
@@ -49,10 +45,8 @@ public class TransactionsTableController extends TableView<TransactionRow> imple
         ApplicationContext context,
         CurrentTransactions currentTransactions
     ) throws IOException {
-        this.fxml = fxml;
-        this.context = context;
         this.currentTransactions = currentTransactions;
-        construct(this.fxml, this.context);
+        construct(fxml, context);
     }
 
     public void initialize() {

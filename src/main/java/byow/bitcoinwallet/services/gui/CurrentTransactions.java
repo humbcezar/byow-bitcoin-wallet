@@ -10,21 +10,24 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static java.lang.String.valueOf;
+import static java.math.BigDecimal.valueOf;
+import static java.math.RoundingMode.UNNECESSARY;
 import static javafx.application.Platform.runLater;
 
 @Component
 @Lazy
 public class CurrentTransactions {
-    private ObservableList<TransactionRow> currentTransactions = new ObservableListWrapper<>(new LinkedList<>());
+    private final ObservableList<TransactionRow> currentTransactions = new ObservableListWrapper<>(new LinkedList<>());
 
-    private WalletRepository walletRepository;
+    private final WalletRepository walletRepository;
 
-    private TransactionGetter transactionGetter;
+    private final TransactionGetter transactionGetter;
 
     @Autowired
     public CurrentTransactions(
@@ -71,20 +74,18 @@ public class CurrentTransactions {
     }
 
     private String calculateBalance(Transaction transaction) {
-        return valueOf(
-            ((transaction.getTransactionOutputs()
+         return valueOf((transaction.getTransactionOutputs()
                 .stream()
                 .map(TransactionOutput::getSatoshis)
                 .reduce(Long::sum)
-                .orElse(0L)
-                .doubleValue())
-            - (transaction.getTransactionInputs()
-            .stream()
-            .map(TransactionInput::getSatoshis)
-            .reduce(Long::sum)
-            .orElse(0L)
-            .doubleValue())) / 100_000_000
-        );
+                .orElse(0L))
+                - (transaction.getTransactionInputs()
+                .stream()
+                .map(TransactionInput::getSatoshis)
+                .reduce(Long::sum)
+                .orElse(0L))
+            ).divide(valueOf(100_000_000), 8, UNNECESSARY)
+            .toString();
     }
 
     public ObservableList<TransactionRow> get() {
