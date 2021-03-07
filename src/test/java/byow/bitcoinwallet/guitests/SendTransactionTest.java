@@ -1,10 +1,9 @@
 package byow.bitcoinwallet.guitests;
 
+import byow.bitcoinwallet.entities.NextChangeAddress;
 import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.entities.TransactionRow;
-import byow.bitcoinwallet.services.address.AddressGenerator;
-import byow.bitcoinwallet.services.address.NestedSegwitAddressGenerator;
-import byow.bitcoinwallet.services.address.SeedGenerator;
+import byow.bitcoinwallet.services.address.*;
 import byow.bitcoinwallet.services.wallet.TotalBalanceCalculator;
 import byow.bitcoinwallet.utils.WalletUtil;
 import javafx.scene.control.ProgressBar;
@@ -21,6 +20,7 @@ import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -40,6 +40,8 @@ import static org.testfx.matcher.control.TableViewMatchers.hasNumRows;
 import static org.testfx.util.WaitForAsyncUtils.waitFor;
 
 public class SendTransactionTest extends TestBase {
+
+    private static final long TIMEOUT = 60;
 
     @Autowired
     private WalletUtil walletUtil;
@@ -72,7 +74,7 @@ public class SendTransactionTest extends TestBase {
         String seed = seedGenerator.generateSeed(mnemonicSeed, password);
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
-        waitFor(60, SECONDS, () -> {
+        waitFor(TIMEOUT, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
         });
@@ -87,21 +89,13 @@ public class SendTransactionTest extends TestBase {
         String seed = seedGenerator.generateSeed(mnemonicSeed, password);
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
-        waitFor(60, SECONDS, () -> {
+        waitFor(TIMEOUT, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
         });
 
         String nodeAddress = bitcoindRpcClient.getNewAddress();
-        robot.clickOn("#sendTab");
-        robot.clickOn("#amountToSend");
-        robot.write("0.5");
-        robot.clickOn("#addressToSend");
-        robot.write(nodeAddress);
-        robot.clickOn("#send");
-        robot.clickOn("#sendTransactionPassword");
-        robot.write("wrong");
-        robot.clickOn("OK");
+        sendBtc(robot, "0.5", "wrong", nodeAddress);
         NodeQuery text = robot.lookup("Wrong password.");
         robot.clickOn("OK");
         assertNotNull(text.queryLabeled().getText());
@@ -113,7 +107,7 @@ public class SendTransactionTest extends TestBase {
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String firstAddress = nestedSegwitAddressGenerator.generate(seed, FIRST_BIP49_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#nestedReceivingAddress");
-        waitFor(60, SECONDS, () -> {
+        waitFor(TIMEOUT, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
         });
@@ -129,7 +123,7 @@ public class SendTransactionTest extends TestBase {
         String secondAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#nestedReceivingAddress");
         fundAddress(robot, secondAddress, ONE, 1, "#receivingAddress");
-        waitFor(60, SECONDS, () -> {
+        waitFor(TIMEOUT, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             return tableView.getItems().size() == 2 && tableView.getItems().get(0).getConfirmations() == 1
                     && tableView.getItems().get(1).getConfirmations() == 2;
@@ -144,7 +138,7 @@ public class SendTransactionTest extends TestBase {
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, valueOf(5), 1, "#receivingAddress");
-        waitFor(60, SECONDS, () -> {
+        waitFor(TIMEOUT, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
         });
@@ -196,7 +190,7 @@ public class SendTransactionTest extends TestBase {
         String recipientMnemonicSeed = walletUtil.createWallet(robot, recipientWallet, "");
         String recipientSeed = seedGenerator.generateSeed(recipientMnemonicSeed, "");
         String recipientWalletAddress = addressGenerator.generate(recipientSeed, FIRST_BIP84_ADDRESS_PATH);
-        waitFor(60, SECONDS, () -> {
+        waitFor(TIMEOUT, SECONDS, () -> {
             String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
             return address != null && address.equals(recipientWalletAddress);
         });
@@ -213,7 +207,7 @@ public class SendTransactionTest extends TestBase {
         robot.write(recipientWalletAddress);
         robot.clickOn("#send");
         robot.clickOn("OK");
-        waitFor(60, SECONDS, () -> {
+        waitFor(TIMEOUT, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             return tableView.getItems().size() == 1 &&
                 tableView.getItems().get(0).getBigDecimalBalance().compareTo(new BigDecimal("0.5")) < 0;
@@ -227,7 +221,7 @@ public class SendTransactionTest extends TestBase {
         robot.moveTo("#load");
         robot.clickOn(recipientWallet);
         robot.clickOn("OK");
-        waitFor(60, SECONDS, () -> {
+        waitFor(TIMEOUT, SECONDS, () -> {
             TableView<ReceivingAddress> recipientTableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             ProgressBar progressBar = robot.lookup("#progressBar").queryAs(ProgressBar.class);
             return recipientTableView.getItems().size() == 1 &&
@@ -249,7 +243,7 @@ public class SendTransactionTest extends TestBase {
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
-        waitFor(60, SECONDS, () -> {
+        waitFor(TIMEOUT, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
         });
@@ -273,7 +267,7 @@ public class SendTransactionTest extends TestBase {
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
-        waitFor(60, SECONDS, () -> {
+        waitFor(TIMEOUT, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
         });
@@ -297,7 +291,7 @@ public class SendTransactionTest extends TestBase {
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
-        waitFor(60, SECONDS, () -> {
+        waitFor(TIMEOUT, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             BigDecimal previousBalance = totalBalanceCalculator.getTotalBalance();
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1
@@ -314,7 +308,7 @@ public class SendTransactionTest extends TestBase {
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
-        waitFor(60, SECONDS, () -> {
+        waitFor(TIMEOUT, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             BigDecimal previousBalance = totalBalanceCalculator.getTotalBalance();
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1
@@ -331,7 +325,7 @@ public class SendTransactionTest extends TestBase {
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
-        waitFor(60, SECONDS, () -> {
+        waitFor(TIMEOUT, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
         });
@@ -355,7 +349,7 @@ public class SendTransactionTest extends TestBase {
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, valueOf(1.00000300), 1, "#receivingAddress");
-        waitFor(60, SECONDS, () -> {
+        waitFor(TIMEOUT, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
         });
@@ -379,7 +373,7 @@ public class SendTransactionTest extends TestBase {
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
-        waitFor(60, SECONDS, () -> {
+        waitFor(TIMEOUT, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
         });
@@ -393,12 +387,30 @@ public class SendTransactionTest extends TestBase {
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
-        waitFor(60, SECONDS, () -> {
+        waitFor(TIMEOUT, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
         });
 
         sendNTransactions(robot, "0.5", 1, "0.50000000", 1, seed, 0, "legacy", 1, "");
+    }
+
+    @Test
+    public void sendOneTransactionToItsOwnFirstAddress(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
+        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
+        fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
+        waitFor(TIMEOUT, SECONDS, () -> {
+            TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
+            return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
+        });
+
+        sendBtc(robot, "0.5", "", firstAddress);
+        TableView<ReceivingAddress> table = robot.lookup("#addressesTable").queryAs(TableView.class);
+        BigDecimal previousBalance = table.getItems().stream().map(ReceivingAddress::getBigDecimalBalance).reduce(BigDecimal::add).orElse(ZERO);
+        addressesTableAssertion(robot, "0.5", 1, table, previousBalance);
+        changeAddressAssertion(seed, 0, 0, table, 1);
     }
 
     private void fundAddress(FxRobot robot, String firstAddress, BigDecimal amount, int confirmations, String fxmlAddress) throws TimeoutException {
@@ -430,7 +442,7 @@ public class SendTransactionTest extends TestBase {
             }
         });
         try {
-            waitFor(60, SECONDS, () -> {
+            waitFor(TIMEOUT, SECONDS, () -> {
                 TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
                 return tableView.getItems().size() == numberOfAddresses
                         && tableView.getItems().get(0).getConfirmations() == numberOfAddresses;
@@ -457,35 +469,10 @@ public class SendTransactionTest extends TestBase {
             BigDecimal previousBalance = table.getItems().stream().map(ReceivingAddress::getBigDecimalBalance).reduce(BigDecimal::add).orElse(ZERO);
 
             String nodeAddress = bitcoindRpcClient.getNewAddress("", toAddressType);
-            robot.clickOn("#sendTab");
-            robot.clickOn("#amountToSend");
-            robot.write(amount);
-            robot.clickOn("#addressToSend");
-            robot.write(nodeAddress);
-            robot.clickOn("#send");
-            robot.clickOn("#sendTransactionPassword");
-            robot.write(password);
-            robot.clickOn("OK");
-            try {
-                waitFor(60, SECONDS, () -> {
-                    TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
-                    return !isNull(tableView) && tableView.getItems().size() == 1
-                            && previousBalance.subtract(new BigDecimal(amount)).setScale(scale, HALF_UP).equals(
-                                tableView.getItems().get(0).getBigDecimalBalance().setScale(scale, HALF_UP)
-                        );
-                });
-            } catch (TimeoutException e) {
-                throw new RuntimeException(e);
-            }
-            assertEquals(
-                previousBalance.subtract(new BigDecimal(amount)).setScale(scale, HALF_UP),
-                table.getItems().get(0).getBigDecimalBalance().setScale(scale, HALF_UP)
-            );
+            sendBtc(robot, amount, password, nodeAddress);
+            addressesTableAssertion(robot, amount, scale, table, previousBalance);
 
-            assertEquals(
-                addressGenerator.generate(seed, FIRST_BIP84_CHANGE_PATH.next(i + firstChangeIndex)),
-                table.getItems().get(0).getAddress()
-            );
+            changeAddressAssertion(seed, firstChangeIndex, i, table, 0);
 
             String nodeConfirmationAddress = bitcoindRpcClient.getNewAddress();
             bitcoindRpcClient.generateToAddress(1, nodeConfirmationAddress);
@@ -496,7 +483,7 @@ public class SendTransactionTest extends TestBase {
         }).collect(Collectors.toList());
 
         robot.clickOn("#transactionsTab");
-        waitFor(60, SECONDS, () -> {
+        waitFor(TIMEOUT, SECONDS, () -> {
             TableView<TransactionRow> transactionsTable = robot.lookup("#transactionsTable").queryAs(TableView.class);
             return transactionsTable.getItems().size() == (numTransactions + numPreviousTransactions);
         });
@@ -508,6 +495,48 @@ public class SendTransactionTest extends TestBase {
                 transactionsTable.getItems().get(i + numPreviousTransactions).getBigDecimalBalance().setScale(8, FLOOR).toString()
             )
         );
+    }
+
+    private void changeAddressAssertion(String seed, int firstChangeIndex, int offset, TableView<ReceivingAddress> table, int row) {
+        try {
+            waitFor(TIMEOUT, SECONDS, () -> table.getItems().size() == row + 1);
+        } catch (TimeoutException e) {
+            throw new RuntimeException(e);
+        }
+        assertEquals(
+            addressGenerator.generate(seed, FIRST_BIP84_CHANGE_PATH.next(offset + firstChangeIndex)),
+            table.getItems().get(row).getAddress()
+        );
+    }
+
+    private void addressesTableAssertion(FxRobot robot, String amount, int scale, TableView<ReceivingAddress> table, BigDecimal previousBalance) {
+        try {
+            waitFor(TIMEOUT, SECONDS, () -> {
+                TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
+                return !isNull(tableView) && tableView.getItems().size() == 1
+                        && previousBalance.subtract(new BigDecimal(amount)).setScale(scale, HALF_UP).equals(
+                            tableView.getItems().get(0).getBigDecimalBalance().setScale(scale, HALF_UP)
+                    );
+            });
+        } catch (TimeoutException e) {
+            throw new RuntimeException(e);
+        }
+        assertEquals(
+            previousBalance.subtract(new BigDecimal(amount)).setScale(scale, HALF_UP),
+            table.getItems().get(0).getBigDecimalBalance().setScale(scale, HALF_UP)
+        );
+    }
+
+    private void sendBtc(FxRobot robot, String amount, String password, String address) {
+        robot.clickOn("#sendTab");
+        robot.clickOn("#amountToSend");
+        robot.write(amount);
+        robot.clickOn("#addressToSend");
+        robot.write(address);
+        robot.clickOn("#send");
+        robot.clickOn("#sendTransactionPassword");
+        robot.write(password);
+        robot.clickOn("OK");
     }
 
     private void sendNTransactions(
@@ -530,7 +559,7 @@ public class SendTransactionTest extends TestBase {
             robot.clickOn("#send");
             robot.clickOn("OK");
             try {
-                waitFor(60, SECONDS, () ->
+                waitFor(TIMEOUT, SECONDS, () ->
                     previousBalance.subtract(new BigDecimal(amount)).setScale(scale, HALF_UP)
                         .equals(totalBalanceCalculator.getTotalBalance().setScale(scale, HALF_UP))
                 );
@@ -552,7 +581,7 @@ public class SendTransactionTest extends TestBase {
         }).collect(Collectors.toList());
 
         robot.clickOn("#transactionsTab");
-        waitFor(60, SECONDS, () -> {
+        waitFor(TIMEOUT, SECONDS, () -> {
             TableView<TransactionRow> transactionsTable = robot.lookup("#transactionsTable").queryAs(TableView.class);
             return transactionsTable.getItems().size() == (numberOfTransactions + numberOfPreviousTransactions);
         });
@@ -565,4 +594,5 @@ public class SendTransactionTest extends TestBase {
             )
         );
     }
+
 }

@@ -8,13 +8,13 @@ import javafx.concurrent.Task;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class UpdateCurrentWalletTask extends Task<Void> {
-    private CurrentWalletManager currentWalletManager;
+    private final CurrentWalletManager currentWalletManager;
 
-    private ReentrantLock reentrantLock;
+    private final ReentrantLock reentrantLock;
 
-    private Wallet wallet;
+    private final Wallet wallet;
 
-    private CurrentTransactions currentTransactions;
+    private final CurrentTransactions currentTransactions;
 
     public UpdateCurrentWalletTask(
         CurrentWalletManager currentWalletManager,

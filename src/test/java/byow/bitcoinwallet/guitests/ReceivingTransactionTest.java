@@ -245,19 +245,7 @@ public class ReceivingTransactionTest extends TestBase {
             );
 
             String seed = seedGenerator.generateSeed(mnemonicSeed, "");
-            String expectedNextAddress = addressSequentialGenerator
-                    .deriveAddresses(1, seed, firstDerivationPath.next(i + 1))
-                    .get(0).getAddress();
-            try {
-                waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
-                    String nextAddress = nextChangeAddress.getValue().getAddress();
-                    return expectedNextAddress.equals(nextAddress);
-                });
-            } catch (TimeoutException e) {
-                e.printStackTrace();
-            }
-            String nextAddress = nextChangeAddress.getValue().getAddress();
-            assertEquals(expectedNextAddress, nextAddress);
+            nextReceivingAddressAssertion(firstDerivationPath, addressSequentialGenerator, i, seed);
         });
 
         robot.clickOn("#transactionsTab");
@@ -275,6 +263,22 @@ public class ReceivingTransactionTest extends TestBase {
                 trRowMap.get(txIds.get(i)).getDate()
             ))
         );
+    }
+
+    private void nextReceivingAddressAssertion(DerivationPath firstDerivationPath, AddressSequentialGenerator addressSequentialGenerator, int i, String seed) {
+        String expectedNextAddress = addressSequentialGenerator
+                .deriveAddresses(1, seed, firstDerivationPath.next(i + 1))
+                .get(0).getAddress();
+        try {
+            waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
+                String nextAddress = nextChangeAddress.getValue().getAddress();
+                return expectedNextAddress.equals(nextAddress);
+            });
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        }
+        String nextAddress = nextChangeAddress.getValue().getAddress();
+        assertEquals(expectedNextAddress, nextAddress);
     }
 
     private void receiveNTransactions(

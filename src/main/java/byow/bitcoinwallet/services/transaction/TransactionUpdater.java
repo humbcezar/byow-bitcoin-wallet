@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
+import javax.persistence.PersistenceException;
 import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Set;
@@ -83,7 +84,7 @@ public class TransactionUpdater {
         currentTransactions.update(currentWallet.getCurrentWallet());
     }
 
-    @Transactional
+    @Transactional(rollbackOn = PersistenceException.class)
     private void saveTransaction(Object transaction, List<String> outputs, Wallet wallet) {
         Set<TransactionOutput> transactionOutputs = range(0, outputs.size())
             .filter(index -> currentReceivingAddresses.contains(outputs.get(index)))
@@ -97,13 +98,16 @@ public class TransactionUpdater {
                 return transactionOutputRepository.save(transactionOutput);
             }).collect(Collectors.toSet());
 
-        if (!transactionOutputs.isEmpty()) {
+        String txId = encode(tx_get_txid(transaction));
+        if (!transactionOutputs.isEmpty() && !txId.isEmpty()) {
             transactionSaver.save(
-                revertEndianess(encode(tx_get_txid(transaction))),
+                revertEndianess(txId),
                 wallet,
                 Set.of(),
                 transactionOutputs
             );
+            return;
         }
+        throw new PersistenceException();
     }
 }
