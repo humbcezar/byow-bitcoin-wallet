@@ -30,7 +30,8 @@ public class CurrentNestedSegwitChangeAddressesManager extends CurrentAddressesM
         TransactionOutputRepository transactionOutputRepository,
         WalletRepository walletRepository,
         AddressRepository addressRepository,
-        NextNestedSegwitChangeAddress nextNestedSegwitChangeAddress
+        NextNestedSegwitChangeAddress nextNestedSegwitChangeAddress,
+        AddressesGetter addressesGetter
     ) {
         super(
             currentReceivingAddresses,
@@ -41,7 +42,8 @@ public class CurrentNestedSegwitChangeAddressesManager extends CurrentAddressesM
             transactionSaver,
             transactionOutputRepository,
             walletRepository,
-            addressRepository
+            addressRepository,
+            addressesGetter
         );
         this.nextAddress = nextNestedSegwitChangeAddress;
         this.currentDerivationPath = FIRST_BIP49_CHANGE_PATH;

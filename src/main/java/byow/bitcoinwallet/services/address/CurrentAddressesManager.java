@@ -39,6 +39,8 @@ abstract public class CurrentAddressesManager {
 
     private final AddressRepository addressRepository;
 
+    private final AddressesGetter addressesGetter;
+
     protected DerivationPath currentDerivationPath;
 
     protected NextAddress nextAddress;
@@ -53,7 +55,8 @@ abstract public class CurrentAddressesManager {
         TransactionSaver transactionSaver,
         TransactionOutputRepository transactionOutputRepository,
         WalletRepository walletRepository,
-        AddressRepository addressRepository
+        AddressRepository addressRepository,
+        AddressesGetter addressesGetter
     ) {
         this.currentReceivingAddresses = currentReceivingAddresses;
         this.addressSequentialGenerator = addressSequentialGenerator;
@@ -64,6 +67,7 @@ abstract public class CurrentAddressesManager {
         this.transactionOutputRepository = transactionOutputRepository;
         this.walletRepository = walletRepository;
         this.addressRepository = addressRepository;
+        this.addressesGetter = addressesGetter;
     }
 
     protected void setNextAddress(ReceivingAddress address) {
@@ -85,7 +89,7 @@ abstract public class CurrentAddressesManager {
 
     public abstract void clear();
 
-    public List<String> initializeAddresses(int numberOfAddresses, String seed, Date walletCreationDate) {
+    public List<String> initializeAddresses(int numberOfAddresses, String seed, Date walletCreationDate, String walletName) {
         List<String> addresses = addressSequentialGenerator.deriveAddresses(numberOfAddresses, seed, getCurrentDerivationPath())
             .stream()
             .filter(address -> !currentReceivingAddresses.contains(address.getAddress()))
@@ -97,8 +101,10 @@ abstract public class CurrentAddressesManager {
             ))
             .map(AddressPath::getAddress)
             .collect(Collectors.toList());
-        if (!addresses.isEmpty()) {
-            multiAddressesImporter.importMultiAddresses(walletCreationDate, addresses.toArray(new String[0]));
+
+        List<String> unimportedAddresses = getUnimportedAddresses(addresses, walletName);
+        if (!unimportedAddresses.isEmpty()) {
+            multiAddressesImporter.importMultiAddresses(walletCreationDate, walletName, unimportedAddresses.toArray(new String[0]));
         }
         return addresses;
     }
@@ -107,7 +113,8 @@ abstract public class CurrentAddressesManager {
         List<String> addressList = initializeAddresses(
             numberOfAddresses,
             wallet.getSeed(),
-            wallet.getCreatedAt()
+            wallet.getCreatedAt(),
+            wallet.getName()
         );
         List<Unspent> utxos = utxosGetter.getUtxos(addressList);
         saveTransaction(wallet, utxos);
@@ -120,7 +127,7 @@ abstract public class CurrentAddressesManager {
             update(wallet, numberOfAddresses);
             return;
         }
-        updateNextAddress(addressList.get(0), updatedAddressesCount, wallet.getSeed(), wallet.getCreatedAt());
+        updateNextAddress(addressList.get(0), updatedAddressesCount, wallet.getSeed(), wallet.getCreatedAt(), wallet.getName());
     }
 
     @Transactional
@@ -153,7 +160,7 @@ abstract public class CurrentAddressesManager {
             .anyMatch(transaction -> transaction.getTxId().equals(txId));
     }
 
-    public void updateNextAddress(String address, int updatedAddressesCount, String seed, Date walletCreationDate) {
+    public void updateNextAddress(String address, int updatedAddressesCount, String seed, Date walletCreationDate, String walletName) {
         if (updatedAddressesCount > 0) {
             address = addressSequentialGenerator.deriveAddresses(
                 1,
@@ -161,12 +168,20 @@ abstract public class CurrentAddressesManager {
                 setNextCurrentDerivationPath(updatedAddressesCount)
             ).get(0).getAddress();
         }
-        initializeAddresses(1, seed, walletCreationDate);
+        initializeAddresses(1, seed, walletCreationDate, walletName);
         ReceivingAddress nextReceivingAddress = new ReceivingAddress(ZERO, 0, address);
         if (addressRepository.existsByAddress(address)) {
-            updateNextAddress(address, 1, seed, walletCreationDate);
+            updateNextAddress(address, 1, seed, walletCreationDate, walletName);
             return;
         }
         runLater(() -> setNextAddress(nextReceivingAddress));
     }
+
+    private List<String> getUnimportedAddresses(List<String> addresses, String walletName) {
+        Set<String> importedAddresses = addressesGetter.getAddressesByLabel(walletName);
+        return addresses.stream()
+            .filter(address -> !importedAddresses.contains(address))
+            .collect(Collectors.toList());
+    }
+
 }

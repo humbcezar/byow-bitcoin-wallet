@@ -124,7 +124,7 @@ public class TransactionUpdaterTest {
 
         transactionUpdater.update(transaction);
 
-        verify(currentDefaultAddressesManager, times(addresses.size())).updateNextAddress("", 1, seed, date);
+        verify(currentDefaultAddressesManager, times(addresses.size())).updateNextAddress("", 1, seed, date, "");
 //        verify(transactionSaver).save(encode(tx_get_txid(transaction)), currentWalletManager.getCurrentWallet());
     }
 }

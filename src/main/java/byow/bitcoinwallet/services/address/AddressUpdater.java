@@ -40,7 +40,8 @@ public class AddressUpdater {
                 currentAddressManager -> currentAddressManager.initializeAddresses(
                     1,
                     wallet.getSeed(),
-                    wallet.getCreatedAt()
+                    wallet.getCreatedAt(),
+                    wallet.getName()
                 ))
             )
             .filter(currentReceivingAddresses::contains)
@@ -51,11 +52,13 @@ public class AddressUpdater {
             .forEach(address -> currentAddressesManagers.stream()
                 .filter(currentAddressManager -> currentAddressManager.getNextAddress().equalAddress(address))
                 .forEach(currentAddressManager -> currentAddressManager.updateNextAddress(
-                    "",
-                    1,
-                    wallet.getSeed(),
-                    wallet.getCreatedAt()
-                ))
+                        "",
+                        1,
+                        wallet.getSeed(),
+                        wallet.getCreatedAt(),
+                        wallet.getName()
+                    )
+                )
             );
     }
 }

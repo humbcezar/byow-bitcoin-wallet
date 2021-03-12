@@ -37,7 +37,7 @@ public class MultiAddressesImporterTest {
         String address2 = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1));
         String address3 = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1).next(1));
         Date date = new Date();
-        multiAddressesImporter.importMultiAddresses(date, address1, address2, address3);
+        multiAddressesImporter.importMultiAddresses(date, "", address1, address2, address3);
         Mockito.verify(bitcoindRpcClient).query("importmulti", expectedRequest(date, address1, address2, address3));
     }
 
@@ -53,6 +53,7 @@ public class MultiAddressesImporterTest {
                         });
                         put("timestamp", date.toInstant().getEpochSecond());
                         put("watchonly", true);
+                        put("label", "");
                     }
                 });
                 add(new LinkedHashMap<>(){
@@ -64,6 +65,7 @@ public class MultiAddressesImporterTest {
                         });
                         put("timestamp", date.toInstant().getEpochSecond());
                         put("watchonly", true);
+                        put("label", "");
                     }
                 });
                 add(new LinkedHashMap<>(){
@@ -75,6 +77,7 @@ public class MultiAddressesImporterTest {
                         });
                         put("timestamp", date.toInstant().getEpochSecond());
                         put("watchonly", true);
+                        put("label", "");
                     }
                 });
             }

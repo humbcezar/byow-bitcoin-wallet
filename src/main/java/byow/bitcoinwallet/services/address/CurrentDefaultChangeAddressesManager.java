@@ -29,7 +29,8 @@ public class CurrentDefaultChangeAddressesManager extends CurrentAddressesManage
         TransactionSaver transactionSaver,
         TransactionOutputRepository transactionOutputRepository,
         WalletRepository walletRepository,
-        AddressRepository addressRepository
+        AddressRepository addressRepository,
+        AddressesGetter addressesGetter
     ) {
         super(
             currentReceivingAddresses,
@@ -40,7 +41,8 @@ public class CurrentDefaultChangeAddressesManager extends CurrentAddressesManage
             transactionSaver,
             transactionOutputRepository,
             walletRepository,
-            addressRepository
+            addressRepository,
+            addressesGetter
         );
         this.nextAddress = nextChangeAddress;
         this.currentDerivationPath = FIRST_BIP84_CHANGE_PATH;

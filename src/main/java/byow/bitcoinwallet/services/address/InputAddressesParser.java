@@ -34,13 +34,19 @@ public class InputAddressesParser {
         if (!tx_is_coinbase(transaction)) {
             int numInputs = tx_get_num_inputs(transaction);
             inputAddresses = range(0, numInputs).mapToObj(i -> {
-                byte[] publicKey = tx_get_input_witness(transaction, i, 1);
+                byte[] publicKey;
+                try {
+                    publicKey = tx_get_input_witness(transaction, i, 1);
+                } catch (IllegalArgumentException ignored) {
+                    return "";
+                }
                 if (isNestedSegwitInput(transaction, i)) {
                     return buildNestedSegwitAddress(publicKey);
                 }
                 byte[] witness = witness_program_from_bytes(publicKey, WALLY_SCRIPT_HASH160);
                 return addr_segwit_from_bytes(witness, addressPrefix, 0);
-            }).collect(Collectors.toList());
+            })
+            .collect(Collectors.toList());
         }
 
         return inputAddresses;

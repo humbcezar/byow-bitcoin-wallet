@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<DialogPane headerText="Give your wallet a name and enter valid Mnemonic Seed. Then, annotate the mnemonic seed in a safe place, and click OK." minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="450.0" xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1" fx:controller="byow.bitcoinwallet.controllers.ImportDialogController">
+<DialogPane headerText="Give your wallet a name and enter valid Mnemonic Seed. Then, annotate the mnemonic seed in a safe place, and click OK." minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="450.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="byow.bitcoinwallet.controllers.ImportDialogController">
     <content>
         <GridPane>
             <columnConstraints>
@@ -17,14 +17,17 @@
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
             </rowConstraints>
             <children>
                 <Label text="Wallet Name" GridPane.columnIndex="0" GridPane.rowIndex="0" />
                 <TextField fx:id="walletName" GridPane.columnIndex="1" GridPane.rowIndex="0" />
                 <Label text="Wallet Password (optional)" GridPane.columnIndex="0" GridPane.rowIndex="1" />
                 <PasswordField fx:id="walletPassword" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                <TextArea fx:id="mnemonicSeed" prefHeight="200.0" prefWidth="200.0" wrapText="true" GridPane.columnSpan="2" GridPane.rowIndex="4" />
+                <Label text="Creation Date (optional)" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                <DatePicker fx:id="creationDate" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                 <Label text="Mnemonic Seed:" GridPane.rowIndex="3" />
+                <TextArea fx:id="mnemonicSeed" prefHeight="200.0" prefWidth="200.0" wrapText="true" GridPane.columnSpan="2" GridPane.rowIndex="4" />
             </children>
         </GridPane>
     </content>

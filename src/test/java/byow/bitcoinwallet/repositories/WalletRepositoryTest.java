@@ -41,15 +41,4 @@ public class WalletRepositoryTest {
         assertThrows(DataIntegrityViolationException.class, () -> walletRepository.save(wallet2));
     }
 
-    @Test
-    public void saveRepeatedSeedFails() {
-        String name = RandomString.make();
-        String name2 = RandomString.make();
-        String seed = RandomString.make();
-
-        Wallet wallet = new Wallet(name, seed);
-        walletRepository.save(wallet);
-        Wallet wallet2 = new Wallet(name2, seed);
-        assertThrows(DataIntegrityViolationException.class, () -> walletRepository.save(wallet2));
-    }
 }
