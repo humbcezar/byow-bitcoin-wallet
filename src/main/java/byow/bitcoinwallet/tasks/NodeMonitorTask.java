@@ -14,7 +14,6 @@ import static com.blockstream.libwally.Wally.WALLY_TX_FLAG_USE_WITNESS;
 import static com.blockstream.libwally.Wally.tx_from_bytes;
 import static java.lang.Thread.currentThread;
 import static java.util.Set.of;
-import static org.zeromq.ZMQ.DONTWAIT;
 
 @Component
 @Lazy
@@ -52,10 +51,9 @@ public class NodeMonitorTask {
     }
 
     public void subscribe() {
-        synchronized (subscriber) {
-            subscriber.subscribe("rawtx".getBytes());
-            subscriber.subscribe("hashblock".getBytes());
-        }
+        subscriber.setReceiveTimeOut(1000);
+        subscriber.subscribe("rawtx".getBytes());
+        subscriber.subscribe("hashblock".getBytes());
     }
 
     public void close() {
@@ -81,14 +79,11 @@ public class NodeMonitorTask {
                     break;
                 }
                 byte[] contents;
-                String topic;
-                synchronized (subscriber) {
-                    topic = subscriber.recvStr(DONTWAIT);
-                    if (topic == null || !of("rawtx", "hashblock").contains(topic)) {
-                        continue;
-                    }
-                    contents = subscriber.recv(DONTWAIT);
+                String topic = subscriber.recvStr();
+                if (topic == null || !of("rawtx", "hashblock").contains(topic)) {
+                    continue;
                 }
+                contents = subscriber.recv();
 
                 switch (topic) {
                     case "rawtx" -> applicationEventPublisher.publishEvent(
