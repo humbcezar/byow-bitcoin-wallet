@@ -8,15 +8,15 @@ import javafx.concurrent.Task;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class UpdateReceivingAddressesTask extends Task<Void> {
-    private CurrentReceivingAddressesUpdater currentReceivingAddressesUpdater;
+    private final CurrentReceivingAddressesUpdater currentReceivingAddressesUpdater;
 
-    private ReentrantLock reentrantLock;
+    private final ReentrantLock reentrantLock;
 
-    private UtxosGetter utxosGetter;
+    private final UtxosGetter utxosGetter;
 
-    private Wallet wallet;
+    private final Wallet wallet;
 
-    private CurrentTransactions currentTransactions;
+    private final CurrentTransactions currentTransactions;
 
     public UpdateReceivingAddressesTask(
         CurrentReceivingAddressesUpdater currentReceivingAddressesUpdater,

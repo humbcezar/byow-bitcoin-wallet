@@ -9,6 +9,7 @@ import byow.bitcoinwallet.utils.WalletUtil;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -36,6 +37,9 @@ public class ReceivingTransactionTest extends TestBase {
     public static final int TIMEOUT = 60;
     @Autowired
     private BitcoindRpcClient bitcoindRpcClient;
+
+    @Autowired
+    private AddressGenerator addressGenerator;
 
     @Autowired
     private SeedGenerator seedGenerator;
@@ -167,6 +171,40 @@ public class ReceivingTransactionTest extends TestBase {
             defaultAddressGenerator,
             addressSequentialGenerator
         );
+    }
+
+    @Test
+    public void receiveOneHashBlockRewardWalletAddress(FxRobot robot) throws TimeoutException, InterruptedException {
+        walletUtil.createWallet(robot, RandomString.make(), "");
+        waitFor(40, TimeUnit.SECONDS, () -> {
+            TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
+            String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+            return !address.isBlank();
+        });
+        String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+        robot.sleep(5000);
+
+        bitcoindRpcClient.generateToAddress(1, address);
+
+        String randomAddress = addressGenerator.generate(
+            seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), ""),
+            FIRST_BIP84_ADDRESS_PATH
+        );
+        bitcoindRpcClient.generateToAddress(100, randomAddress);
+
+        waitFor(40, TimeUnit.SECONDS, () -> {
+            TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
+            return tableView.getItems().size() == 1;
+        });
+        TableView<ReceivingAddress> table = robot.lookup("#addressesTable").queryAs(TableView.class);
+        assertEquals(table.getItems().get(0).getAddress(), address);
+
+        waitFor(40, TimeUnit.SECONDS, () -> {
+            TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
+            return tableView.getItems().get(0).getConfirmations() == 101;
+        });
+        TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
+        assertEquals(101, tableView.getItems().get(0).getConfirmations());
     }
 
     private void receiveNSequentialTransactions(FxRobot robot, String mnemonicSeed, int numberOfTransactions) throws TimeoutException {
