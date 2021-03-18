@@ -34,7 +34,6 @@ public class GuiStartedListener implements ApplicationListener<GuiStartedEvent> 
     }
 
     @Override
-    @EventListener
     public void onApplicationEvent(GuiStartedEvent guiStartedEvent) {
         FXMLLoader fxmlLoader = new FXMLLoader();
         Stage stage = guiStartedEvent.getStage();
