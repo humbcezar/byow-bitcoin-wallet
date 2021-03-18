@@ -48,6 +48,8 @@ public class MainController {
 
     private final LoadNodeWallet loadNodeWallet;
 
+    private boolean isInitialized = false;
+
     @Autowired
     public MainController(
         @Value("fxml/create_wallet_dialog.fxml") Resource createWalletDialog,
@@ -69,6 +71,10 @@ public class MainController {
 
     @FXML
     public void initialize() {
+        if (!isInitialized) {
+            isInitialized = true;
+            return;
+        }
         loadNodeWallet.createOrLoadNodeWallet();
         walletsMenuManager.getMenuItems().addListener(
             (SetChangeListener<MenuItem>) change -> Platform.runLater(
