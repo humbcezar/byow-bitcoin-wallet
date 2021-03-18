@@ -72,7 +72,16 @@ public class ReceivingTransactionTest extends TestBase {
     @Test
     public void receiveOneTransaction(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, make(), "");
-        receiveNTransactions(robot, mnemonicSeed, 1, FIRST_BIP84_ADDRESS_PATH, defaultAddressGenerator, "#receivingAddress", addressSequentialGenerator, "");
+        receiveNTransactions(
+            robot,
+            mnemonicSeed,
+            1,
+            FIRST_BIP84_ADDRESS_PATH,
+            defaultAddressGenerator,
+            "#receivingAddress",
+            addressSequentialGenerator,
+            ""
+        );
     }
 
     @Test
@@ -101,17 +110,17 @@ public class ReceivingTransactionTest extends TestBase {
         String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
 
         List<ReceivingAddress> addresses = List.of(
-                new ReceivingAddress(new BigDecimal("2.00000000"), 5, address),
-                new ReceivingAddress(new BigDecimal("2.50000000"), 4, address),
-                new ReceivingAddress(new BigDecimal("3.00000000"), 3, address),
-                new ReceivingAddress(new BigDecimal("4.00000000"), 2, address),
-                new ReceivingAddress(new BigDecimal("7.00000000"), 2, address)
+            new ReceivingAddress(new BigDecimal("2.00000000"), 5, address),
+            new ReceivingAddress(new BigDecimal("2.50000000"), 4, address),
+            new ReceivingAddress(new BigDecimal("3.00000000"), 3, address),
+            new ReceivingAddress(new BigDecimal("4.00000000"), 2, address),
+            new ReceivingAddress(new BigDecimal("7.00000000"), 2, address)
         );
         String expectedBalance = addresses.stream()
-                .map(ReceivingAddress::getBigDecimalBalance)
-                .reduce(BigDecimal::add)
-                .get()
-                .toString();
+            .map(ReceivingAddress::getBigDecimalBalance)
+            .reduce(BigDecimal::add)
+            .get()
+            .toString();
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String expectedNextAddress = addressSequentialGenerator
                 .deriveAddresses(1, seed, FIRST_BIP84_ADDRESS_PATH.next(1))

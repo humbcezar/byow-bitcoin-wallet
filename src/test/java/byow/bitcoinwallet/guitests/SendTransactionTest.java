@@ -1,6 +1,5 @@
 package byow.bitcoinwallet.guitests;
 
-import byow.bitcoinwallet.entities.NextChangeAddress;
 import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.entities.TransactionRow;
 import byow.bitcoinwallet.services.address.*;
@@ -20,15 +19,13 @@ import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static byow.bitcoinwallet.services.address.DerivationPath.*;
 import static java.lang.Integer.MAX_VALUE;
 import static java.math.BigDecimal.*;
-import static java.math.RoundingMode.FLOOR;
-import static java.math.RoundingMode.HALF_UP;
+import static java.math.RoundingMode.*;
 import static java.util.Objects.isNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.IntStream.range;
@@ -137,7 +134,7 @@ public class SendTransactionTest extends TestBase {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
-        fundAddress(robot, firstAddress, valueOf(5), 1, "#receivingAddress");
+        fundAddress(robot, firstAddress, BigDecimal.valueOf(5), 1, "#receivingAddress");
         waitFor(TIMEOUT, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
@@ -151,8 +148,9 @@ public class SendTransactionTest extends TestBase {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
 
-        fundNAddresses(robot, seed, valueOf(2), 1, 3);
-        sendNTransactions(robot, "0.8", 1, "0.80000000", 5, 3);
+        fundNAddresses(robot, seed, BigDecimal.valueOf(2), 1, 3);
+        BigDecimal initialBalance = new BigDecimal(6);
+        sendNTransactions(robot, "0.8", 1, "0.80000000", 5, 3, initialBalance);
     }
 
     @Test
@@ -160,8 +158,9 @@ public class SendTransactionTest extends TestBase {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
 
-        fundNAddresses(robot, seed, valueOf(2), 1, 3);
-        sendNTransactions(robot, "5", 1, "5.00000000", 1, 3);
+        fundNAddresses(robot, seed, BigDecimal.valueOf(2), 1, 3);
+        BigDecimal initialBalance = new BigDecimal(6);
+        sendNTransactions(robot, "5", 1, "5.00000000", 1, 3, initialBalance);
     }
 
     @Test
@@ -169,7 +168,7 @@ public class SendTransactionTest extends TestBase {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");
 
-        fundNAddresses(robot, seed, valueOf(2), 1, 1);
+        fundNAddresses(robot, seed, BigDecimal.valueOf(2), 1, 1);
 
         String nodeAddress = bitcoindRpcClient.getNewAddress();
         robot.clickOn("#sendTab");
@@ -299,7 +298,7 @@ public class SendTransactionTest extends TestBase {
         });
 
         //1 - totalFee(which is 2679) - 200 sats -> generating dust change
-        sendNTransactions(robot, "0.99997121", 4, "0.99997121", 1, 1);
+        sendNTransactions(robot, "0.99997121", 4, "0.99997121", 1, 1, ONE);
     }
 
     @Test
@@ -316,7 +315,7 @@ public class SendTransactionTest extends TestBase {
         });
 
         //1 - totalFee(which is 2679)
-        sendNTransactions(robot, "0.99997321", 4, "0.99997321", 1, 1);
+        sendNTransactions(robot, "0.99997321", 4, "0.99997321", 1, 1, ONE);
     }
 
     @Test
@@ -545,9 +544,19 @@ public class SendTransactionTest extends TestBase {
         int scale,
         String expectedBalance,
         int numberOfTransactions,
-        int numberOfPreviousTransactions
-    ) throws TimeoutException {
+        int numberOfPreviousTransactions,
+        BigDecimal initialBalance) throws TimeoutException {
         List<String> transactionAmountsSent = range(0, numberOfTransactions).mapToObj(i -> {
+            try {
+                waitFor(TIMEOUT, SECONDS, () -> initialBalance
+                    .subtract(new BigDecimal(i)
+                    .multiply(new BigDecimal(amount)))
+                    .setScale(2, HALF_DOWN)
+                    .equals(totalBalanceCalculator.getTotalBalance().setScale(2, HALF_DOWN))
+                );
+            } catch (TimeoutException e) {
+                throw new RuntimeException(e);
+            }
             BigDecimal previousBalance = totalBalanceCalculator.getTotalBalance();
 
             String nodeAddress = bitcoindRpcClient.getNewAddress();
