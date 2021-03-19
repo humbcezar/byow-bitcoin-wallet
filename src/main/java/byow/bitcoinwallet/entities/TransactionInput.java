@@ -42,16 +42,20 @@ public class TransactionInput {
         return address;
     }
 
+    public long getId() {
+        return id;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TransactionInput that = (TransactionInput) o;
-        return getAddress().equals(that.getAddress()) && getSatoshis().equals(that.getSatoshis());
+        return getId() == that.getId();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getAddress(), getSatoshis());
+        return Objects.hash(getId());
     }
 }

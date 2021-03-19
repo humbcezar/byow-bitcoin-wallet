@@ -8,6 +8,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ActiveProfiles;
 import wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient;
 
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ import java.util.List;
 import static byow.bitcoinwallet.services.address.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
 
 @SpringBootTest
+@ActiveProfiles("test")
 public class MultiAddressesImporterTest {
 
     @Autowired

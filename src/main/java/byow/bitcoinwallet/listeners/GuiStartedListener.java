@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.EventListener;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
@@ -18,15 +17,15 @@ import java.io.IOException;
 
 @Component
 public class GuiStartedListener implements ApplicationListener<GuiStartedEvent> {
-    private Resource fxml;
-    private ApplicationContext context;
-    private SpringComponentBuilderFactory springComponentBuilderFactory;
+    private final Resource fxml;
+    private final ApplicationContext context;
+    private final SpringComponentBuilderFactory springComponentBuilderFactory;
 
     @Autowired
     public GuiStartedListener(
-            @Value("classpath:/fxml/main_window.fxml") Resource fxml,
-            ApplicationContext context,
-            SpringComponentBuilderFactory springComponentBuilderFactory
+        @Value("classpath:/fxml/main_window.fxml") Resource fxml,
+        ApplicationContext context,
+        SpringComponentBuilderFactory springComponentBuilderFactory
     ) {
         this.fxml = fxml;
         this.context = context;
