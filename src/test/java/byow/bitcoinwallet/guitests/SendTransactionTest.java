@@ -144,6 +144,30 @@ public class SendTransactionTest extends TestBase {
     }
 
     @Test
+    public void sendFiveTransactionsWithSameAddressInputsToNodeAddress(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
+        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
+        waitFor(40, SECONDS, () -> {
+            String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+            return address != null && !address.isBlank() && address.equals(firstAddress);
+        });
+        String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+        range(0, 5).forEach((int i) -> {
+            robot.clickOn("#addressesTab");
+            bitcoindRpcClient.sendToAddress(address, ONE);
+            String nodeAddress = bitcoindRpcClient.getNewAddress();
+            bitcoindRpcClient.generateToAddress(1, nodeAddress);
+        });
+        waitFor(TIMEOUT, SECONDS, () -> {
+            TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
+            return tableView.getItems().size() == 1 && tableView.getItems().get(0).getBalance().equals("5.00000000");
+        });
+
+        sendNTransactions(robot, "4", 1, "4.00000000", 1, seed, 0, "bech32", 5, "");
+    }
+
+    @Test
     public void sendFiveTransactionsFromWalletWithThreeUtxosToNodeAddress(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
         String seed = seedGenerator.generateSeed(mnemonicSeed, "");

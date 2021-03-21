@@ -34,7 +34,8 @@ public class SendTransactionService {
     public SendTransactionService(
         TransactionSender transactionSender,
         TransactionSaver transactionSaver,
-        CurrentWallet currentWallet, TransactionInputRepository transactionInputRepository,
+        CurrentWallet currentWallet,
+        TransactionInputRepository transactionInputRepository,
         AddressRepository addressRepository
     ) {
         this.transactionSender = transactionSender;
