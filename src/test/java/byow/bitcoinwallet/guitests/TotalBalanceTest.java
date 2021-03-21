@@ -89,4 +89,40 @@ public class TotalBalanceTest extends TestBase {
             totalBalance
         );
     }
+
+    @Test
+    public void showPositiveBalanceWithTwoUtxosOneAddressOneUnconfirmedAnotherConfirmed(FxRobot robot) throws TimeoutException {
+        int numberOfReceivingAddresses = 1;
+
+        List<String> addresses = addressSequentialGenerator.deriveAddresses(
+            numberOfReceivingAddresses,
+            seed, FIRST_BIP84_ADDRESS_PATH
+        ).stream()
+        .map(AddressPath::getAddress)
+        .collect(Collectors.toList());
+        addresses.forEach(address -> bitcoindRpcClient.sendToAddress(address, BigDecimal.ONE));
+        String nodeAddress = bitcoindRpcClient.getNewAddress();
+        bitcoindRpcClient.generateToAddress(1, nodeAddress);
+        addresses.forEach(address -> bitcoindRpcClient.sendToAddress(address, BigDecimal.ONE));
+
+        robot.clickOn("#wallet");
+        robot.moveTo("#load");
+        robot.clickOn(walletName);
+        robot.clickOn("OK");
+        WaitForAsyncUtils.waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
+            TableView tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
+            String totalBalance = robot.lookup("#totalBalance").queryAs(Label.class).getText();
+            return tableView.getItems().size() == numberOfReceivingAddresses && !totalBalance.isBlank();
+        });
+        String totalBalance = robot.lookup("#totalBalance").queryAs(Label.class).getText();
+        assertEquals(
+            String.format(
+                "Total Balance: %s BTC (confirmed: %s, unconfirmed: %s)",
+                bigDecimalStringConverter.toString(new BigDecimal(2)).concat(".00000000"),
+                bigDecimalStringConverter.toString(BigDecimal.ONE).concat(".00000000"),
+                bigDecimalStringConverter.toString(BigDecimal.ONE).concat(".00000000")
+            ),
+            totalBalance
+        );
+    }
 }

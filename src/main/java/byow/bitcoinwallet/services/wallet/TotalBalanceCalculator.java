@@ -1,12 +1,13 @@
 package byow.bitcoinwallet.services.wallet;
 
-import byow.bitcoinwallet.entities.ReceivingAddress;
-import byow.bitcoinwallet.services.gui.CurrentReceivingAddresses;
+import byow.bitcoinwallet.services.UtxosGetter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
+import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Unspent;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Lazy
 @Component
@@ -19,20 +20,22 @@ public class TotalBalanceCalculator {
     private BigDecimal totalBalance = BigDecimal.ZERO;
 
     @Autowired
-    private CurrentReceivingAddresses currentReceivingAddresses;
+    private UtxosGetter utxosGetter;
 
     public void calculate() {
-        unconfirmedBalance = currentReceivingAddresses.getReceivingAddresses()
+        List<Unspent> utxos = utxosGetter.getUtxos();
+
+        unconfirmedBalance = utxos
             .stream()
-            .filter(receivingAddress -> receivingAddress.getConfirmations() == 0)
-            .map(ReceivingAddress::getBigDecimalBalance)
+            .filter(utxo -> utxo.confirmations() == 0)
+            .map(Unspent::amount)
             .reduce(BigDecimal::add)
             .orElse(BigDecimal.ZERO);
 
-        confirmedBalance = currentReceivingAddresses.getReceivingAddresses()
+        confirmedBalance = utxos
             .stream()
-            .filter(receivingAddress -> receivingAddress.getConfirmations() > 0)
-            .map(ReceivingAddress::getBigDecimalBalance)
+            .filter(utxo -> utxo.confirmations() > 0)
+            .map(Unspent::amount)
             .reduce(BigDecimal::add)
             .orElse(BigDecimal.ZERO);
 
