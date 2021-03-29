@@ -34,7 +34,7 @@ public class MultiAddressesImporterTest {
     @Test
     public void importMulti() {
         MultiAddressesImporter multiAddressesImporter = new MultiAddressesImporter(bitcoindRpcClient);
-        String seed = seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), "");
+        String seed = seedGenerator.generateSeedAsString(seedGenerator.generateMnemonicSeed(), "");
         String address1 = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         String address2 = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1));
         String address3 = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(1).next(1));

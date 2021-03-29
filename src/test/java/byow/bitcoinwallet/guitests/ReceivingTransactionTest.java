@@ -44,21 +44,18 @@ public class ReceivingTransactionTest extends TestBase {
     @Autowired
     private SeedGenerator seedGenerator;
 
-    @Autowired
     private AddressSequentialGenerator addressSequentialGenerator;
 
-    @Autowired
-    @Qualifier("nestedSegwitAddressSequentialGenerator")
     private AddressSequentialGenerator nestedSegwitAddressSequentialGenerator;
 
     @Autowired
-    private DefaultAddressGenerator defaultAddressGenerator;
+    private DefaultAddressGeneratorBySeed defaultAddressGeneratorBySeed;
 
     @Autowired
     private NextChangeAddress nextChangeAddress;
 
     @Autowired
-    private NestedSegwitAddressGenerator nestedSegwitAddressGenerator;
+    private NestedSegwitAddressGeneratorBySeed nestedSegwitAddressGeneratorBySeed;
 
     @Autowired
     private WalletUtil walletUtil;
@@ -66,6 +63,8 @@ public class ReceivingTransactionTest extends TestBase {
     @Override
     @Start
     public void start(Stage stage) throws Exception {
+        addressSequentialGenerator = new AddressSequentialGenerator(defaultAddressGeneratorBySeed);
+        nestedSegwitAddressSequentialGenerator = new AddressSequentialGenerator(nestedSegwitAddressGeneratorBySeed);
         super.start(stage);
     }
 
@@ -77,7 +76,7 @@ public class ReceivingTransactionTest extends TestBase {
             mnemonicSeed,
             1,
             FIRST_BIP84_ADDRESS_PATH,
-            defaultAddressGenerator,
+            defaultAddressGeneratorBySeed,
             "#receivingAddress",
             addressSequentialGenerator,
             ""
@@ -88,7 +87,7 @@ public class ReceivingTransactionTest extends TestBase {
     public void receiveSixTransactions(FxRobot robot) throws TimeoutException {
         String password = make();
         String mnemonicSeed = walletUtil.createWallet(robot, make(), password);
-        receiveNTransactions(robot, mnemonicSeed, 6, FIRST_BIP84_ADDRESS_PATH, defaultAddressGenerator, "#receivingAddress", addressSequentialGenerator, password);
+        receiveNTransactions(robot, mnemonicSeed, 6, FIRST_BIP84_ADDRESS_PATH, defaultAddressGeneratorBySeed, "#receivingAddress", addressSequentialGenerator, password);
     }
 
     @Test
@@ -121,7 +120,7 @@ public class ReceivingTransactionTest extends TestBase {
             .reduce(BigDecimal::add)
             .get()
             .toString();
-        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, "");
         String expectedNextAddress = addressSequentialGenerator
                 .deriveAddresses(1, seed, FIRST_BIP84_ADDRESS_PATH.next(1))
                 .get(0).getAddress();
@@ -139,7 +138,7 @@ public class ReceivingTransactionTest extends TestBase {
         });
         String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
 
-        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, "");
         List<String> expectedAddresses = addressSequentialGenerator.deriveAddresses(
                 2,
                 seed,
@@ -163,7 +162,7 @@ public class ReceivingTransactionTest extends TestBase {
                 mnemonicSeed,
                 5,
                 FIRST_BIP49_ADDRESS_PATH,
-                nestedSegwitAddressGenerator,
+            nestedSegwitAddressGeneratorBySeed,
                 "#nestedReceivingAddress",
                 nestedSegwitAddressSequentialGenerator,
             "");
@@ -177,7 +176,7 @@ public class ReceivingTransactionTest extends TestBase {
             mnemonicSeed,
             5,
             FIRST_BIP84_CHANGE_PATH,
-            defaultAddressGenerator,
+            defaultAddressGeneratorBySeed,
             addressSequentialGenerator
         );
     }
@@ -196,7 +195,7 @@ public class ReceivingTransactionTest extends TestBase {
         bitcoindRpcClient.generateToAddress(1, address);
 
         String randomAddress = addressGenerator.generate(
-            seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), ""),
+            seedGenerator.generateSeedAsString(seedGenerator.generateMnemonicSeed(), ""),
             FIRST_BIP84_ADDRESS_PATH
         );
         bitcoindRpcClient.generateToAddress(100, randomAddress);
@@ -243,7 +242,7 @@ public class ReceivingTransactionTest extends TestBase {
         );
         assertThat(tableView, hasNumRows(1));
 
-        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, "");
         String expectedNextAddress = addressSequentialGenerator
                 .deriveAddresses(1, seed, FIRST_BIP84_ADDRESS_PATH.next(1))
                 .get(0).getAddress();
@@ -265,7 +264,7 @@ public class ReceivingTransactionTest extends TestBase {
             AddressSequentialGenerator addressSequentialGenerator
     ) throws TimeoutException {
         robot.clickOn("#addressesTab");
-        String firstAddress = addressGenerator.generate(seedGenerator.generateSeed(mnemonicSeed, ""), firstDerivationPath);
+        String firstAddress = addressGenerator.generate(seedGenerator.generateSeedAsString(mnemonicSeed, ""), firstDerivationPath);
         waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
             String address = nextChangeAddress.getValue().getAddress();
             return address != null && !address.isBlank() && address.equals(firstAddress);
@@ -291,7 +290,7 @@ public class ReceivingTransactionTest extends TestBase {
                 )
             );
 
-            String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+            String seed = seedGenerator.generateSeedAsString(mnemonicSeed, "");
             nextReceivingAddressAssertion(firstDerivationPath, addressSequentialGenerator, i, seed);
         });
 
@@ -339,7 +338,7 @@ public class ReceivingTransactionTest extends TestBase {
         String password
     ) throws TimeoutException {
         robot.clickOn("#addressesTab");
-        String firstAddress = addressGenerator.generate(seedGenerator.generateSeed(mnemonicSeed, password), firstDerivationPath);
+        String firstAddress = addressGenerator.generate(seedGenerator.generateSeedAsString(mnemonicSeed, password), firstDerivationPath);
         waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
             robot.lookup("#addressesTable").queryAs(TableView.class);
             String address = robot.lookup(receivingAddressQuery).queryAs(TextField.class).getText();
@@ -366,7 +365,7 @@ public class ReceivingTransactionTest extends TestBase {
                 )
             );
 
-            String seed = seedGenerator.generateSeed(mnemonicSeed, password);
+            String seed = seedGenerator.generateSeedAsString(mnemonicSeed, password);
             String expectedNextAddress = addressSequentialGenerator
                     .deriveAddresses(1, seed, firstDerivationPath.next(i + 1))
                     .get(0).getAddress();

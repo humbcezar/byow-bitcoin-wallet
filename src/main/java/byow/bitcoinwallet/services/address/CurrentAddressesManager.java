@@ -89,8 +89,10 @@ abstract public class CurrentAddressesManager {
 
     public abstract void clear();
 
-    public List<String> initializeAddresses(int numberOfAddresses, String seed, Date walletCreationDate, String walletName) {
-        List<String> addresses = addressSequentialGenerator.deriveAddresses(numberOfAddresses, seed, getCurrentDerivationPath())
+    public abstract XPubTypes getXPubType();
+
+    public List<String> initializeAddresses(int numberOfAddresses, String key, Date walletCreationDate, String walletName) {
+        List<String> addresses = addressSequentialGenerator.deriveAddresses(numberOfAddresses, key, getCurrentDerivationPath())
             .stream()
             .filter(address -> !currentReceivingAddresses.contains(address.getAddress()))
             .peek(address -> currentReceivingAddresses.add(
@@ -112,7 +114,7 @@ abstract public class CurrentAddressesManager {
     public void update(Wallet wallet, int numberOfAddresses) {
         List<String> addressList = initializeAddresses(
             numberOfAddresses,
-            wallet.getSeed(),
+            wallet.getXPub(getXPubType()).getKey(),
             wallet.getCreatedAt(),
             wallet.getName()
         );
@@ -127,7 +129,7 @@ abstract public class CurrentAddressesManager {
             update(wallet, numberOfAddresses);
             return;
         }
-        updateNextAddress(addressList.get(0), updatedAddressesCount, wallet.getSeed(), wallet.getCreatedAt(), wallet.getName());
+        updateNextAddress(addressList.get(0), updatedAddressesCount, wallet.getXPub(getXPubType()).getKey(), wallet.getCreatedAt(), wallet.getName());
     }
 
     @Transactional
@@ -160,18 +162,18 @@ abstract public class CurrentAddressesManager {
             .anyMatch(transaction -> transaction.getTxId().equals(txId));
     }
 
-    public void updateNextAddress(String address, int updatedAddressesCount, String seed, Date walletCreationDate, String walletName) {
+    public void updateNextAddress(String address, int updatedAddressesCount, String key, Date walletCreationDate, String walletName) {
         if (updatedAddressesCount > 0) {
             address = addressSequentialGenerator.deriveAddresses(
                 1,
-                seed,
+                key,
                 setNextCurrentDerivationPath(updatedAddressesCount)
             ).get(0).getAddress();
         }
-        initializeAddresses(1, seed, walletCreationDate, walletName);
+        initializeAddresses(1, key, walletCreationDate, walletName);
         ReceivingAddress nextReceivingAddress = new ReceivingAddress(ZERO, 0, address);
         if (addressRepository.existsByAddress(address)) {
-            updateNextAddress(address, 1, seed, walletCreationDate, walletName);
+            updateNextAddress(address, 1, key, walletCreationDate, walletName);
             return;
         }
         runLater(() -> setNextAddress(nextReceivingAddress));

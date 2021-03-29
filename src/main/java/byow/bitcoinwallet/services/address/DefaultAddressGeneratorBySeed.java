@@ -9,13 +9,13 @@ import static com.blockstream.libwally.Wally.*;
 
 @Component
 @Primary
-public class DefaultAddressGenerator implements AddressGenerator {
-    private DefaultKeyGenerator defaultKeyGenerator;
+public class DefaultAddressGeneratorBySeed implements AddressGenerator {
+    private final DefaultKeyGenerator defaultKeyGenerator;
 
-    private String addressPrefix;
+    private final String addressPrefix;
 
     @Autowired
-    public DefaultAddressGenerator(
+    public DefaultAddressGeneratorBySeed(
         DefaultKeyGenerator defaultKeyGenerator,
         @Qualifier("addressPrefix") String addressPrefix
     ) {
@@ -24,7 +24,7 @@ public class DefaultAddressGenerator implements AddressGenerator {
     }
 
     public String generate(String seed, DerivationPath derivationPath) {
-        Object privateKey = defaultKeyGenerator.getPrivateKey(seed, derivationPath);
+        Object privateKey = defaultKeyGenerator.getXPrivateKey(seed, derivationPath);
         return bip32_key_to_addr_segwit(privateKey, addressPrefix, 0);
     }
 }

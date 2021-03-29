@@ -3,6 +3,7 @@ package byow.bitcoinwallet.guitests;
 import byow.bitcoinwallet.entities.*;
 import byow.bitcoinwallet.repositories.WalletRepository;
 import byow.bitcoinwallet.services.address.*;
+import byow.bitcoinwallet.services.wallet.XPubCreator;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
@@ -10,7 +11,6 @@ import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
@@ -54,18 +54,21 @@ public class TablesTest extends TestBase {
     @Autowired
     private WalletRepository walletRepository;
 
-    @Autowired
-    private AddressSequentialGenerator defaultAddressSequentialGenerator;
+    private AddressSequentialGenerator addressSequentialGenerator;
 
     @Autowired
-    private NestedSegwitAddressGenerator nestedSegwitAddressGenerator;
+    private NestedSegwitAddressGeneratorBySeed nestedSegwitAddressGeneratorBySeed;
 
     @Autowired
-    @Qualifier("nestedSegwitAddressSequentialGenerator")
+    private DefaultAddressGeneratorBySeed defaultAddressGeneratorBySeed;
+
     private AddressSequentialGenerator nestedSegwitAddressSequentialGenerator;
 
     @Autowired
     private MultiAddressUpdater multiAddressUpdater;
+
+    @Autowired
+    private XPubCreator xPubCreator;
 
     private String seed;
 
@@ -75,38 +78,41 @@ public class TablesTest extends TestBase {
     @Override
     @Start
     public void start(Stage stage) throws Exception {
+        addressSequentialGenerator = new AddressSequentialGenerator(defaultAddressGeneratorBySeed);
+        nestedSegwitAddressSequentialGenerator = new AddressSequentialGenerator(nestedSegwitAddressGeneratorBySeed);
         walletName = RandomString.make();
-        seed = seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), "");
+        seed = seedGenerator.generateSeedAsString(seedGenerator.generateMnemonicSeed(), "");
         Wallet wallet = new Wallet(walletName, seed);
         wallet.setCreatedAt(new Date());
         walletRepository.save(wallet);
+        xPubCreator.create(seed, wallet);
         super.start(stage);
     }
 
     @Test
     public void showAddressWithPositiveBalance(FxRobot robot) throws TimeoutException {
-        showNAddressesWithPositiveBalance(robot, 1, FIRST_BIP84_ADDRESS_PATH, defaultAddressSequentialGenerator);
+        showNAddressesWithPositiveBalance(robot, 1, FIRST_BIP84_ADDRESS_PATH, addressSequentialGenerator);
         assertNextReceivingAddress(robot, 1);
         assertNextChangeAddress(0);
     }
 
     @Test
     public void showFiveAddressWithPositiveBalance(FxRobot robot) throws TimeoutException {
-        showNAddressesWithPositiveBalance(robot, 5, FIRST_BIP84_ADDRESS_PATH, defaultAddressSequentialGenerator);
+        showNAddressesWithPositiveBalance(robot, 5, FIRST_BIP84_ADDRESS_PATH, addressSequentialGenerator);
         assertNextReceivingAddress(robot, 5);
         assertNextChangeAddress(0);
     }
 
     @Test
     public void showSixAddressWithPositiveBalance(FxRobot robot) throws TimeoutException {
-        showNAddressesWithPositiveBalance(robot, 6, FIRST_BIP84_ADDRESS_PATH, defaultAddressSequentialGenerator);
+        showNAddressesWithPositiveBalance(robot, 6, FIRST_BIP84_ADDRESS_PATH, addressSequentialGenerator);
         assertNextReceivingAddress(robot, 6);
         assertNextChangeAddress(0);
     }
 
     @Test
     public void showSixAddressWithPositiveBalanceWithChangeAddresses(FxRobot robot) throws TimeoutException {
-        showNAddressesWithPositiveBalance(robot, 6, FIRST_BIP84_CHANGE_PATH, defaultAddressSequentialGenerator);
+        showNAddressesWithPositiveBalance(robot, 6, FIRST_BIP84_CHANGE_PATH, addressSequentialGenerator);
         assertNextChangeAddress(6);
         assertNextReceivingAddress(robot, 0);
     }
@@ -134,7 +140,7 @@ public class TablesTest extends TestBase {
 
         int numberOfReceivingAddresses = 3;
 
-        List<String> addresses = defaultAddressSequentialGenerator.deriveAddresses(
+        List<String> addresses = addressSequentialGenerator.deriveAddresses(
                 numberOfReceivingAddresses,
                 seed, FIRST_BIP84_CHANGE_PATH
         ).stream().map(AddressPath::getAddress).collect(Collectors.toList());
@@ -242,7 +248,7 @@ public class TablesTest extends TestBase {
 
         int numberOfReceivingAddresses = 3;
 
-        List<String> addresses = defaultAddressSequentialGenerator.deriveAddresses(
+        List<String> addresses = addressSequentialGenerator.deriveAddresses(
                 numberOfReceivingAddresses,
                 seed, FIRST_BIP84_ADDRESS_PATH
         ).stream().map(AddressPath::getAddress).collect(Collectors.toList());
@@ -420,7 +426,7 @@ public class TablesTest extends TestBase {
     }
 
     private void assertNextNestedSegwitAddress(FxRobot robot, int numberOfReceivingAddresses) throws TimeoutException {
-        String expectedReceivingAddress = nestedSegwitAddressGenerator.generate(
+        String expectedReceivingAddress = nestedSegwitAddressGeneratorBySeed.generate(
             seed, new DerivationPath("49'/0'/0'/0/" + numberOfReceivingAddresses)
         );
         waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
@@ -434,7 +440,7 @@ public class TablesTest extends TestBase {
     }
 
     private void assertNextNestedSegwitChangeAddress(int numberOfReceivingAddresses) throws TimeoutException {
-        String expectedReceivingAddress = nestedSegwitAddressGenerator.generate(
+        String expectedReceivingAddress = nestedSegwitAddressGeneratorBySeed.generate(
             seed, new DerivationPath("49'/0'/0'/1/" + numberOfReceivingAddresses)
         );
         waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {

@@ -1,5 +1,6 @@
 package byow.bitcoinwallet.services.transaction;
 
+import byow.bitcoinwallet.entities.XPub;
 import byow.bitcoinwallet.entities.wally.WallyTransaction;
 import byow.bitcoinwallet.entities.wally.WallyTransactionInput;
 import byow.bitcoinwallet.entities.wally.WallyTransactionOutput;
@@ -17,6 +18,7 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.blockstream.libwally.Wally.*;
@@ -32,15 +34,15 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
 
     private static final long INITIAL_DEFAULT_CHANGE_VALUE = 1;
 
-    private DefaultKeyGenerator defaultKeyGenerator;
+    private final DefaultKeyGenerator defaultKeyGenerator;
 
-    private String addressPrefix;
+    private final String addressPrefix;
 
-    private DustCalculator dustCalculator;
+    private final DustCalculator dustCalculator;
 
-    private CurrentReceivingAddresses currentReceivingAddresses;
+    private final CurrentReceivingAddresses currentReceivingAddresses;
 
-    private int networkVersion;
+    private final int networkVersion;
 
     @Autowired
     public SingleRandomDrawCoinSelector(
@@ -62,7 +64,7 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
         List<Unspent> utxos,
         BigDecimal target,
         BigDecimal feeRate,
-        String seed,
+        Set<XPub> xPubs,
         String toAddress,
         String changeAddress
     ) {
@@ -78,7 +80,7 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
 
         for (Unspent utxo : shuffledCoins) {
             DerivationPath derivationPath = currentReceivingAddresses.getReceivingAddress(utxo.address()).getDerivationPath();
-            transactionInputs.add(createInput(utxo, derivationPath, seed));
+            transactionInputs.add(createInput(utxo, derivationPath, xPubs));
             long totalInputBalance = totalInputBalance(transactionInputs);
             if (totalInputBalance < targetInSatoshis) {
                 continue;
@@ -93,7 +95,7 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
             if (totalInputBalance > adjustedTarget) {
                 transaction.removeOutput(1);
                 byte[] scriptPubKey = addr_segwit_to_bytes(changeAddress, addressPrefix, 0);
-                WallyTransactionOutput changeOutput = new WallyTransactionOutput(
+                    WallyTransactionOutput changeOutput = new WallyTransactionOutput(
                     totalInputBalance - adjustedTarget,
                     scriptPubKey,
                     changeAddress
@@ -172,9 +174,8 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
         return new WallyTransactionOutput(targetInSatoshis, scriptPubKey, toAddress);
     }
 
-    private WallyTransactionInput createInput(Unspent utxo, DerivationPath derivationPath, String seed) {
-        byte[] publicKey = defaultKeyGenerator.getPublicKeyAsByteArray(seed, derivationPath);
-        byte[] privateKey = defaultKeyGenerator.getPrivateKeyAsByteArray(seed, derivationPath);
+    private WallyTransactionInput createInput(Unspent utxo, DerivationPath derivationPath, Set<XPub> xPubs) {
+        byte[] publicKey = defaultKeyGenerator.getPublicKeyAsByteArray(xPubs, derivationPath);
 
         WallyWitness witness = new WallyWitness(2);
         witness.addDummySignature(WALLY_TX_DUMMY_SIG_LOW_R);
@@ -184,11 +185,11 @@ public class SingleRandomDrawCoinSelector implements CoinSelector {
             utxo.txid(),
             utxo.vout(),
             satoshis(utxo.amount()),
-            privateKey,
             N_SEQUENCE,
             buildScriptSig(publicKey, utxo.address()),
             witness,
-            utxo.address()
+            utxo.address(),
+            derivationPath
         );
     }
 

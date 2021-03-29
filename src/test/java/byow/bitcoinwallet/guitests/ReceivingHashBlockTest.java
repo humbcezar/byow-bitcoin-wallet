@@ -2,6 +2,7 @@ package byow.bitcoinwallet.guitests;
 
 import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.services.address.AddressGenerator;
+import byow.bitcoinwallet.services.address.DefaultAddressGeneratorBySeed;
 import byow.bitcoinwallet.services.address.SeedGenerator;
 import byow.bitcoinwallet.utils.WalletUtil;
 import javafx.scene.control.TableView;
@@ -34,7 +35,7 @@ public class ReceivingHashBlockTest extends TestBase {
     private SeedGenerator seedGenerator;
 
     @Autowired
-    private AddressGenerator addressGenerator;
+    private DefaultAddressGeneratorBySeed addressGenerator;
 
     @Override
     @Start
@@ -60,7 +61,7 @@ public class ReceivingHashBlockTest extends TestBase {
         });
 
         String randomAddress = addressGenerator.generate(
-            seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), ""),
+            seedGenerator.generateSeedAsString(seedGenerator.generateMnemonicSeed(), ""),
             FIRST_BIP84_ADDRESS_PATH
         );
         bitcoindRpcClient.generateToAddress(1, randomAddress);

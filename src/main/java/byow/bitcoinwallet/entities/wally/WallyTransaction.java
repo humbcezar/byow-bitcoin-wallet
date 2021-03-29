@@ -1,7 +1,11 @@
 package byow.bitcoinwallet.entities.wally;
 
+import byow.bitcoinwallet.services.address.DefaultKeyGenerator;
+import byow.bitcoinwallet.services.address.DerivationPath;
+
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.blockstream.libwally.Wally.*;
@@ -13,6 +17,8 @@ public class WallyTransaction {
     private List<WallyTransactionOutput> outputs = new ArrayList<>();
 
     private List<WallyTransactionInput> inputs = new ArrayList<>();
+
+    private final DefaultKeyGenerator defaultKeyGenerator = new DefaultKeyGenerator();
 
     private long feeRateInSatoshisPerByte;
 
@@ -34,7 +40,7 @@ public class WallyTransaction {
         tx_add_input(tx, transactionInput.getInput());
     }
 
-    public void sign(int inputIndex) {
+    public void sign(int inputIndex, String seed) {
         WallyTransactionInput input = inputs.get(inputIndex);
         byte[] sigHash = tx_get_btc_signature_hash(
             tx,
@@ -48,7 +54,7 @@ public class WallyTransaction {
         byte[] signature = ec_sig_to_der(
             ec_sig_normalize(
                 ec_sig_from_bytes(
-                    input.getPrivateKey(), sigHash, EC_FLAG_ECDSA
+                    getPrivateKey(input.getDerivationPath(), seed), sigHash, EC_FLAG_ECDSA
                 )
             )
         );
@@ -59,6 +65,10 @@ public class WallyTransaction {
 
         tx_set_input_witness(tx, inputIndex, signedWitness.getWitness());
         input.setWitness(signedWitness);
+    }
+
+    private byte[] getPrivateKey(DerivationPath derivationPath, String seed) {
+        return defaultKeyGenerator.getPrivateKeyAsByteArray(seed, derivationPath);
     }
 
     private byte[] appendSigHashType(byte[] signature) {

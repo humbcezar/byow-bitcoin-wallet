@@ -2,6 +2,7 @@ package byow.bitcoinwallet.services.address;
 
 import byow.bitcoinwallet.entities.NextReceivingAddress;
 import byow.bitcoinwallet.entities.ReceivingAddress;
+import byow.bitcoinwallet.entities.XPubTypes;
 import byow.bitcoinwallet.repositories.AddressRepository;
 import byow.bitcoinwallet.repositories.TransactionOutputRepository;
 import byow.bitcoinwallet.repositories.WalletRepository;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
+import static byow.bitcoinwallet.entities.XPubTypes.DEFAULT_X_PUB;
 import static byow.bitcoinwallet.services.address.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
 import static java.math.BigDecimal.ZERO;
 
@@ -48,10 +50,16 @@ public class CurrentDefaultAddressesManager extends CurrentAddressesManager {
         this.currentDerivationPath = FIRST_BIP84_ADDRESS_PATH;
     }
 
+    @Override
     public void clear() {
         currentDerivationPath = FIRST_BIP84_ADDRESS_PATH;
         nextAddress.setReceivingAddress(
             new ReceivingAddress(ZERO, 0, "")
         );
+    }
+
+    @Override
+    public XPubTypes getXPubType() {
+        return DEFAULT_X_PUB;
     }
 }

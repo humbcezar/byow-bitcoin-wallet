@@ -1,5 +1,7 @@
 package byow.bitcoinwallet.entities.wally;
 
+import byow.bitcoinwallet.services.address.DerivationPath;
+
 import static byow.bitcoinwallet.utils.HexUtils.revertEndianess;
 import static com.blockstream.libwally.Wally.tx_input_init;
 import static javax.xml.bind.DatatypeConverter.parseHexBinary;
@@ -7,13 +9,13 @@ import static javax.xml.bind.DatatypeConverter.parseHexBinary;
 public class WallyTransactionInput {
     private final Object input;
 
-    private final byte[] privateKey;
-
     private byte[] scriptSig;
 
     private WallyWitness witness;
 
-    private String address;
+    private final String address;
+
+    private final DerivationPath derivationPath;
 
     private final long amountInSatoshis;
 
@@ -23,16 +25,17 @@ public class WallyTransactionInput {
         String txid,
         int vout,
         long amountInSatoshis,
-        byte[] privateKey,
         long nSequence,
         byte[] scriptSig,
         WallyWitness witness,
-        String address
+        String address,
+        DerivationPath derivationPath
     ) {
         this.txId = txid;
         this.scriptSig = scriptSig;
         this.witness = witness;
         this.address = address;
+        this.derivationPath = derivationPath;
         input = tx_input_init(
             parseHexBinary(revertEndianess(txid)),
             vout,
@@ -41,7 +44,6 @@ public class WallyTransactionInput {
             witness.getWitness()
         );
         this.amountInSatoshis = amountInSatoshis;
-        this.privateKey = privateKey;
     }
 
     public WallyWitness getWitness() {
@@ -50,10 +52,6 @@ public class WallyTransactionInput {
 
     public long getAmountInSatoshis() {
         return amountInSatoshis;
-    }
-
-    public byte[] getPrivateKey() {
-        return privateKey;
     }
 
     public void setWitness(WallyWitness signedWitness) {
@@ -78,5 +76,9 @@ public class WallyTransactionInput {
 
     public String getAddress() {
         return address;
+    }
+
+    public DerivationPath getDerivationPath() {
+        return derivationPath;
     }
 }

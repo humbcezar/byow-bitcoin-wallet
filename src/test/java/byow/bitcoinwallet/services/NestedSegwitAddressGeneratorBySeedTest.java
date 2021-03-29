@@ -2,9 +2,10 @@ package byow.bitcoinwallet.services;
 
 import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.repositories.WalletRepository;
+import byow.bitcoinwallet.repositories.XPubRepository;
 import byow.bitcoinwallet.services.address.DefaultKeyGenerator;
 import byow.bitcoinwallet.services.address.DerivationPath;
-import byow.bitcoinwallet.services.address.NestedSegwitAddressGenerator;
+import byow.bitcoinwallet.services.address.NestedSegwitAddressGeneratorBySeed;
 import byow.bitcoinwallet.services.wallet.WalletCreator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -25,9 +26,9 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 @ActiveProfiles("test")
 @SpringBootTest
-public class NestedSegwitAddressGeneratorTest {
+public class NestedSegwitAddressGeneratorBySeedTest {
 
-    private NestedSegwitAddressGenerator addressGenerator;
+    private NestedSegwitAddressGeneratorBySeed addressGenerator;
 
     @Autowired
     private DefaultKeyGenerator defaultKeyGenerator;
@@ -41,12 +42,19 @@ public class NestedSegwitAddressGeneratorTest {
     @MockBean
     ApplicationEventPublisher applicationEventPublisher;
 
+    @Autowired
+    private XPubRepository xPubRepository;
+
+    @Autowired
+    private Encryptor encryptor;
+
     @BeforeEach
     void setUp() {
         initMocks(this);
+        xPubRepository.deleteAll();
         walletRepository.deleteAll();
         walletCreator.setApplicationEventPublisher(this.applicationEventPublisher);
-        addressGenerator = new NestedSegwitAddressGenerator(defaultKeyGenerator, WALLY_ADDRESS_VERSION_P2SH_MAINNET);
+        addressGenerator = new NestedSegwitAddressGeneratorBySeed(defaultKeyGenerator, WALLY_ADDRESS_VERSION_P2SH_MAINNET);
     }
 
     @ParameterizedTest
@@ -63,7 +71,7 @@ public class NestedSegwitAddressGeneratorTest {
             mnemonicSeed,
             password
         );
-        String address = addressGenerator.generate(wallet.getSeed(), derivationPath);
+        String address = addressGenerator.generate(encryptor.decrypt(wallet.getSeed(), password), derivationPath);
         assertEquals(expectedAddress, address);
     }
 

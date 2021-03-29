@@ -39,7 +39,7 @@ public class AddressUpdater {
             .peek(address -> currentAddressesManagers.forEach(
                 currentAddressManager -> currentAddressManager.initializeAddresses(
                     1,
-                    wallet.getSeed(),
+                    wallet.getXPub(currentAddressManager.getXPubType()).getKey(),
                     wallet.getCreatedAt(),
                     wallet.getName()
                 ))
@@ -54,7 +54,7 @@ public class AddressUpdater {
                 .forEach(currentAddressManager -> currentAddressManager.updateNextAddress(
                         "",
                         1,
-                        wallet.getSeed(),
+                        wallet.getXPub(currentAddressManager.getXPubType()).getKey(),
                         wallet.getCreatedAt(),
                         wallet.getName()
                     )

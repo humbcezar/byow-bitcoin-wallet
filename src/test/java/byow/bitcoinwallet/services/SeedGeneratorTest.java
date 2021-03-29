@@ -32,7 +32,7 @@ public class SeedGeneratorTest {
     public void generateSeed() {
         String mnemonicSeed = seedGenerator.generateMnemonicSeed();
         String password = "";
-        String seed = seedGenerator.generateSeed(mnemonicSeed, password);
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, password);
         assertFalse(seed.isEmpty());
     }
 }

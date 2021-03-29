@@ -47,7 +47,7 @@ public class TransactionCreator {
             utxos,
             amountToSend,
             feeRate,
-            currentWallet.getCurrentWallet().getSeed(),
+            currentWallet.getCurrentWallet().getxPubs(),
             addressToSend,
             nextChangeAddress.getValue().getAddress()
         );

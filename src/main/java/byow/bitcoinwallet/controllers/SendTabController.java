@@ -1,6 +1,7 @@
 package byow.bitcoinwallet.controllers;
 
 import byow.bitcoinwallet.entities.wally.WallyTransaction;
+import byow.bitcoinwallet.services.Encryptor;
 import byow.bitcoinwallet.services.gui.CurrentWallet;
 import byow.bitcoinwallet.services.gui.DialogService;
 import byow.bitcoinwallet.services.transaction.DustCalculator;
@@ -65,6 +66,8 @@ public class SendTabController extends Tab implements BaseController {
 
     private final CurrentWallet currentWallet;
 
+    private final Encryptor encryptor;
+
     @Autowired
     public SendTabController(
         @Value("classpath:/fxml/send_tab.fxml") Resource fxml,
@@ -76,7 +79,8 @@ public class SendTabController extends Tab implements BaseController {
         TransactionCreator transactionCreator,
         DustCalculator dustCalculator,
         DialogService dialogService,
-        CurrentWallet currentWallet
+        CurrentWallet currentWallet,
+        Encryptor encryptor
     ) throws IOException {
         this.fxml = fxml;
         this.sendTransactionDialog = sendTransactionDialog;
@@ -89,6 +93,7 @@ public class SendTabController extends Tab implements BaseController {
         this.dustCalculator = dustCalculator;
         this.dialogService = dialogService;
         this.currentWallet = currentWallet;
+        this.encryptor = encryptor;
         setText("Send");
         construct(this.fxml, this.context);
     }
@@ -128,7 +133,7 @@ public class SendTabController extends Tab implements BaseController {
         );
         Optional<ButtonType> result = dialog.showAndWait();
         if (dialogIsValid(result)) {
-            new Thread(buildTask(transaction)).start();
+            new Thread(buildTask(transaction, decrypt(currentWallet.getCurrentWallet().getSeed()))).start();
             return;
         }
         if (result.isPresent() && result.get() != CANCEL) {
@@ -136,6 +141,10 @@ public class SendTabController extends Tab implements BaseController {
             addressToSend.setText("");
             showAlert();
         }
+    }
+
+    private String decrypt(String seed) {
+        return encryptor.decrypt(seed, sendTransactionDialogController.sendTransactionPassword.getText());
     }
 
     private void showAlert() {
@@ -171,12 +180,13 @@ public class SendTabController extends Tab implements BaseController {
         return true;
     }
 
-    private Task<Void> buildTask(WallyTransaction transaction) {
+    private Task<Void> buildTask(WallyTransaction transaction, String seed) {
         Task<Void> task = taskConfigurer.configure(
             new SendTransactionTask(
                 reentrantLock,
                 sendTransactionService,
-                transaction
+                transaction,
+                seed
             ),
             "Sending transaction..."
         );

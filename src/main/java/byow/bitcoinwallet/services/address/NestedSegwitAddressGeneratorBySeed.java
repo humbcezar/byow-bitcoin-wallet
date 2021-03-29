@@ -7,13 +7,13 @@ import org.springframework.stereotype.Component;
 import static com.blockstream.libwally.Wally.*;
 
 @Component
-public class NestedSegwitAddressGenerator implements AddressGenerator {
-    private int nestedAddressVersion;
+public class NestedSegwitAddressGeneratorBySeed implements AddressGenerator {
+    private final int nestedAddressVersion;
 
-    private DefaultKeyGenerator defaultKeyGenerator;
+    private final DefaultKeyGenerator defaultKeyGenerator;
 
     @Autowired
-    public NestedSegwitAddressGenerator(
+    public NestedSegwitAddressGeneratorBySeed(
         DefaultKeyGenerator defaultKeyGenerator,
         @Qualifier("nestedAddressVersion") int nestedAddressVersion
     ) {
@@ -23,7 +23,7 @@ public class NestedSegwitAddressGenerator implements AddressGenerator {
 
     @Override
     public String generate(String seed, DerivationPath derivationPath) {
-        Object privateKey = defaultKeyGenerator.getPrivateKey(seed, derivationPath);
+        Object privateKey = defaultKeyGenerator.getXPrivateKey(seed, derivationPath);
         return bip32_key_to_address(privateKey, WALLY_ADDRESS_TYPE_P2SH_P2WPKH , nestedAddressVersion);
     }
 }

@@ -8,6 +8,7 @@ import java.security.SecureRandom;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import static javax.persistence.FetchType.EAGER;
 
@@ -23,7 +24,7 @@ public class Wallet {
     @Column(name = "name", unique = true, nullable = false)
     private String name;
 
-    @Column(name = "seed", nullable = false)
+    @Column(name = "seed", nullable = false, length = 500)
     private String seed;
 
     @Column(name = "created_at")
@@ -35,6 +36,10 @@ public class Wallet {
 
     @Column(name = "password")
     private String password;
+
+    @OneToMany(fetch = EAGER)
+    @JoinColumn(name = "wallet_id")
+    private Set<XPub> xPubs;
 
     public Wallet(String name, String seed) {
         this.name = name;
@@ -102,6 +107,17 @@ public class Wallet {
 
     public List<Transaction> getTransactions() {
         return transactions;
+    }
+
+    public XPub getXPub(XPubTypes xPubType) {
+        return xPubs.stream()
+            .filter(xPub -> xPub.getType().equals(xPubType.toString()))
+            .findFirst()
+            .orElseThrow();
+    }
+
+    public Set<XPub> getxPubs() {
+        return xPubs;
     }
 
 }

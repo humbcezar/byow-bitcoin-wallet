@@ -1,9 +1,7 @@
 package byow.bitcoinwallet;
 
 import byow.bitcoinwallet.enums.Languages;
-import byow.bitcoinwallet.services.address.AddressSequentialGenerator;
-import byow.bitcoinwallet.services.address.DefaultAddressGenerator;
-import byow.bitcoinwallet.services.address.NestedSegwitAddressGenerator;
+import byow.bitcoinwallet.services.address.*;
 import com.blockstream.libwally.Wally;
 import javafx.application.Application;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -44,12 +42,12 @@ public class ByowApplication {
 
     @Bean
     @Primary
-    public AddressSequentialGenerator defaultAddressSequentialGenerator(DefaultAddressGenerator defaultAddressGenerator) {
-        return new AddressSequentialGenerator(defaultAddressGenerator);
+    public AddressSequentialGenerator defaultAddressSequentialGenerator(DefaultAddressGeneratorByXPubKey defaultAddressGeneratorByXPubKey) {
+        return new AddressSequentialGenerator(defaultAddressGeneratorByXPubKey);
     }
 
     @Bean
-    public AddressSequentialGenerator nestedSegwitAddressSequentialGenerator(NestedSegwitAddressGenerator nestedSegwitAddressGenerator) {
-        return new AddressSequentialGenerator(nestedSegwitAddressGenerator);
+    public AddressSequentialGenerator nestedSegwitAddressSequentialGenerator(NestedSegwitAddressGeneratorByXPubKey nestedSegwitAddressGeneratorByXPubKey) {
+        return new AddressSequentialGenerator(nestedSegwitAddressGeneratorByXPubKey);
     }
 }

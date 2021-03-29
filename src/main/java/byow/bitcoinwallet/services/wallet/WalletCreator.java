@@ -4,6 +4,7 @@ import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.events.WalletCreatedEvent;
 import byow.bitcoinwallet.repositories.WalletRepository;
 import byow.bitcoinwallet.services.AuthenticationService;
+import byow.bitcoinwallet.services.Encryptor;
 import byow.bitcoinwallet.services.address.EntropyCreator;
 import byow.bitcoinwallet.services.address.SeedGenerator;
 import com.blockstream.libwally.Wally;
@@ -28,6 +29,10 @@ public class WalletCreator {
 
     private final AuthenticationService authenticationService;
 
+    private final Encryptor encryptor;
+
+    private final XPubCreator xPubCreator;
+
     @Autowired
     public WalletCreator(
         WalletRepository walletRepository,
@@ -35,7 +40,9 @@ public class WalletCreator {
         EntropyCreator entropyCreator,
         ApplicationEventPublisher applicationEventPublisher,
         SeedGenerator seedGenerator,
-        AuthenticationService authenticationService
+        AuthenticationService authenticationService,
+        Encryptor encryptor,
+        XPubCreator xPubCreator
     ) {
         this.walletRepository = walletRepository;
         this.wordList = wordList;
@@ -43,6 +50,8 @@ public class WalletCreator {
         this.applicationEventPublisher = applicationEventPublisher;
         this.seedGenerator = seedGenerator;
         this.authenticationService = authenticationService;
+        this.encryptor = encryptor;
+        this.xPubCreator = xPubCreator;
     }
 
     public Wallet create(String walletName, String mnemonicSeed, String password) {
@@ -50,11 +59,22 @@ public class WalletCreator {
     }
 
     public Wallet create(String walletName, String mnemonicSeed, String password, Date walletCreationDate) {
-        Wallet wallet = new Wallet(walletName, seedGenerator.generateSeed(mnemonicSeed, password), authenticationService.hashPassword(password));
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, password);
+        Wallet wallet = new Wallet(
+            walletName,
+            encryptor.encrypt(seed, password),
+            authenticationService.hashPassword(password)
+        );
         wallet.setCreatedAt(walletCreationDate);
         walletRepository.save(wallet);
-        this.applicationEventPublisher.publishEvent(new WalletCreatedEvent(this, wallet));
+        xPubCreator.create(seed, wallet);
+        this.applicationEventPublisher.publishEvent(new WalletCreatedEvent(this, fresh(wallet)));
         return wallet;
+    }
+
+    private Wallet fresh(Wallet wallet) {
+        return walletRepository.findById(wallet.getId())
+            .orElseThrow();
     }
 
     public String generateMnemonicSeed() {

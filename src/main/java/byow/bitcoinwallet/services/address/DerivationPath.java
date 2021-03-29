@@ -1,7 +1,10 @@
 package byow.bitcoinwallet.services.address;
 
+import byow.bitcoinwallet.entities.XPubTypes;
+
 import java.util.Arrays;
 
+import static byow.bitcoinwallet.entities.XPubTypes.*;
 import static com.blockstream.libwally.Wally.BIP32_INITIAL_HARDENED_CHILD;
 
 public class DerivationPath {
@@ -40,5 +43,30 @@ public class DerivationPath {
         splitPath[splitPath.length - 1] = Integer.toString(nextLast);
 
         return new DerivationPath(String.join("/", splitPath));
+    }
+
+    public DerivationPath lastStep() {
+        String[] splitPath = path.split("/");
+        return new DerivationPath(splitPath[splitPath.length - 1]);
+    }
+
+    public XPubTypes getType() {
+        String[] splitPath = path.split("/");
+        if (splitPath.length < 5) {
+            return UNKNOWN;
+        }
+        if (splitPath[0].equals("84'") && splitPath[3].equals("0")) {
+            return DEFAULT_X_PUB;
+        }
+        if (splitPath[0].equals("84'") && splitPath[3].equals("1")) {
+            return CHANGE_X_PUB;
+        }
+        if (splitPath[0].equals("49'") && splitPath[3].equals("0")) {
+            return NESTED_SEGWIT_X_PUB;
+        }
+        if (splitPath[0].equals("49'") && splitPath[3].equals("1")) {
+            return CHANGE_NESTED_SEGWIT_X_PUB;
+        }
+        return UNKNOWN;
     }
 }

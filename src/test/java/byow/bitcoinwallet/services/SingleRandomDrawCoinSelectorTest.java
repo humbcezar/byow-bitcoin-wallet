@@ -1,9 +1,12 @@
 package byow.bitcoinwallet.services;
 
 import byow.bitcoinwallet.entities.ReceivingAddress;
+import byow.bitcoinwallet.entities.Wallet;
+import byow.bitcoinwallet.entities.XPub;
 import byow.bitcoinwallet.entities.wally.WallyTransaction;
+import byow.bitcoinwallet.services.address.XPubKeyGenerator;
 import byow.bitcoinwallet.services.gui.CurrentReceivingAddresses;
-import byow.bitcoinwallet.services.address.DefaultAddressGenerator;
+import byow.bitcoinwallet.services.address.DefaultAddressGeneratorBySeed;
 import byow.bitcoinwallet.services.address.SeedGenerator;
 import byow.bitcoinwallet.services.transaction.SingleRandomDrawCoinSelector;
 import byow.bitcoinwallet.utils.UnspentUtil;
@@ -16,6 +19,8 @@ import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Unspent;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static byow.bitcoinwallet.services.address.DerivationPath.FIRST_BIP84_ADDRESS_PATH;
 import static java.math.BigDecimal.ONE;
@@ -37,14 +42,18 @@ public class SingleRandomDrawCoinSelectorTest {
     private SeedGenerator seedGenerator;
 
     @Autowired
-    private DefaultAddressGenerator addressGenerator;
+    private DefaultAddressGeneratorBySeed addressGenerator;
+
+    @Autowired
+    private List<XPubKeyGenerator> xPubKeyGenerators;
 
     @MockBean
     private CurrentReceivingAddresses currentReceivingAddresses;
 
     @Test
     public void createTransactionWithOneInputWithChange() {
-        String seed = seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), "");
+        String seed = seedGenerator.generateSeedAsString(seedGenerator.generateMnemonicSeed(), "");
+        Set<XPub> xPubs = getXPubs(seed);
         String inputAddress = "bcrt1qp6lszgmk559zg6m9st08f85mc39aghwe8qlqd6";
         String changeAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(3));
         BigDecimal inputBalance = valueOf(100);
@@ -63,7 +72,7 @@ public class SingleRandomDrawCoinSelectorTest {
             List.of(utxo),
             ONE,
             new BigDecimal("0.002"),
-            seed,
+            xPubs,
             outputAddress,
             changeAddress
         );
@@ -77,7 +86,8 @@ public class SingleRandomDrawCoinSelectorTest {
 
     @Test
     public void createTransactionWithTwoInputsWithChange() {
-        String seed = seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), "");
+        String seed = seedGenerator.generateSeedAsString(seedGenerator.generateMnemonicSeed(), "");
+        Set<XPub> xPubs = getXPubs(seed);
         String inputAddress1 = "bcrt1qp6lszgmk559zg6m9st08f85mc39aghwe8qlqd6";
         String inputAddress2 = "bcrt1qxmv2gr88cs8m5gckaeccr445arpvuqv79mwx5q";
         String changeAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(3));
@@ -108,7 +118,7 @@ public class SingleRandomDrawCoinSelectorTest {
             List.of(utxo1, utxo2),
             new BigDecimal(150),
             new BigDecimal("0.002"),
-            seed,
+            xPubs,
             outputAddress,
             changeAddress
         );
@@ -121,7 +131,8 @@ public class SingleRandomDrawCoinSelectorTest {
 
     @Test
     public void createTransactionWithOneInsufficientInputReturnNull() {
-        String seed = seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), "");
+        String seed = seedGenerator.generateSeedAsString(seedGenerator.generateMnemonicSeed(), "");
+        Set<XPub> xPubs = getXPubs(seed);
         String inputAddress = "bcrt1qp6lszgmk559zg6m9st08f85mc39aghwe8qlqd6";
         String changeAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(3));
         BigDecimal inputBalance = valueOf(100);
@@ -140,7 +151,7 @@ public class SingleRandomDrawCoinSelectorTest {
                 List.of(utxo),
                 valueOf(110),
                 new BigDecimal("0.002"),
-                seed,
+                xPubs,
                 outputAddress,
                 changeAddress
         );
@@ -149,7 +160,8 @@ public class SingleRandomDrawCoinSelectorTest {
 
     @Test
     public void createTransactionWithOneInsufficientInputEqualToTarget() {
-        String seed = seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), "");
+        String seed = seedGenerator.generateSeedAsString(seedGenerator.generateMnemonicSeed(), "");
+        Set<XPub> xPubs = getXPubs(seed);
         String inputAddress = "bcrt1qp6lszgmk559zg6m9st08f85mc39aghwe8qlqd6";
         String changeAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(3));
         BigDecimal inputBalance = valueOf(110);
@@ -168,7 +180,7 @@ public class SingleRandomDrawCoinSelectorTest {
             List.of(utxo),
             valueOf(110),
             new BigDecimal("0.002"),
-            seed,
+            xPubs,
             outputAddress,
             changeAddress
         );
@@ -180,7 +192,8 @@ public class SingleRandomDrawCoinSelectorTest {
 
     @Test
     public void createTransactionWithTotalFeeGreaterThanDustButLesserThanIntendedFee() {
-        String seed = seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), "");
+        String seed = seedGenerator.generateSeedAsString(seedGenerator.generateMnemonicSeed(), "");
+        Set<XPub> xPubs = getXPubs(seed);
         String inputAddress = "bcrt1qp6lszgmk559zg6m9st08f85mc39aghwe8qlqd6";
         String changeAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(3));
         BigDecimal inputBalance = valueOf(1.00020000);
@@ -199,7 +212,7 @@ public class SingleRandomDrawCoinSelectorTest {
             List.of(utxo),
             valueOf(1),
             new BigDecimal("0.002"),
-            seed,
+            xPubs,
             outputAddress,
             changeAddress
         );
@@ -212,7 +225,8 @@ public class SingleRandomDrawCoinSelectorTest {
 
     @Test
     public void createTransactionWithDustFee() {
-        String seed = seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), "");
+        String seed = seedGenerator.generateSeedAsString(seedGenerator.generateMnemonicSeed(), "");
+        Set<XPub> xPubs = getXPubs(seed);
         String inputAddress = "bcrt1qp6lszgmk559zg6m9st08f85mc39aghwe8qlqd6";
         String changeAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(3));
         BigDecimal inputBalance = valueOf(1);
@@ -231,7 +245,7 @@ public class SingleRandomDrawCoinSelectorTest {
                 List.of(utxo),
                 valueOf(0.99999800),
                 new BigDecimal("0.002"),
-                seed,
+                xPubs,
                 outputAddress,
                 changeAddress
         );
@@ -244,7 +258,8 @@ public class SingleRandomDrawCoinSelectorTest {
 
     @Test
     public void createTransactionWithOneInputWithZeroConfirmationReturnNull() {
-        String seed = seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), "");
+        String seed = seedGenerator.generateSeedAsString(seedGenerator.generateMnemonicSeed(), "");
+        Set<XPub> xPubs = getXPubs(seed);
         String inputAddress = "bcrt1qp6lszgmk559zg6m9st08f85mc39aghwe8qlqd6";
         String changeAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH.next(3));
         BigDecimal inputBalance = valueOf(100);
@@ -263,11 +278,19 @@ public class SingleRandomDrawCoinSelectorTest {
             List.of(utxo),
             ONE,
             new BigDecimal("0.002"),
-            seed,
+            xPubs,
             outputAddress,
             changeAddress
         );
         assertNull(transaction);
     }
     //TODO: limpar transaction, inputs e outputs apos usa-las
+
+    private Set<XPub> getXPubs(String seed) {
+        Wallet wallet = new Wallet();
+        return xPubKeyGenerators.stream()
+            .map(xPubKeyGenerator -> new XPub(xPubKeyGenerator.generateXPubkeySerialized(seed), xPubKeyGenerator.getType().toString(), wallet))
+            .collect(Collectors.toSet());
+    }
+
 }

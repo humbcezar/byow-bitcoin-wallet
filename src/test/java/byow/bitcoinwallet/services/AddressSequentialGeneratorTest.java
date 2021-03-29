@@ -29,31 +29,39 @@ public class AddressSequentialGeneratorTest {
     SeedGenerator seedGenerator;
 
     @Autowired
-    DefaultAddressGenerator defaultAddressGenerator;
+    DefaultAddressGeneratorBySeed defaultAddressGeneratorBySeed;
 
     @Autowired
-    NestedSegwitAddressGenerator nestedSegwitAddressGenerator;
+    NestedSegwitAddressGeneratorBySeed nestedSegwitAddressGeneratorBySeed;
+
+    @Autowired
+    DefaultXPubKeyGenerator defaultXPubKeyGenerator;
+
+    @Autowired
+    NestedSegwitXPubKeyGenerator nestedSegwitXPubKeyGenerator;
 
     @Test
     public void deriveDefaultAddresses() {
-        String seed = seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), "");
+        String seed = seedGenerator.generateSeedAsString(seedGenerator.generateMnemonicSeed(), "");
+        String xPub = defaultXPubKeyGenerator.generateXPubkeySerialized(seed);
         List<String> addresses = defaultAddressSequentialGenerator.deriveAddresses(
-                5,
-                seed,
-                FIRST_BIP84_ADDRESS_PATH
+            5,
+            xPub,
+            FIRST_BIP84_ADDRESS_PATH
         ).stream().map(AddressPath::getAddress).collect(Collectors.toList());
-        assertArrayEquals(expectedAddresses(seed, 5, FIRST_BIP84_ADDRESS_PATH, defaultAddressGenerator), addresses.toArray());
+        assertArrayEquals(expectedAddresses(seed, 5, FIRST_BIP84_ADDRESS_PATH, defaultAddressGeneratorBySeed), addresses.toArray());
     }
 
     @Test
     public void deriveNestedSegwitAddresses() {
-        String seed = seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), "");
+        String seed = seedGenerator.generateSeedAsString(seedGenerator.generateMnemonicSeed(), "");
+        String xPub = nestedSegwitXPubKeyGenerator.generateXPubkeySerialized(seed);
         List<String> addresses = nestedSegwitAddressSequentialGenerator.deriveAddresses(
-                5,
-                seed,
-                FIRST_BIP49_ADDRESS_PATH
+            5,
+            xPub,
+            FIRST_BIP49_ADDRESS_PATH
         ).stream().map(AddressPath::getAddress).collect(Collectors.toList());
-        assertArrayEquals(expectedAddresses(seed, 5, FIRST_BIP49_ADDRESS_PATH, nestedSegwitAddressGenerator), addresses.toArray());
+        assertArrayEquals(expectedAddresses(seed, 5, FIRST_BIP49_ADDRESS_PATH, nestedSegwitAddressGeneratorBySeed), addresses.toArray());
     }
 
     private String[] expectedAddresses(String seed, int numberOfAddresses, DerivationPath derivationPath, AddressGenerator addressGenerator) {

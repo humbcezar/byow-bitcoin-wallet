@@ -33,9 +33,16 @@ public class SeedGenerator {
         return mnemonicSeed;
     }
 
-    public String generateSeed(String mnemonicSeed, String password) {
-        final byte[] seed = new byte[Wally.BIP39_SEED_LEN_512];
+    public String generateSeedAsString(String mnemonicSeed, String password) {
+        byte[] seed = new byte[Wally.BIP39_SEED_LEN_512];
         Wally.bip39_mnemonic_to_seed(mnemonicSeed, password, seed);
         return Wally.hex_from_bytes(seed);
     }
+
+//    public CharSequence generateSeed(String mnemonicSeed, String password) {
+//        byte[] seed = new byte[Wally.BIP39_SEED_LEN_512];
+//        Wally.bip39_mnemonic_to_seed(mnemonicSeed, password, seed);
+//        TODO
+
+//    }
 }

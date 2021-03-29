@@ -45,8 +45,8 @@ public class SendTransactionService {
         this.addressRepository = addressRepository;
     }
 
-    public void signAndSend(WallyTransaction transaction) {
-        range(0, transaction.getInputCount()).forEach(transaction::sign);
+    public void signAndSend(WallyTransaction transaction, String seed) {
+        range(0, transaction.getInputCount()).forEach(index -> transaction.sign(index, seed));
         String txId = transactionSender.send(transaction);
         saveTransaction(transaction, txId);
     }

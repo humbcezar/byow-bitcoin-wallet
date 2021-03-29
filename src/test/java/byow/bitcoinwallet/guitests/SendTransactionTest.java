@@ -47,7 +47,7 @@ public class SendTransactionTest extends TestBase {
     private AddressGenerator addressGenerator;
 
     @Autowired
-    private NestedSegwitAddressGenerator nestedSegwitAddressGenerator;
+    private NestedSegwitAddressGeneratorBySeed nestedSegwitAddressGeneratorBySeed;
 
     @Autowired
     private SeedGenerator seedGenerator;
@@ -68,7 +68,7 @@ public class SendTransactionTest extends TestBase {
     public void sendOneTransactionToNodeAddress(FxRobot robot) throws TimeoutException {
         String password = make();
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), password);
-        String seed = seedGenerator.generateSeed(mnemonicSeed, password);
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, password);
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
         waitFor(TIMEOUT, SECONDS, () -> {
@@ -83,7 +83,7 @@ public class SendTransactionTest extends TestBase {
     public void sendOneTransactionWithWrongPasswordFail(FxRobot robot) throws TimeoutException {
         String password = make();
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), password);
-        String seed = seedGenerator.generateSeed(mnemonicSeed, password);
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, password);
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
         waitFor(TIMEOUT, SECONDS, () -> {
@@ -101,8 +101,8 @@ public class SendTransactionTest extends TestBase {
     @Test
     public void sendOneTransactionToNodeAddressFromNestedSegwitUtxo(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
-        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
-        String firstAddress = nestedSegwitAddressGenerator.generate(seed, FIRST_BIP49_ADDRESS_PATH);
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, "");
+        String firstAddress = nestedSegwitAddressGeneratorBySeed.generate(seed, FIRST_BIP49_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#nestedReceivingAddress");
         waitFor(TIMEOUT, SECONDS, () -> {
             TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
@@ -115,8 +115,8 @@ public class SendTransactionTest extends TestBase {
     @Test
     public void sendOneTransactionToNodeAddressFromNestedSegwitUtxoAndDefaultUtxo(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
-        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
-        String firstAddress = nestedSegwitAddressGenerator.generate(seed, FIRST_BIP49_ADDRESS_PATH);
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, "");
+        String firstAddress = nestedSegwitAddressGeneratorBySeed.generate(seed, FIRST_BIP49_ADDRESS_PATH);
         String secondAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#nestedReceivingAddress");
         fundAddress(robot, secondAddress, ONE, 1, "#receivingAddress");
@@ -132,7 +132,7 @@ public class SendTransactionTest extends TestBase {
     @Test
     public void sendFiveTransactionsToNodeAddress(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
-        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, BigDecimal.valueOf(5), 1, "#receivingAddress");
         waitFor(TIMEOUT, SECONDS, () -> {
@@ -146,7 +146,7 @@ public class SendTransactionTest extends TestBase {
     @Test
     public void sendFiveTransactionsWithSameAddressInputsToNodeAddress(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
-        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         waitFor(40, SECONDS, () -> {
             String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
@@ -170,7 +170,7 @@ public class SendTransactionTest extends TestBase {
     @Test
     public void sendFiveTransactionsFromWalletWithThreeUtxosToNodeAddress(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
-        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, "");
 
         fundNAddresses(robot, seed, BigDecimal.valueOf(2), 1, 3);
         BigDecimal initialBalance = new BigDecimal(6);
@@ -180,7 +180,7 @@ public class SendTransactionTest extends TestBase {
     @Test
     public void sendOneTransactionFromWalletWithThreeUtxosToNodeAddress(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
-        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, "");
 
         fundNAddresses(robot, seed, BigDecimal.valueOf(2), 1, 3);
         BigDecimal initialBalance = new BigDecimal(6);
@@ -190,7 +190,7 @@ public class SendTransactionTest extends TestBase {
     @Test
     public void sendOneTransactionWithoutEnoughFundsFail(FxRobot robot) {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
-        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, "");
 
         fundNAddresses(robot, seed, BigDecimal.valueOf(2), 1, 1);
 
@@ -211,7 +211,7 @@ public class SendTransactionTest extends TestBase {
     public void sendOneTransactionToAnotherByowWalletThenSpendIt(FxRobot robot) throws TimeoutException {
         String recipientWallet = RandomString.make();
         String recipientMnemonicSeed = walletUtil.createWallet(robot, recipientWallet, "");
-        String recipientSeed = seedGenerator.generateSeed(recipientMnemonicSeed, "");
+        String recipientSeed = seedGenerator.generateSeedAsString(recipientMnemonicSeed, "");
         String recipientWalletAddress = addressGenerator.generate(recipientSeed, FIRST_BIP84_ADDRESS_PATH);
         waitFor(TIMEOUT, SECONDS, () -> {
             String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
@@ -219,7 +219,7 @@ public class SendTransactionTest extends TestBase {
         });
 
         String senderMnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
-        String seed = seedGenerator.generateSeed(senderMnemonicSeed, "");
+        String seed = seedGenerator.generateSeedAsString(senderMnemonicSeed, "");
         String senderWalletAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, senderWalletAddress, ONE, 1, "#receivingAddress");
 
@@ -263,7 +263,7 @@ public class SendTransactionTest extends TestBase {
     @Test
     public void sendOneTransactionWithDustOutputToNodeAddress(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
-        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
         waitFor(TIMEOUT, SECONDS, () -> {
@@ -287,7 +287,7 @@ public class SendTransactionTest extends TestBase {
     @Test
     public void sendOneTransactionWithDustChangeToNodeAddressWithInsufficientFundsForChangeFail(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
-        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
         waitFor(TIMEOUT, SECONDS, () -> {
@@ -311,7 +311,7 @@ public class SendTransactionTest extends TestBase {
     @Test
     public void sendOneTransactionWithDustChangeToNodeAddress(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
-        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
         waitFor(TIMEOUT, SECONDS, () -> {
@@ -328,7 +328,7 @@ public class SendTransactionTest extends TestBase {
     @Test
     public void sendOneTransactionWithInputsEqualAdjustedTargetToNodeAddress(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
-        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
         waitFor(TIMEOUT, SECONDS, () -> {
@@ -345,7 +345,7 @@ public class SendTransactionTest extends TestBase {
     @Test
     public void sendOneTransactionWithInputsEqualTargetToNodeAddressFail(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
-        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
         waitFor(TIMEOUT, SECONDS, () -> {
@@ -369,7 +369,7 @@ public class SendTransactionTest extends TestBase {
     @Test
     public void sendOneTransactionWithTotalFeeGreaterThanDustButLesserThanIntendedFee(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
-        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, valueOf(1.00000300), 1, "#receivingAddress");
         waitFor(TIMEOUT, SECONDS, () -> {
@@ -393,7 +393,7 @@ public class SendTransactionTest extends TestBase {
     @Test
     public void sendOneTransactionToNestedSegwitNodeAddress(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
-        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
         waitFor(TIMEOUT, SECONDS, () -> {
@@ -407,7 +407,7 @@ public class SendTransactionTest extends TestBase {
     @Test
     public void sendOneTransactionToLegacyNodeAddress(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
-        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
         waitFor(TIMEOUT, SECONDS, () -> {
@@ -421,7 +421,7 @@ public class SendTransactionTest extends TestBase {
     @Test
     public void sendOneTransactionToItsOwnFirstAddress(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, RandomString.make(), "");
-        String seed = seedGenerator.generateSeed(mnemonicSeed, "");
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, "");
         String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
         fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
         waitFor(TIMEOUT, SECONDS, () -> {
@@ -430,9 +430,19 @@ public class SendTransactionTest extends TestBase {
         });
 
         sendBtc(robot, "0.5", "", firstAddress);
+        waitFor(TIMEOUT, SECONDS, () -> {
+            TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
+            return tableView.getItems().size() == 2;
+        });
         TableView<ReceivingAddress> table = robot.lookup("#addressesTable").queryAs(TableView.class);
-        BigDecimal previousBalance = table.getItems().stream().map(ReceivingAddress::getBigDecimalBalance).reduce(BigDecimal::add).orElse(ZERO);
-        addressesTableAssertion(robot, "0.5", 1, table, previousBalance);
+        assertEquals(
+            new BigDecimal("0.5"),
+            table.getItems().get(0).getBigDecimalBalance().setScale(1, HALF_UP)
+        );
+        assertEquals(
+            new BigDecimal("0.5"),
+            table.getItems().get(1).getBigDecimalBalance().setScale(1, HALF_UP)
+        );
         changeAddressAssertion(seed, 0, 0, table, 1);
     }
 

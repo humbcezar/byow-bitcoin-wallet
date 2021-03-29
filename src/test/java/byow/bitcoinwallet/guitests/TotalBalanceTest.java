@@ -4,7 +4,9 @@ import byow.bitcoinwallet.entities.AddressPath;
 import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.repositories.WalletRepository;
 import byow.bitcoinwallet.services.address.AddressSequentialGenerator;
+import byow.bitcoinwallet.services.address.DefaultAddressGeneratorBySeed;
 import byow.bitcoinwallet.services.address.SeedGenerator;
+import byow.bitcoinwallet.services.wallet.XPubCreator;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import javafx.stage.Stage;
@@ -36,11 +38,16 @@ public class TotalBalanceTest extends TestBase {
     @Autowired
     private WalletRepository walletRepository;
 
-    @Autowired
     private AddressSequentialGenerator addressSequentialGenerator;
 
     @Autowired
+    private DefaultAddressGeneratorBySeed defaultAddressGeneratorBySeed;
+
+    @Autowired
     private BitcoindRpcClient bitcoindRpcClient;
+
+    @Autowired
+    private XPubCreator xPubCreator;
 
     private String seed;
 
@@ -51,11 +58,13 @@ public class TotalBalanceTest extends TestBase {
     @Override
     @Start
     public void start(Stage stage) throws Exception {
+        addressSequentialGenerator = new AddressSequentialGenerator(defaultAddressGeneratorBySeed);
         walletName = RandomString.make();
-        seed = seedGenerator.generateSeed(seedGenerator.generateMnemonicSeed(), "");
+        seed = seedGenerator.generateSeedAsString(seedGenerator.generateMnemonicSeed(), "");
         Wallet wallet = new Wallet(walletName, seed);
         wallet.setCreatedAt(new Date());
         walletRepository.save(wallet);
+        xPubCreator.create(seed, wallet);
         super.start(stage);
     }
 
