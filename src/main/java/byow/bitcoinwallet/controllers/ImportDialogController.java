@@ -23,9 +23,6 @@ public class ImportDialogController extends GenerateWalletDialogController {
             walletPassword.getText(),
             buildDate()
         );
-        mnemonicSeed.clear();
-        walletPassword.clear();
-        walletName.clear();
     }
 
     private Date buildDate() {

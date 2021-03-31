@@ -25,9 +25,6 @@ public abstract class GenerateWalletDialogController {
 
     public void createWallet() {
         walletCreator.create(walletName.getText(), mnemonicSeed.getText(), walletPassword.getText());
-        mnemonicSeed.clear();
-        walletPassword.clear();
-        walletName.clear();
     }
 
     public BooleanBinding getAllInputsAreFull() {
