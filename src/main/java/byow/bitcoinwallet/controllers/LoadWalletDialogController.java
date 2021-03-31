@@ -19,6 +19,8 @@ public class LoadWalletDialogController {
     }
 
     public boolean passwordIsValid(String hashedPassword) {
-        return authenticationService.checkPassword(loadWalletPassword.getText(), hashedPassword);
+        boolean result = authenticationService.checkPassword(loadWalletPassword.getText(), hashedPassword);
+        loadWalletPassword.clear();
+        return result;
     }
 }
