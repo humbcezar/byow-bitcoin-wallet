@@ -12,7 +12,6 @@ import javafx.stage.Stage;
 import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
@@ -29,7 +28,8 @@ import static java.util.stream.IntStream.range;
 import static org.assertj.core.internal.bytebuddy.utility.RandomString.make;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.testfx.matcher.control.TableViewMatchers.*;
+import static org.testfx.matcher.control.TableViewMatchers.containsRow;
+import static org.testfx.matcher.control.TableViewMatchers.hasNumRows;
 import static org.testfx.util.WaitForAsyncUtils.waitFor;
 
 public class ReceivingTransactionTest extends TestBase {
@@ -158,14 +158,15 @@ public class ReceivingTransactionTest extends TestBase {
     public void receiveSixTransactionToNestedSegwitAddress(FxRobot robot) throws TimeoutException {
         String mnemonicSeed = walletUtil.createWallet(robot, make(), "");
         receiveNTransactions(
-                robot,
-                mnemonicSeed,
-                5,
-                FIRST_BIP49_ADDRESS_PATH,
+            robot,
+            mnemonicSeed,
+            5,
+            FIRST_BIP49_ADDRESS_PATH,
             nestedSegwitAddressGeneratorBySeed,
-                "#nestedReceivingAddress",
-                nestedSegwitAddressSequentialGenerator,
-            "");
+            "#nestedReceivingAddress",
+            nestedSegwitAddressSequentialGenerator,
+            ""
+        );
     }
 
     @Test

@@ -29,7 +29,7 @@ public class Transaction {
     private Set<TransactionInput> transactionInputs;
 
     @OneToMany(fetch = EAGER)
-    @JoinColumn(name = "wallet_id")
+    @JoinColumn(name = "transaction_id")
     private Set<TransactionOutput> transactionOutputs;
 
     public Transaction() {
