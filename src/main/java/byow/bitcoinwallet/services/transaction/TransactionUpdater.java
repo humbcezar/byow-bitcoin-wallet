@@ -5,6 +5,7 @@ import byow.bitcoinwallet.entities.TransactionOutput;
 import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.repositories.AddressRepository;
 import byow.bitcoinwallet.repositories.TransactionOutputRepository;
+import byow.bitcoinwallet.repositories.WalletRepository;
 import byow.bitcoinwallet.services.address.AddressUpdater;
 import byow.bitcoinwallet.services.address.InputAddressesParser;
 import byow.bitcoinwallet.services.address.OutputAddressesParser;
@@ -48,6 +49,8 @@ public class TransactionUpdater {
 
     private final AddressRepository addressRepository;
 
+    private final WalletRepository walletRepository;
+
     @Autowired
     public TransactionUpdater(
         CurrentReceivingAddresses currentReceivingAddresses,
@@ -58,7 +61,8 @@ public class TransactionUpdater {
         AddressUpdater addressUpdater,
         InputAddressesParser inputAddressesParser,
         OutputAddressesParser outputAddressesParser,
-        AddressRepository addressRepository
+        AddressRepository addressRepository,
+        WalletRepository walletRepository
     ) {
         this.currentReceivingAddresses = currentReceivingAddresses;
         this.currentWallet = currentWallet;
@@ -69,6 +73,7 @@ public class TransactionUpdater {
         this.inputAddressesParser = inputAddressesParser;
         this.outputAddressesParser = outputAddressesParser;
         this.addressRepository = addressRepository;
+        this.walletRepository = walletRepository;
     }
 
     public void update(Object transaction) {
@@ -85,10 +90,11 @@ public class TransactionUpdater {
 
     @Transactional
     private void saveTransaction(Object transaction, List<String> outputs, Wallet wallet) {
-        String txId = encode(tx_get_txid(transaction));
-        if (txId.isEmpty()) {
+        String txId = revertEndianess(encode(tx_get_txid(transaction)));
+        if (walletContainsTransaction(wallet, txId)) {
             return;
         }
+
         Set<TransactionOutput> transactionOutputs = range(0, outputs.size())
             .filter(index -> currentReceivingAddresses.contains(outputs.get(index)))
             .mapToObj(index -> {
@@ -103,11 +109,18 @@ public class TransactionUpdater {
 
         if (!transactionOutputs.isEmpty()) {
             transactionSaver.save(
-                revertEndianess(txId),
+                txId,
                 wallet,
                 Set.of(),
                 transactionOutputs
             );
         }
+    }
+
+    private boolean walletContainsTransaction(Wallet wallet, String txId) {
+        return walletRepository.findByName(wallet.getName())
+            .getTransactions()
+            .stream()
+            .anyMatch(transaction -> transaction.getTxId().equals(txId) && !transaction.getTransactionOutputs().isEmpty());
     }
 }

@@ -182,7 +182,7 @@ public class ReceivingTransactionTest extends TestBase {
         );
     }
 
-    @Test
+//    @Test
     public void receiveOneHashBlockRewardWalletAddress(FxRobot robot) throws TimeoutException, InterruptedException {
         walletUtil.createWallet(robot, RandomString.make(), "");
         waitFor(40, TimeUnit.SECONDS, () -> {
