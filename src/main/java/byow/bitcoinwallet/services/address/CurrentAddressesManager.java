@@ -180,6 +180,9 @@ abstract public class CurrentAddressesManager {
     }
 
     private List<String> getUnimportedAddresses(List<String> addresses, String walletName) {
+        if (addresses.isEmpty()) {
+            return List.of();
+        }
         Set<String> importedAddresses = addressesGetter.getAddressesByLabel(walletName);
         return addresses.stream()
             .filter(address -> !importedAddresses.contains(address))

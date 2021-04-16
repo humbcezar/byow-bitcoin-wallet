@@ -7,8 +7,6 @@ import byow.bitcoinwallet.repositories.AddressRepository;
 import byow.bitcoinwallet.repositories.TransactionOutputRepository;
 import byow.bitcoinwallet.repositories.WalletRepository;
 import byow.bitcoinwallet.services.address.AddressUpdater;
-import byow.bitcoinwallet.services.address.InputAddressesParser;
-import byow.bitcoinwallet.services.address.OutputAddressesParser;
 import byow.bitcoinwallet.services.gui.CurrentReceivingAddresses;
 import byow.bitcoinwallet.services.gui.CurrentTransactions;
 import byow.bitcoinwallet.services.gui.CurrentWallet;
@@ -25,7 +23,6 @@ import static byow.bitcoinwallet.utils.HexUtils.revertEndianess;
 import static com.blockstream.libwally.Wally.tx_get_output_satoshi;
 import static com.blockstream.libwally.Wally.tx_get_txid;
 import static java.util.stream.IntStream.range;
-import static java.util.stream.Stream.concat;
 import static wf.bitcoin.krotjson.HexCoder.encode;
 
 @Component
@@ -43,10 +40,6 @@ public class TransactionUpdater {
 
     private final AddressUpdater addressUpdater;
 
-    private final InputAddressesParser inputAddressesParser;
-
-    private final OutputAddressesParser outputAddressesParser;
-
     private final AddressRepository addressRepository;
 
     private final WalletRepository walletRepository;
@@ -59,8 +52,6 @@ public class TransactionUpdater {
         TransactionOutputRepository transactionOutputRepository,
         CurrentTransactions currentTransactions,
         AddressUpdater addressUpdater,
-        InputAddressesParser inputAddressesParser,
-        OutputAddressesParser outputAddressesParser,
         AddressRepository addressRepository,
         WalletRepository walletRepository
     ) {
@@ -70,16 +61,12 @@ public class TransactionUpdater {
         this.transactionOutputRepository = transactionOutputRepository;
         this.currentTransactions = currentTransactions;
         this.addressUpdater = addressUpdater;
-        this.inputAddressesParser = inputAddressesParser;
-        this.outputAddressesParser = outputAddressesParser;
         this.addressRepository = addressRepository;
         this.walletRepository = walletRepository;
     }
 
-    public void update(Object transaction) {
-        List<String> inputs = inputAddressesParser.parseInputAddresses(transaction);
-        List<String> outputs = outputAddressesParser.parseOutputAddresses(transaction);
-        addressUpdater.update(concat(inputs.stream(), outputs.stream()), currentWallet.getCurrentWallet());
+    public void update(Object transaction, List<String> addresses, List<String> outputs) {
+        addressUpdater.update(addresses.stream(), currentWallet.getCurrentWallet());
         updateTransactions(transaction, outputs);
     }
 
