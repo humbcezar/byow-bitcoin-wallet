@@ -1,7 +1,9 @@
 package byow.bitcoinwallet;
 
 import byow.bitcoinwallet.enums.Languages;
-import byow.bitcoinwallet.services.address.*;
+import byow.bitcoinwallet.services.address.AddressSequentialGenerator;
+import byow.bitcoinwallet.services.address.DefaultAddressGeneratorByXPubKey;
+import byow.bitcoinwallet.services.address.NestedSegwitAddressGeneratorByXPubKey;
 import com.blockstream.libwally.Wally;
 import javafx.application.Application;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -11,7 +13,8 @@ import org.zeromq.SocketType;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ.Socket;
 
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @SpringBootApplication
 public class ByowApplication {
@@ -36,11 +39,6 @@ public class ByowApplication {
     }
 
     @Bean
-    public ReentrantLock reentrantLock() {
-        return new ReentrantLock();
-    }
-
-    @Bean
     @Primary
     public AddressSequentialGenerator defaultAddressSequentialGenerator(DefaultAddressGeneratorByXPubKey defaultAddressGeneratorByXPubKey) {
         return new AddressSequentialGenerator(defaultAddressGeneratorByXPubKey);
@@ -50,4 +48,10 @@ public class ByowApplication {
     public AddressSequentialGenerator nestedSegwitAddressSequentialGenerator(NestedSegwitAddressGeneratorByXPubKey nestedSegwitAddressGeneratorByXPubKey) {
         return new AddressSequentialGenerator(nestedSegwitAddressGeneratorByXPubKey);
     }
+
+    @Bean
+    public ExecutorService executorService() {
+        return Executors.newSingleThreadExecutor();
+    }
+
 }

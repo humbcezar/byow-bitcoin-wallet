@@ -1,7 +1,7 @@
 package byow.bitcoinwallet.listeners;
 
 import byow.bitcoinwallet.events.BlockReceivedEvent;
-import byow.bitcoinwallet.services.*;
+import byow.bitcoinwallet.services.UtxosGetter;
 import byow.bitcoinwallet.services.address.CurrentReceivingAddressesUpdater;
 import byow.bitcoinwallet.services.gui.CurrentTransactions;
 import byow.bitcoinwallet.services.gui.CurrentWallet;
@@ -13,14 +13,12 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.ExecutorService;
 
 @Component
 @Lazy
 public class BlockReceivedListener implements ApplicationListener<BlockReceivedEvent> {
     private final CurrentReceivingAddressesUpdater currentReceivingAddressesUpdater;
-
-    private final ReentrantLock reentrantLock;
 
     private final TaskConfigurer taskConfigurer;
 
@@ -30,27 +28,29 @@ public class BlockReceivedListener implements ApplicationListener<BlockReceivedE
 
     private final CurrentWallet currentWallet;
 
+    private final ExecutorService executorService;
+
     @Autowired
     public BlockReceivedListener(
         CurrentReceivingAddressesUpdater currentReceivingAddressesUpdater,
-        ReentrantLock reentrantLock,
         TaskConfigurer taskConfigurer,
         UtxosGetter utxosGetter,
         CurrentTransactions currentTransactions,
-        CurrentWallet currentWallet
+        CurrentWallet currentWallet,
+        ExecutorService executorService
     ) {
         this.currentReceivingAddressesUpdater = currentReceivingAddressesUpdater;
-        this.reentrantLock = reentrantLock;
         this.taskConfigurer = taskConfigurer;
         this.utxosGetter = utxosGetter;
         this.currentTransactions = currentTransactions;
         this.currentWallet = currentWallet;
+        this.executorService = executorService;
     }
 
     @Override
     public void onApplicationEvent(BlockReceivedEvent event) {
         if (currentWallet.getCurrentWallet() != null) {
-            new Thread(buildTask()).start();
+            executorService.submit(buildTask());
         }
     }
 
@@ -58,7 +58,6 @@ public class BlockReceivedListener implements ApplicationListener<BlockReceivedE
         return taskConfigurer.configure(
             new UpdateReceivingAddressesTask(
                 currentReceivingAddressesUpdater,
-                reentrantLock,
                 utxosGetter,
                 currentWallet.getCurrentWallet(),
                 currentTransactions

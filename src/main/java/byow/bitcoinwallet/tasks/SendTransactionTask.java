@@ -4,24 +4,18 @@ import byow.bitcoinwallet.entities.wally.WallyTransaction;
 import byow.bitcoinwallet.services.transaction.SendTransactionService;
 import javafx.concurrent.Task;
 
-import java.util.concurrent.locks.ReentrantLock;
-
 public class SendTransactionTask extends Task<Void> {
-    private ReentrantLock reentrantLock;
+    private final SendTransactionService sendTransactionService;
 
-    private SendTransactionService sendTransactionService;
+    private final WallyTransaction transaction;
 
-    private WallyTransaction transaction;
-
-    private String seed;
+    private final String seed;
 
     public SendTransactionTask(
-        ReentrantLock reentrantLock,
         SendTransactionService sendTransactionService,
         WallyTransaction transaction,
         String seed
     ) {
-        this.reentrantLock = reentrantLock;
         this.sendTransactionService = sendTransactionService;
         this.transaction = transaction;
         this.seed = seed;
@@ -29,9 +23,7 @@ public class SendTransactionTask extends Task<Void> {
 
     @Override
     protected Void call() {
-        synchronized (reentrantLock) {
-            sendTransactionService.signAndSend(transaction, seed);
-        }
+        sendTransactionService.signAndSend(transaction, seed);
         return null;
     }
 }

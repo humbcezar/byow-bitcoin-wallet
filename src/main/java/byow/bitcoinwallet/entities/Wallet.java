@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import static java.util.Objects.isNull;
 import static javax.persistence.FetchType.EAGER;
 
 @Entity
@@ -24,7 +25,7 @@ public class Wallet {
     @Column(name = "name", unique = true, nullable = false)
     private String name;
 
-    @Column(name = "seed", nullable = false, length = 500)
+    @Column(name = "seed", length = 500)
     private String seed;
 
     @Column(name = "created_at")
@@ -92,6 +93,10 @@ public class Wallet {
         return password;
     }
 
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -118,6 +123,11 @@ public class Wallet {
 
     public Set<XPub> getxPubs() {
         return xPubs;
+    }
+
+    @Transient
+    public boolean isWatchOnly() {
+        return isNull(seed);
     }
 
 }

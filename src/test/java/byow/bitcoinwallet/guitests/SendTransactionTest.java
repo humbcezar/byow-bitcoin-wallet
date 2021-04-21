@@ -2,7 +2,9 @@ package byow.bitcoinwallet.guitests;
 
 import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.entities.TransactionRow;
-import byow.bitcoinwallet.services.address.*;
+import byow.bitcoinwallet.services.address.AddressGenerator;
+import byow.bitcoinwallet.services.address.NestedSegwitAddressGeneratorBySeed;
+import byow.bitcoinwallet.services.address.SeedGenerator;
 import byow.bitcoinwallet.services.wallet.TotalBalanceCalculator;
 import byow.bitcoinwallet.utils.WalletUtil;
 import javafx.scene.control.ProgressBar;
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
 
 import static byow.bitcoinwallet.services.address.DerivationPath.*;
 import static java.lang.Integer.MAX_VALUE;
+import static java.math.BigDecimal.valueOf;
 import static java.math.BigDecimal.*;
 import static java.math.RoundingMode.*;
 import static java.util.Objects.isNull;
@@ -444,6 +447,24 @@ public class SendTransactionTest extends TestBase {
             table.getItems().get(1).getBigDecimalBalance().setScale(1, HALF_UP)
         );
         changeAddressAssertion(seed, 0, 0, table, 1);
+    }
+
+    @Test
+    public void sendFailForWatchOnlyWallet(FxRobot robot) throws TimeoutException {
+        String mnemonicSeed = walletUtil.createWatchOnlyWallet(robot, RandomString.make(), "", stage);
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, "");
+        String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
+        fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
+        robot.clickOn("#sendTab");
+        robot.clickOn("#amountToSend");
+        robot.write("0.5");
+        robot.clickOn("#addressToSend");
+        robot.write(firstAddress);
+        robot.clickOn("#send");
+
+        NodeQuery text = robot.lookup("Cannot send transaction for watch only wallet.");
+        assertNotNull(text.queryLabeled().getText());
+        robot.clickOn("OK");
     }
 
     private void fundAddress(FxRobot robot, String firstAddress, BigDecimal amount, int confirmations, String fxmlAddress) throws TimeoutException {

@@ -32,4 +32,14 @@ public class XPubCreator {
             );
         });
     }
+
+    public void create(XPub xPub, Wallet wallet) {
+        xPubRepository.save(
+            new XPub(
+                xPub.getKey(),
+                xPub.getType(),
+                wallet
+            )
+        );
+    }
 }

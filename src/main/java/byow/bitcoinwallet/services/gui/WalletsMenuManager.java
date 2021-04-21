@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.Optional;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.ExecutorService;
 
 import static javafx.concurrent.WorkerStateEvent.WORKER_STATE_SCHEDULED;
 import static javafx.scene.control.Alert.AlertType.ERROR;
@@ -38,8 +38,6 @@ public class WalletsMenuManager {
     private final WalletRepository walletRepository;
 
     private final CurrentWalletManager currentWalletManager;
-
-    private final ReentrantLock reentrantLock;
 
     private final TaskConfigurer taskConfigurer;
 
@@ -55,27 +53,29 @@ public class WalletsMenuManager {
 
     private final CurrentWallet currentWallet;
 
+    private final ExecutorService executorService;
+
     @Autowired
     public WalletsMenuManager(
         WalletRepository walletRepository,
         CurrentWalletManager currentWalletManager,
-        ReentrantLock reentrantLock,
         TaskConfigurer taskConfigurer,
         CurrentTransactions currentTransactions,
         DialogService dialogService,
         @Value("fxml/load_wallet_dialog.fxml") Resource loadWalletDialog,
         TotalBalanceController totalBalanceController,
-        CurrentWallet currentWallet
+        CurrentWallet currentWallet,
+        ExecutorService executorService
     ) {
         this.walletRepository = walletRepository;
         this.currentWalletManager = currentWalletManager;
-        this.reentrantLock = reentrantLock;
         this.taskConfigurer = taskConfigurer;
         this.currentTransactions = currentTransactions;
         this.dialogService = dialogService;
         this.loadWalletDialog = loadWalletDialog;
         this.totalBalanceController = totalBalanceController;
         this.currentWallet = currentWallet;
+        this.executorService = executorService;
     }
 
     public void load() {
@@ -99,7 +99,7 @@ public class WalletsMenuManager {
         Optional<ButtonType> result = dialog.showAndWait();
         LoadWalletDialogController controller = fxmlLoader.getController();
         if (dialogIsValid(wallet, result, controller)) {
-            new Thread(buildTask(wallet)).start();
+            executorService.submit(buildTask(wallet));
             return;
         }
         if (result.isPresent() && result.get() != CANCEL) {
@@ -120,7 +120,7 @@ public class WalletsMenuManager {
 
     private Task<Void> buildTask(Wallet wallet) {
         Task<Void> task = taskConfigurer.configure(
-            new UpdateCurrentWalletTask(currentWalletManager, reentrantLock, wallet, currentTransactions),
+            new UpdateCurrentWalletTask(currentWalletManager, wallet, currentTransactions),
             "Loading wallet..."
         );
         task.addEventHandler(WORKER_STATE_SCHEDULED, event -> {

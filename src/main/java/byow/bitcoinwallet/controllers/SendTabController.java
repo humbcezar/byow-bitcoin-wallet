@@ -25,7 +25,7 @@ import wf.bitcoin.javabitcoindrpcclient.BitcoinRPCException;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Optional;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.ExecutorService;
 import java.util.function.UnaryOperator;
 
 import static java.util.Objects.isNull;
@@ -54,8 +54,6 @@ public class SendTabController extends Tab implements BaseController {
 
     private final TaskConfigurer taskConfigurer;
 
-    private final ReentrantLock reentrantLock;
-
     private final SendTransactionDialogController sendTransactionDialogController;
 
     private final TransactionCreator transactionCreator;
@@ -68,32 +66,35 @@ public class SendTabController extends Tab implements BaseController {
 
     private final Encryptor encryptor;
 
+    private final ExecutorService executorService;
+
     @Autowired
     public SendTabController(
         @Value("classpath:/fxml/send_tab.fxml") Resource fxml,
         @Value("fxml/send_transaction_dialog.fxml") Resource sendTransactionDialog,
         ApplicationContext context,
         SendTransactionService sendTransactionService,
-        TaskConfigurer taskConfigurer, ReentrantLock reentrantLock,
+        TaskConfigurer taskConfigurer,
         SendTransactionDialogController sendTransactionDialogController,
         TransactionCreator transactionCreator,
         DustCalculator dustCalculator,
         DialogService dialogService,
         CurrentWallet currentWallet,
-        Encryptor encryptor
+        Encryptor encryptor,
+        ExecutorService executorService
     ) throws IOException {
         this.fxml = fxml;
         this.sendTransactionDialog = sendTransactionDialog;
         this.context = context;
         this.sendTransactionService = sendTransactionService;
         this.taskConfigurer = taskConfigurer;
-        this.reentrantLock = reentrantLock;
         this.sendTransactionDialogController = sendTransactionDialogController;
         this.transactionCreator = transactionCreator;
         this.dustCalculator = dustCalculator;
         this.dialogService = dialogService;
         this.currentWallet = currentWallet;
         this.encryptor = encryptor;
+        this.executorService = executorService;
         setText("Send");
         construct(this.fxml, this.context);
     }
@@ -103,6 +104,12 @@ public class SendTabController extends Tab implements BaseController {
     }
 
     public void send() throws IOException {
+        if (currentWallet.getCurrentWallet().isWatchOnly()) {
+            showWatchOnlyAlert();
+            addressToSend.setText("");
+            amountToSend.setText("");
+            return;
+        }
         BigDecimal amount = new BigDecimal(amountToSend.getText());
         if (dustCalculator.isDust(amount)) {
             showDustAlert();
@@ -133,7 +140,7 @@ public class SendTabController extends Tab implements BaseController {
         );
         Optional<ButtonType> result = dialog.showAndWait();
         if (dialogIsValid(result)) {
-            new Thread(buildTask(transaction, decrypt(currentWallet.getCurrentWallet().getSeed()))).start();
+            executorService.submit(buildTask(transaction, decrypt(currentWallet.getCurrentWallet().getSeed())));
             return;
         }
         if (result.isPresent() && result.get() != CANCEL) {
@@ -148,10 +155,7 @@ public class SendTabController extends Tab implements BaseController {
     }
 
     private void showAlert() {
-        Alert alert = new Alert(ERROR);
-        alert.setTitle("Error");
-        alert.setContentText("Wrong password.");
-        alert.show();
+        showErrorAlert("Wrong password.");
     }
 
     private boolean dialogIsValid(Optional<ButtonType> result) {
@@ -160,10 +164,7 @@ public class SendTabController extends Tab implements BaseController {
 
     private boolean validateFunds(WallyTransaction transaction) {
         if (isNull(transaction)) {
-            Alert alert = new Alert(ERROR);
-            alert.setTitle("Error");
-            alert.setContentText("Not enough funds available for transaction.");
-            alert.show();
+            showErrorAlert("Not enough funds available for transaction.");
             return false;
         }
         return true;
@@ -171,10 +172,7 @@ public class SendTabController extends Tab implements BaseController {
 
     private boolean validateTotalFee(WallyTransaction transaction) {
         if(transaction.getTotalFeeInSatoshis() < transaction.getIntendedTotalFeeInSatoshis()) {
-            Alert alert = new Alert(ERROR);
-            alert.setTitle("Error");
-            alert.setContentText("Insufficient funds for calculated fee.");
-            alert.show();
+            showErrorAlert("Insufficient funds for calculated fee.");
             return false;
         }
         return true;
@@ -183,7 +181,6 @@ public class SendTabController extends Tab implements BaseController {
     private Task<Void> buildTask(WallyTransaction transaction, String seed) {
         Task<Void> task = taskConfigurer.configure(
             new SendTransactionTask(
-                reentrantLock,
                 sendTransactionService,
                 transaction,
                 seed
@@ -206,9 +203,17 @@ public class SendTabController extends Tab implements BaseController {
     }
 
     private void showDustAlert() {
+        showErrorAlert("Unable to send the transaction: the transaction has an output lower than the dust limit.");
+    }
+
+    private void showWatchOnlyAlert() {
+        showErrorAlert("Cannot send transaction for watch only wallet.");
+    }
+
+    private void showErrorAlert(String message) {
         Alert alert = new Alert(ERROR);
         alert.setTitle("Error");
-        alert.setContentText("Unable to send the transaction: the transaction has an output lower than the dust limit.");
+        alert.setContentText(message);
         alert.show();
     }
 

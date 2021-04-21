@@ -7,6 +7,7 @@ import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Unspent;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class UtxosGetter {
@@ -22,6 +23,6 @@ public class UtxosGetter {
     }
 
     public List<Unspent> getUtxos() {
-        return getUtxos(currentReceivingAddresses.getAddresses());
+        return getUtxos(currentReceivingAddresses.getAddresses().stream().distinct().collect(Collectors.toList()));
     }
 }

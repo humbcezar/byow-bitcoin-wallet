@@ -1,5 +1,6 @@
 package byow.bitcoinwallet.controllers;
 
+import byow.bitcoinwallet.exceptions.WrongPasswordException;
 import byow.bitcoinwallet.services.LoadNodeWallet;
 import byow.bitcoinwallet.services.gui.CurrentWallet;
 import byow.bitcoinwallet.services.gui.DialogService;
@@ -38,6 +39,8 @@ public class MainController {
 
     private final Resource importWalletDialog;
 
+    private final Resource createWatchOnlyWalletDialog;
+
     private final WalletsMenuManager walletsMenuManager;
 
     private final CurrentWallet currentWallet;
@@ -52,6 +55,7 @@ public class MainController {
     public MainController(
         @Value("fxml/create_wallet_dialog.fxml") Resource createWalletDialog,
         @Value("fxml/import_wallet_dialog.fxml") Resource importWalletDialog,
+        @Value("fxml/create_watch_only_wallet_dialog.fxml") Resource createWatchOnlyWalletDialog,
         WalletsMenuManager walletsMenuManager,
         CurrentWallet currentWallet,
         NodeMonitorTask nodeMonitorTask,
@@ -60,6 +64,7 @@ public class MainController {
     ) {
         this.createWalletDialog = createWalletDialog;
         this.importWalletDialog = importWalletDialog;
+        this.createWatchOnlyWalletDialog = createWatchOnlyWalletDialog;
         this.walletsMenuManager = walletsMenuManager;
         this.currentWallet = currentWallet;
         this.nodeMonitorTask = nodeMonitorTask;
@@ -111,6 +116,13 @@ public class MainController {
         configureDialog(dialog, fxmlLoader);
     }
 
+    public void openCreateWatchOnlyWalletDialog() throws IOException {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        FXMLLoader fxmlLoader = new FXMLLoader();
+        dialogService.initialize(dialog, fxmlLoader, createWatchOnlyWalletDialog.getURL(), "Create New Watch Only Wallet");
+        configureDialog(dialog, fxmlLoader);
+    }
+
     private void configureDialog(Dialog<ButtonType> dialog, FXMLLoader fxmlLoader) {
         GenerateWalletDialogController controller = fxmlLoader.getController();
         dialog.getDialogPane()
@@ -131,15 +143,22 @@ public class MainController {
             try {
                 controller.createWallet();
             } catch (DataIntegrityViolationException exception) {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error");
-                alert.setContentText("Could not create wallet: A wallet with the same name already exists.");
-                alert.show();
+                alertException("Could not create wallet: A wallet with the same name already exists.");
+            } catch (WrongPasswordException exception) {
+                alertException(exception.getMessage());
             }
         }
+    }
+
+    private void alertException(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setContentText(message);
+        alert.show();
     }
 
     public Menu getLoad() {
         return load;
     }
+
 }

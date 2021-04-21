@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<DialogPane headerText="Create watch only wallet from current wallet" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="450.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="byow.bitcoinwallet.controllers.CreateWatchOnlyWalletDialogController">
+    <content>
+        <GridPane>
+            <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints minHeight="10.0" prefHeight="5.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="5.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="90.0" vgrow="SOMETIMES" />
+            </rowConstraints>
+            <Label text="Current Wallet Password" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+            <PasswordField fx:id="currentWalletPassword" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+            <Label text="New Watch Only Wallet Password" wrapText="true" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+            <PasswordField fx:id="watchOnlyWalletPassword" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+        </GridPane>
+    </content>
+    <padding>
+        <Insets left="10.0" right="10.0" top="10.0" />
+    </padding>
+</DialogPane>

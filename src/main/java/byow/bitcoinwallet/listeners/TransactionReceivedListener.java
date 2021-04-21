@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Stream.concat;
@@ -24,8 +24,6 @@ import static java.util.stream.Stream.concat;
 @Lazy
 public class TransactionReceivedListener implements ApplicationListener<TransactionReceivedEvent> {
     private final TransactionUpdater transactionUpdater;
-
-    private final ReentrantLock reentrantLock;
 
     private final TaskConfigurer taskConfigurer;
 
@@ -37,23 +35,25 @@ public class TransactionReceivedListener implements ApplicationListener<Transact
 
     private final OutputAddressesParser outputAddressesParser;
 
+    private final ExecutorService executorService;
+
     @Autowired
     public TransactionReceivedListener(
         TransactionUpdater transactionUpdater,
-        ReentrantLock reentrantLock,
         TaskConfigurer taskConfigurer,
         CurrentWallet currentWallet,
         AddressesFilter addressesFilter,
         InputAddressesParser inputAddressesParser,
-        OutputAddressesParser outputAddressesParser
+        OutputAddressesParser outputAddressesParser,
+        ExecutorService executorService
     ) {
         this.transactionUpdater = transactionUpdater;
-        this.reentrantLock = reentrantLock;
         this.taskConfigurer = taskConfigurer;
         this.currentWallet = currentWallet;
         this.addressesFilter = addressesFilter;
         this.inputAddressesParser = inputAddressesParser;
         this.outputAddressesParser = outputAddressesParser;
+        this.executorService = executorService;
     }
 
     @Override
@@ -65,13 +65,13 @@ public class TransactionReceivedListener implements ApplicationListener<Transact
         List<String> outputs = outputAddressesParser.parseOutputAddresses(event.getTransaction());
         List<String> addresses = addressesFilter.filterAddresses(concat(inputs.stream(), outputs.stream())).collect(Collectors.toList());
         if (!addresses.isEmpty()) {
-            new Thread(buildTask(event.getTransaction(), addresses, outputs)).start();
+            executorService.submit(buildTask(event.getTransaction(), addresses, outputs));
         }
     }
 
     private Task<Void> buildTask(Object transaction, List<String> addresses, List<String> outputs) {
         return taskConfigurer.configure(
-            new UpdateTransactionTask(transactionUpdater, reentrantLock, transaction, addresses, outputs),
+            new UpdateTransactionTask(transactionUpdater, transaction, addresses, outputs),
             "Receiving transaction..."
         );
     }
