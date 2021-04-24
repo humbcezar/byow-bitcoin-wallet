@@ -6,6 +6,7 @@ import byow.bitcoinwallet.services.address.AddressGenerator;
 import byow.bitcoinwallet.services.address.NestedSegwitAddressGeneratorBySeed;
 import byow.bitcoinwallet.services.address.SeedGenerator;
 import byow.bitcoinwallet.services.wallet.TotalBalanceCalculator;
+import byow.bitcoinwallet.utils.TransactionInfo;
 import byow.bitcoinwallet.utils.WalletUtil;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableView;
@@ -20,9 +21,12 @@ import org.testfx.service.query.NodeQuery;
 import wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static byow.bitcoinwallet.services.address.DerivationPath.*;
 import static java.lang.Integer.MAX_VALUE;
@@ -143,7 +147,18 @@ public class SendTransactionTest extends TestBase {
             return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
         });
 
-        sendNTransactions(robot, "0.8", 1, "0.80000000", 5, seed, 0, "bech32", 1, "");
+        sendNTransactions(
+            robot,
+            "0.8",
+            1,
+            "0.80000000",
+            5,
+            seed,
+            0,
+            "bech32",
+            1,
+            ""
+        );
     }
 
     @Test
@@ -467,6 +482,77 @@ public class SendTransactionTest extends TestBase {
         robot.clickOn("OK");
     }
 
+    @Test
+    public void sendFromWalletWithChild(FxRobot robot) throws TimeoutException {
+        String walletName = RandomString.make();
+        String mnemonicSeed = walletUtil.createWatchOnlyWallet(robot, walletName, "", stage);
+
+        String seed = seedGenerator.generateSeedAsString(mnemonicSeed, "");
+        String firstAddress = addressGenerator.generate(seed, FIRST_BIP84_ADDRESS_PATH);
+        fundAddress(robot, firstAddress, ONE, 1, "#receivingAddress");
+        waitFor(TIMEOUT, SECONDS, () -> {
+            TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
+            return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
+        });
+
+        robot.clickOn("#wallet");
+        robot.moveTo("#load");
+        robot.clickOn(walletName);
+        robot.clickOn("OK");
+        waitFor(40, SECONDS, () ->
+            "BYOW Wallet - ".concat(walletName).equals(stage.getTitle())
+        );
+        waitFor(TIMEOUT, SECONDS, () -> {
+            TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
+            return tableView.getItems().size() == 1 && tableView.getItems().get(0).getConfirmations() == 1;
+        });
+        TransactionInfo transactionInfo = sendNTransactions(
+            robot,
+            "0.5",
+            1,
+            "0.50000000",
+            1,
+            seed,
+            0,
+            "bech32",
+            1,
+            ""
+        );
+
+        loadWalletAndAssert(robot, walletName.concat("(watch only)"), transactionInfo);
+    }
+
+    private void loadWalletAndAssert(FxRobot robot, String walletName, TransactionInfo transactionInfo) throws TimeoutException {
+        robot.clickOn("#wallet");
+        robot.moveTo("#load");
+        robot.clickOn(walletName);
+        robot.clickOn("OK");
+        waitFor(40, SECONDS, () ->
+            "BYOW Wallet - ".concat(walletName).equals(stage.getTitle())
+        );
+
+        robot.clickOn("#addressesTab");
+        waitFor(TIMEOUT, SECONDS, () -> {
+            TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
+            return transactionInfo.getAddressRow().size() == tableView.getItems().size();
+        });
+
+        TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
+        IntStream.range(0, transactionInfo.getAddressRow().size()).forEach(i -> {
+            assertEquals(tableView.getItems().get(i).getAddress(), transactionInfo.getAddressRow().get(i).getAddress());
+            assertEquals(tableView.getItems().get(i).getBalance(), transactionInfo.getAddressRow().get(i).getBalance());
+            assertEquals(tableView.getItems().get(i).getConfirmations(), transactionInfo.getAddressRow().get(i).getConfirmations());
+        });
+
+        robot.clickOn("#transactionsTab");
+        TableView<TransactionRow> transactionsTable = robot.lookup("#transactionsTable").queryAs(TableView.class);
+        transactionsTable.getItems().forEach((transactionRow) -> {
+            assertEquals(transactionInfo.getTransactionRows().get(transactionRow.getTransactionId()).getTransactionId(), transactionRow.getTransactionId());
+            assertEquals(transactionInfo.getTransactionRows().get(transactionRow.getTransactionId()).getBalance(), transactionRow.getBalance());
+            assertEquals(transactionInfo.getTransactionRows().get(transactionRow.getTransactionId()).getConfirmations(), transactionRow.getConfirmations());
+        });
+    }
+
     private void fundAddress(FxRobot robot, String firstAddress, BigDecimal amount, int confirmations, String fxmlAddress) throws TimeoutException {
         robot.clickOn("#addressesTab");
         waitFor(40, SECONDS, () -> {
@@ -506,7 +592,7 @@ public class SendTransactionTest extends TestBase {
         }
     }
 
-    private void sendNTransactions(
+    private TransactionInfo sendNTransactions(
         FxRobot robot,
         String amount,
         int scale,
@@ -518,6 +604,7 @@ public class SendTransactionTest extends TestBase {
         int numPreviousTransactions,
         String password
     ) throws TimeoutException {
+        TransactionInfo transactionInfo = new TransactionInfo();
         List<String> transactionAmountsSent = range(0, numTransactions).mapToObj(i -> {
             TableView<ReceivingAddress> table = robot.lookup("#addressesTable").queryAs(TableView.class);
             BigDecimal previousBalance = table.getItems().stream().map(ReceivingAddress::getBigDecimalBalance).reduce(BigDecimal::add).orElse(ZERO);
@@ -530,11 +617,23 @@ public class SendTransactionTest extends TestBase {
 
             String nodeConfirmationAddress = bitcoindRpcClient.getNewAddress();
             bitcoindRpcClient.generateToAddress(1, nodeConfirmationAddress);
+            TableView<ReceivingAddress> tableAfter = robot.lookup("#addressesTable").queryAs(TableView.class);
+            try {
+                waitFor(TIMEOUT, SECONDS, () -> tableAfter.getItems().stream().allMatch(item -> item.getConfirmations() > 0));
+            } catch (TimeoutException e) {
+                throw new RuntimeException(e);
+            }
 
             BigDecimal nodeAddressBalance = bitcoindRpcClient.listUnspent(0, MAX_VALUE, nodeAddress).get(0).amount();
             assertEquals(new BigDecimal(expectedBalance), nodeAddressBalance);
+
             return previousBalance.subtract(table.getItems().get(0).getBigDecimalBalance()).toString();
         }).collect(Collectors.toList());
+
+        TableView<ReceivingAddress> table = robot.lookup("#addressesTable").queryAs(TableView.class);
+        table.getItems().forEach(row -> {
+            transactionInfo.addAddressesRow(row.getAddress(), row.getBalance(), row.getConfirmations());
+        });
 
         robot.clickOn("#transactionsTab");
         waitFor(TIMEOUT, SECONDS, () -> {
@@ -549,6 +648,14 @@ public class SendTransactionTest extends TestBase {
                 transactionsTable.getItems().get(i + numPreviousTransactions).getBigDecimalBalance().setScale(8, FLOOR).toString()
             )
         );
+
+        Map<String, TransactionRow> trRowMap = new HashMap<>();
+        transactionsTable.getItems().forEach(transactionRow -> {
+            trRowMap.put(transactionRow.getTransactionId(), transactionRow);
+        });
+        transactionInfo.setTransactionRows(trRowMap);
+
+        return transactionInfo;
     }
 
     private void changeAddressAssertion(String seed, int firstChangeIndex, int offset, TableView<ReceivingAddress> table, int row) {

@@ -1,7 +1,6 @@
 package byow.bitcoinwallet.services.wallet;
 
 import byow.bitcoinwallet.entities.Wallet;
-import byow.bitcoinwallet.entities.XPub;
 import byow.bitcoinwallet.events.WalletCreatedEvent;
 import byow.bitcoinwallet.repositories.WalletRepository;
 import byow.bitcoinwallet.services.AuthenticationService;
@@ -15,7 +14,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
-import java.util.Set;
 
 @Service
 public class WalletCreator {
@@ -74,13 +72,14 @@ public class WalletCreator {
         return wallet;
     }
 
-    public void createWatchOnly(String walletName, String password, Date walletCreationDate, Set<XPub> xPubs) {
+    public void createWatchOnly(String walletName, String password, Wallet parentWallet) {
         Wallet wallet = new Wallet();
         wallet.setName(walletName);
         wallet.setPassword(authenticationService.hashPassword(password));
-        wallet.setCreatedAt(walletCreationDate);
+        wallet.setCreatedAt(parentWallet.getCreatedAt());
+        wallet.setParent(parentWallet);
         walletRepository.save(wallet);
-        xPubs.forEach(xPub -> xPubCreator.create(xPub, wallet));
+        parentWallet.getxPubs().forEach(xPub -> xPubCreator.create(xPub, wallet));
         this.applicationEventPublisher.publishEvent(new WalletCreatedEvent(this, fresh(wallet)));
     }
 

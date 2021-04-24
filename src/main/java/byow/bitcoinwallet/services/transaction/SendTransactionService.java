@@ -2,6 +2,7 @@ package byow.bitcoinwallet.services.transaction;
 
 import byow.bitcoinwallet.entities.Address;
 import byow.bitcoinwallet.entities.TransactionInput;
+import byow.bitcoinwallet.entities.Wallet;
 import byow.bitcoinwallet.entities.wally.WallyTransaction;
 import byow.bitcoinwallet.repositories.AddressRepository;
 import byow.bitcoinwallet.repositories.TransactionInputRepository;
@@ -63,6 +64,9 @@ public class SendTransactionService {
                     transactionInput.getAmountInSatoshis()
                 )
             )).collect(Collectors.toSet());
-        transactionSaver.save(txId, currentWallet.getCurrentWallet(), inputs, Set.of());
+        Wallet wallet = currentWallet.getCurrentWallet().isWatchOnly()
+            ? currentWallet.getCurrentWallet().getParent()
+            : currentWallet.getCurrentWallet();
+        transactionSaver.save(txId, wallet, inputs, Set.of());
     }
 }

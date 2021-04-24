@@ -34,6 +34,6 @@ public class CurrentWalletManager {
     public void updateCurrentWallet(Wallet currentWallet) {
         currentAddressesManagers.forEach(CurrentAddressesManager::clear);
         this.currentWallet.setCurrentWallet(currentWallet);
-        multiAddressUpdater.update(currentWallet);
+        multiAddressUpdater.update(currentWallet.isWatchOnly() ? currentWallet.getParent() : currentWallet);
     }
 }

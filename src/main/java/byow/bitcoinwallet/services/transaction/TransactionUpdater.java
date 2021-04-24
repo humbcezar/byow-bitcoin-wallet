@@ -71,8 +71,9 @@ public class TransactionUpdater {
     }
 
     private void updateTransactions(Object transaction, List<String> outputs) {
-        saveTransaction(transaction, outputs, currentWallet.getCurrentWallet());
-        currentTransactions.update(currentWallet.getCurrentWallet());
+        Wallet wallet = currentWallet.getCurrentWallet().isWatchOnly() ? currentWallet.getCurrentWallet().getParent() : currentWallet.getCurrentWallet();
+        saveTransaction(transaction, outputs, wallet);
+        currentTransactions.update(wallet);
     }
 
     @Transactional

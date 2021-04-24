@@ -5,6 +5,7 @@ import byow.bitcoinwallet.entities.NextChangeAddress;
 import byow.bitcoinwallet.entities.ReceivingAddress;
 import byow.bitcoinwallet.entities.TransactionRow;
 import byow.bitcoinwallet.services.address.*;
+import byow.bitcoinwallet.utils.TransactionInfo;
 import byow.bitcoinwallet.utils.WalletUtil;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -21,9 +22,11 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static byow.bitcoinwallet.services.address.DerivationPath.*;
 import static java.math.RoundingMode.UNNECESSARY;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.IntStream.range;
 import static org.assertj.core.internal.bytebuddy.utility.RandomString.make;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -81,6 +84,51 @@ public class ReceivingTransactionTest extends TestBase {
             addressSequentialGenerator,
             ""
         );
+    }
+
+    @Test
+    public void receiveOneTransactionToWatchOnlyWallet(FxRobot robot) throws TimeoutException {
+        String walletName = make();
+        String mnemonicSeed = walletUtil.createWatchOnlyWallet(robot, walletName, "", stage);
+        TransactionInfo transactionInfo = receiveNTransactions(
+            robot,
+            mnemonicSeed,
+            1,
+            FIRST_BIP84_ADDRESS_PATH,
+            defaultAddressGeneratorBySeed,
+            "#receivingAddress",
+            addressSequentialGenerator,
+            ""
+        );
+
+        loadWalletAndAssert(robot, walletName, transactionInfo);
+    }
+
+    @Test
+    public void receiveOneTransactionToWalletWithChild(FxRobot robot) throws TimeoutException {
+        String walletName = make();
+        String mnemonicSeed = walletUtil.createWatchOnlyWallet(robot, walletName, "", stage);
+
+        robot.clickOn("#wallet");
+        robot.moveTo("#load");
+        robot.clickOn(walletName);
+        robot.clickOn("OK");
+        waitFor(40, SECONDS, () ->
+            "BYOW Wallet - ".concat(walletName).equals(stage.getTitle())
+        );
+
+        TransactionInfo transactionInfo = receiveNTransactions(
+            robot,
+            mnemonicSeed,
+            1,
+            FIRST_BIP84_ADDRESS_PATH,
+            defaultAddressGeneratorBySeed,
+            "#receivingAddress",
+            addressSequentialGenerator,
+            ""
+        );
+
+        loadWalletAndAssert(robot, walletName.concat("(watch only)"), transactionInfo);
     }
 
     @Test
@@ -328,7 +376,7 @@ public class ReceivingTransactionTest extends TestBase {
         assertEquals(expectedNextAddress, nextAddress);
     }
 
-    private void receiveNTransactions(
+    private TransactionInfo receiveNTransactions(
         FxRobot robot,
         String mnemonicSeed,
         int numberOfTransactions,
@@ -338,6 +386,8 @@ public class ReceivingTransactionTest extends TestBase {
         AddressSequentialGenerator addressSequentialGenerator,
         String password
     ) throws TimeoutException {
+        TransactionInfo transactionInfo = new TransactionInfo();
+
         robot.clickOn("#addressesTab");
         String firstAddress = addressGenerator.generate(seedGenerator.generateSeedAsString(mnemonicSeed, password), firstDerivationPath);
         waitFor(TIMEOUT, TimeUnit.SECONDS, () -> {
@@ -365,6 +415,7 @@ public class ReceivingTransactionTest extends TestBase {
                     0
                 )
             );
+            transactionInfo.addAddressesRow(address, "1.00000000", 0);
 
             String seed = seedGenerator.generateSeedAsString(mnemonicSeed, password);
             String expectedNextAddress = addressSequentialGenerator
@@ -380,6 +431,7 @@ public class ReceivingTransactionTest extends TestBase {
             }
             String nextAddress = robot.lookup(receivingAddressQuery).queryAs(TextField.class).getText();
             assertEquals(expectedNextAddress, nextAddress);
+            transactionInfo.setExpectedNextAddress(expectedNextAddress);
         });
 
         robot.clickOn("#transactionsTab");
@@ -396,6 +448,10 @@ public class ReceivingTransactionTest extends TestBase {
                 trRowMap.get(txIds.get(i)).getDate()
             ))
         );
+
+        transactionInfo.setTransactionRows(trRowMap);
+
+        return transactionInfo;
     }
 
     private void receiveVaryingTransactions(
@@ -464,5 +520,42 @@ public class ReceivingTransactionTest extends TestBase {
                 trRowMap.get(txIds.get(i)).getDate()
             ))
         );
+    }
+
+    private void loadWalletAndAssert(FxRobot robot, String walletName, TransactionInfo transactionInfo) throws TimeoutException {
+        robot.clickOn("#wallet");
+        robot.moveTo("#load");
+        robot.clickOn(walletName);
+        robot.clickOn("OK");
+        waitFor(40, SECONDS, () ->
+            "BYOW Wallet - ".concat(walletName).equals(stage.getTitle())
+        );
+
+        waitFor(TIMEOUT, SECONDS, () -> {
+            String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+            return transactionInfo.getExpectedNextAddress().equals(address);
+        });
+        String address = robot.lookup("#receivingAddress").queryAs(TextField.class).getText();
+        assertEquals(transactionInfo.getExpectedNextAddress(), address);
+
+        robot.clickOn("#addressesTab");
+        waitFor(TIMEOUT, SECONDS, () -> {
+            TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
+            return transactionInfo.getAddressRow().size() == tableView.getItems().size();
+        });
+        TableView<ReceivingAddress> tableView = robot.lookup("#addressesTable").queryAs(TableView.class);
+        IntStream.range(0, transactionInfo.getAddressRow().size()).forEach(i -> {
+            assertEquals(tableView.getItems().get(i).getAddress(), transactionInfo.getAddressRow().get(i).getAddress());
+            assertEquals(tableView.getItems().get(i).getBalance(), transactionInfo.getAddressRow().get(i).getBalance());
+            assertEquals(tableView.getItems().get(i).getConfirmations(), transactionInfo.getAddressRow().get(i).getConfirmations());
+        });
+
+        robot.clickOn("#transactionsTab");
+        TableView<TransactionRow> transactionsTable = robot.lookup("#transactionsTable").queryAs(TableView.class);
+        transactionsTable.getItems().forEach((transactionRow) -> {
+            assertEquals(transactionInfo.getTransactionRows().get(transactionRow.getTransactionId()).getTransactionId(), transactionRow.getTransactionId());
+            assertEquals(transactionInfo.getTransactionRows().get(transactionRow.getTransactionId()).getBalance(), transactionRow.getBalance());
+            assertEquals(transactionInfo.getTransactionRows().get(transactionRow.getTransactionId()).getConfirmations(), transactionRow.getConfirmations());
+        });
     }
 }

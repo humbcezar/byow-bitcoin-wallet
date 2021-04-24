@@ -36,8 +36,7 @@ public class CreateWatchOnlyWalletDialogController extends GenerateWalletDialogC
         walletCreator.createWatchOnly(
             currentWallet.getWalletName().concat("(watch only)"),
             watchOnlyWalletPassword.getText(),
-            currentWallet.getCurrentWallet().getCreatedAt(),
-            currentWallet.getCurrentWallet().getxPubs()
+            currentWallet.getCurrentWallet()
         );
     }
 

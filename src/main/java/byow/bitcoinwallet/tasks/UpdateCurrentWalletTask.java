@@ -25,7 +25,7 @@ public class UpdateCurrentWalletTask extends Task<Void> {
     @Override
     protected Void call() {
         currentWalletManager.updateCurrentWallet(wallet);
-        currentTransactions.update(wallet);
+        currentTransactions.update(wallet.isWatchOnly() ? wallet.getParent() : wallet);
         return null;
     }
 }

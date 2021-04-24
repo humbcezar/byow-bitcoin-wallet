@@ -42,6 +42,10 @@ public class Wallet {
     @JoinColumn(name = "wallet_id")
     private Set<XPub> xPubs;
 
+    @OneToOne(fetch = EAGER)
+    @JoinColumn(referencedColumnName = "id")
+    private Wallet parent;
+
     public Wallet(String name, String seed) {
         this.name = name;
         this.seed = seed;
@@ -111,6 +115,9 @@ public class Wallet {
     }
 
     public List<Transaction> getTransactions() {
+        if (isWatchOnly()) {
+            return parent.getTransactions();
+        }
         return transactions;
     }
 
@@ -123,6 +130,14 @@ public class Wallet {
 
     public Set<XPub> getxPubs() {
         return xPubs;
+    }
+
+    public Wallet getParent() {
+        return parent;
+    }
+
+    public void setParent(Wallet parent) {
+        this.parent = parent;
     }
 
     @Transient

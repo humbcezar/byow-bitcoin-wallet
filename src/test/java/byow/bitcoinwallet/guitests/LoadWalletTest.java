@@ -16,7 +16,6 @@ import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.Start;
 import org.testfx.service.query.NodeQuery;
 
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -118,7 +117,7 @@ public class LoadWalletTest extends TestBase {
     @Test
     public void loadWatchOnlyWalletWithPassword(FxRobot robot) throws TimeoutException {
         Wallet wallet = walletRepository.findByName(testWalletWithPassword);
-        walletCreator.createWatchOnly(testWatchWalletWithPassword, password, new Date(), wallet.getxPubs());
+        walletCreator.createWatchOnly(testWatchWalletWithPassword, password, wallet);
 
         robot.clickOn("#wallet");
         robot.moveTo("#load");
@@ -158,7 +157,7 @@ public class LoadWalletTest extends TestBase {
     @Test
     public void loadWatchWalletWithWrongPasswordFail(FxRobot robot) throws TimeoutException {
         Wallet wallet = walletRepository.findByName(testWallet);
-        walletCreator.createWatchOnly("testWatchWalletWithWrongPassword", "asdf", new Date(), wallet.getxPubs());
+        walletCreator.createWatchOnly("testWatchWalletWithWrongPassword", "asdf", wallet);
         robot.clickOn("#wallet");
         robot.moveTo("#load");
         robot.clickOn("testWatchWalletWithWrongPassword");
