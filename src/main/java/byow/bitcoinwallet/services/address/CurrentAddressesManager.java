@@ -91,8 +91,10 @@ abstract public class CurrentAddressesManager {
 
     public abstract XPubTypes getXPubType();
 
-    public List<String> initializeAddresses(int numberOfAddresses, String key, Date walletCreationDate, String walletName) {
-        List<String> addresses = addressSequentialGenerator.deriveAddresses(numberOfAddresses, key, getCurrentDerivationPath())
+    public List<String> initializeAddresses(int numberOfAddresses, Wallet wallet) {
+        List<String> addresses = addressSequentialGenerator.deriveAddresses(
+                numberOfAddresses, wallet.getXPub(getXPubType()).getKey(), getCurrentDerivationPath()
+            )
             .stream()
             .filter(address -> !currentReceivingAddresses.contains(address.getAddress()))
             .peek(address -> currentReceivingAddresses.add(
@@ -104,19 +106,24 @@ abstract public class CurrentAddressesManager {
             .map(AddressPath::getAddress)
             .collect(Collectors.toList());
 
-        List<String> unimportedAddresses = getUnimportedAddresses(addresses, walletName);
+        List<String> unimportedAddresses = getUnimportedAddresses(addresses, wallet.getName());
         if (!unimportedAddresses.isEmpty()) {
-            multiAddressesImporter.importMultiAddresses(walletCreationDate, walletName, unimportedAddresses.toArray(new String[0]));
+            importAddresses(wallet, unimportedAddresses);
         }
         return addresses;
+    }
+
+    private void importAddresses(Wallet wallet, List<String> unimportedAddresses) {
+        Date date = wallet.getLastImportedAt() == null ? wallet.getCreatedAt() : wallet.getLastImportedAt();
+        wallet.setLastImportedAt(new Date());
+        multiAddressesImporter.importMultiAddresses(date, wallet.getName(), unimportedAddresses.toArray(new String[0]));
+        walletRepository.save(wallet);
     }
 
     public void update(Wallet wallet, int numberOfAddresses) {
         List<String> addressList = initializeAddresses(
             numberOfAddresses,
-            wallet.getXPub(getXPubType()).getKey(),
-            wallet.getCreatedAt(),
-            wallet.getName()
+            wallet
         );
         List<Unspent> utxos = utxosGetter.getUtxos(addressList);
         saveTransaction(wallet, utxos);
@@ -129,7 +136,7 @@ abstract public class CurrentAddressesManager {
             update(wallet, numberOfAddresses);
             return;
         }
-        updateNextAddress(addressList.get(0), updatedAddressesCount, wallet.getXPub(getXPubType()).getKey(), wallet.getCreatedAt(), wallet.getName());
+        updateNextAddress(addressList.get(0), updatedAddressesCount, wallet);
     }
 
     @Transactional
@@ -162,18 +169,18 @@ abstract public class CurrentAddressesManager {
             .anyMatch(transaction -> transaction.getTxId().equals(txId));
     }
 
-    public void updateNextAddress(String address, int updatedAddressesCount, String key, Date walletCreationDate, String walletName) {
+    public void updateNextAddress(String address, int updatedAddressesCount, Wallet wallet) {
         if (updatedAddressesCount > 0) {
             address = addressSequentialGenerator.deriveAddresses(
                 1,
-                key,
+                wallet.getXPub(getXPubType()).getKey(),
                 setNextCurrentDerivationPath(updatedAddressesCount)
             ).get(0).getAddress();
         }
-        initializeAddresses(1, key, walletCreationDate, walletName);
+        initializeAddresses(1, wallet);
         ReceivingAddress nextReceivingAddress = new ReceivingAddress(ZERO, 0, address);
         if (addressRepository.existsByAddress(address)) {
-            updateNextAddress(address, 1, key, walletCreationDate, walletName);
+            updateNextAddress(address, 1, wallet);
             return;
         }
         runLater(() -> setNextAddress(nextReceivingAddress));

@@ -39,9 +39,7 @@ public class AddressUpdater {
             .forEach(currentAddressManager -> currentAddressManager.updateNextAddress(
                     "",
                     1,
-                    wallet.getXPub(currentAddressManager.getXPubType()).getKey(),
-                    wallet.getCreatedAt(),
-                    wallet.getName()
+                    wallet
                 )
             )
         );

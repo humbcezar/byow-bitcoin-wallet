@@ -32,6 +32,9 @@ public class Wallet {
     @CreatedDate
     private Date createdAt;
 
+    @Column(name = "last_imported_at")
+    private Date lastImportedAt;
+
     @ManyToMany(mappedBy = "wallets", fetch = EAGER)
     private List<Transaction> transactions;
 
@@ -91,6 +94,14 @@ public class Wallet {
 
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Date getLastImportedAt() {
+        return lastImportedAt;
+    }
+
+    public void setLastImportedAt(Date lastImportedAt) {
+        this.lastImportedAt = lastImportedAt;
     }
 
     public String getPassword() {

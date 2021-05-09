@@ -37,9 +37,7 @@ public class AddressesFilter {
             .peek(address -> currentAddressesManagers.forEach(
                 currentAddressManager -> currentAddressManager.initializeAddresses(
                     1,
-                    wallet.getXPub(currentAddressManager.getXPubType()).getKey(),
-                    wallet.getCreatedAt(),
-                    wallet.getName()
+                    wallet
                 ))
             )
             .filter(currentReceivingAddresses::contains);
