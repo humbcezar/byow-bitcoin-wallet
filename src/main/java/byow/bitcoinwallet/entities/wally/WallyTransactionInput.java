@@ -21,6 +21,8 @@ public class WallyTransactionInput {
 
     private final String txId;
 
+    private int vout;
+
     public WallyTransactionInput(
         String txid,
         int vout,
@@ -32,6 +34,7 @@ public class WallyTransactionInput {
         DerivationPath derivationPath
     ) {
         this.txId = txid;
+        this.vout = vout;
         this.scriptSig = scriptSig;
         this.witness = witness;
         this.address = address;
@@ -80,5 +83,9 @@ public class WallyTransactionInput {
 
     public DerivationPath getDerivationPath() {
         return derivationPath;
+    }
+
+    public int getVout() {
+        return vout;
     }
 }
